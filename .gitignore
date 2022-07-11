@@ -1,0 +1,12 @@
+*.exe
+*.o
+vendor/SDL2/*
+!vendor/SDL2/.keep
+
+*.dll
+
+*.bin
+*.cue
+*.CPE
+*.EXE
+*.OBJ
