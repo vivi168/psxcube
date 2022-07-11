@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "io.h"
 #include "renderer.h"
 
 #define SCREEN_W 320
@@ -33,6 +34,7 @@ SVECTOR rotation;
 VECTOR translation;
 MATRIX transform;
 
+void rdr_create_texture();
 void rdr_render_mesh(Mesh*);
 
 void rdr_init()
@@ -72,10 +74,56 @@ void rdr_init()
     cdb = &db[0];
     nextpri = cdb->pribuff;
 
+    rdr_create_texture();
+
     FntLoad( 960, 0 );
     FntOpen( 0, 8, 320, 224, 0, 100 );
 
     SetDispMask(1);
+}
+
+void rdr_create_texture()
+{
+    uint32_t file_size;
+    int i;
+    int8_t *buff;
+
+    TIM_IMAGE   *image;
+
+    buff = load_file("\\CUBE.TIM;1", &file_size);
+    if (buff == NULL) {
+        printf("[ERROR]: error while loading texture\n");
+        while(1);
+    }
+
+    OpenTIM((uint32_t*)buff);
+    ReadTIM(image);
+
+    // upload pixel data to framebuffer
+    LoadImage(image->prect, image->paddr);
+    DrawSync(0);
+
+    // upload CLUT to framebuffer if any
+    if (image->mode & 0x8) {
+        LoadImage(image->crect, image->caddr);
+        DrawSync(0);
+    }
+
+    // copy properties
+    printf("[INFO]: %d %d %d\n", image->mode, image->prect->x, image->prect->y);
+    texture.prect = *image->prect;
+    texture.crect = *image->crect;
+    texture.mode = image->mode;
+
+    texture.u = (texture.prect.x % 0x40) << ( 2 - (texture.mode & 0x3));
+    texture.v = (texture.prect.y & 0xff);
+
+    texture.tpage = getTPage(texture.mode & 0x3, 0, texture.prect.x, texture.prect.y);
+    texture.clut = getClut(texture.crect.x, texture.crect.y);
+
+    printf("[INFO]: %d %d %d\n", texture.mode, texture.prect.x, texture.prect.y);
+
+    free3(buff);
 }
 
 void rdr_render(Mesh *mesh)

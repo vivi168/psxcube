@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <libcd.h>
 
 #include "renderer.h"
 
@@ -75,6 +76,7 @@ void mainloop()
 int main(int argc, char** argv)
 {
     InitHeap3((void*)&heap, HEAP_SIZE);
+    CdInit();
 
     rdr_init();
 
