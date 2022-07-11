@@ -131,7 +131,7 @@ void rdr_render(Mesh *mesh)
     ClearOTagR(cdb->ot, OTLEN);
 
     rotation.vy += 16;
-    // rotation.vz += 16;
+    rotation.vz += 16;
 
     RotMatrix(&rotation, &transform);
     TransMatrix(&transform, &translation);
@@ -146,16 +146,23 @@ void rdr_render_mesh(Mesh *mesh)
 {
     long p, otz;
     int i, nclip;
-    POLY_F4 *pf4;
+    POLY_FT4 *pf4;
 
     SetRotMatrix(&transform);
     SetTransMatrix(&transform);
 
     for (i = 0; i < mesh->num_faces; i ++) {
-        pf4 = (POLY_F4*)nextpri;
-        SetPolyF4(pf4);
-        setRGB0(pf4, mesh->colors[i].r, mesh->colors[i].g, mesh->colors[i].b);
+        pf4 = (POLY_FT4*)nextpri;
 
+        setUV4(pf4, texture.u, texture.v,
+                    texture.u + 32, texture.v,
+                    texture.u, texture.v + 32,
+                    texture.u + 32, texture.v + 32
+        );
+        pf4->tpage = texture.tpage;
+        pf4->clut = texture.clut;
+        setRGB0(pf4, mesh->colors[i].r, mesh->colors[i].g, mesh->colors[i].b);
+        setPolyFT4(pf4);
 
         nclip = RotAverageNclip4(&mesh->vertices[mesh->indices[i * 4 + 0]],
                                  &mesh->vertices[mesh->indices[i * 4 + 1]],
@@ -173,7 +180,7 @@ void rdr_render_mesh(Mesh *mesh)
 
         if ((otz > 0) && (otz < OTLEN)) {
             addPrim(cdb->ot, pf4);
-            nextpri += sizeof(POLY_F4);
+            nextpri += sizeof(POLY_FT4);
         }
     }
 }

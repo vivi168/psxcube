@@ -50,7 +50,7 @@ void init_cube()
 
     for (i = 0; i < 6; ++i) {
         cube.colors[i].r = 255;
-        cube.colors[i].g = 0;
+        cube.colors[i].g = 255;
         cube.colors[i].b = 255;
     }
 
