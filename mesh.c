@@ -90,6 +90,10 @@ Mesh parsemesh(char* buffer, uint32_t size) {
                 f.num_vertices = atoi(token);
                 f.vertex_idx = malloc(sizeof(unsigned int) * f.num_vertices);
 
+                f.color.r = 255;
+                f.color.g = 255;
+                f.color.b = 255;
+
                 for (vc = 0; vc < f.num_vertices; vc++) {
                     token = strtok(NULL, " ");
                     f.vertex_idx[vc] = atoi(token);

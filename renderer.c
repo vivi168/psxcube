@@ -162,13 +162,13 @@ void rdr_render_mesh(Mesh *mesh)
         );
         pf4->tpage = texture.tpage;
         pf4->clut = texture.clut;
-        setRGB0(pf4, mesh->colors_old[i].r, mesh->colors_old[i].g, mesh->colors_old[i].b);
+        setRGB0(pf4, mesh->faces[i].color.r, mesh->faces[i].color.g, mesh->faces[i].color.b);
         setPolyFT4(pf4);
 
-        nclip = RotAverageNclip4(&mesh->vertices_old[mesh->indices[i * 4 + 0]],
-                                 &mesh->vertices_old[mesh->indices[i * 4 + 1]],
-                                 &mesh->vertices_old[mesh->indices[i * 4 + 2]],
-                                 &mesh->vertices_old[mesh->indices[i * 4 + 3]],
+        nclip = RotAverageNclip4(&mesh->vertices[mesh->faces[i].vertex_idx[0]].position,
+                                 &mesh->vertices[mesh->faces[i].vertex_idx[1]].position,
+                                 &mesh->vertices[mesh->faces[i].vertex_idx[2]].position,
+                                 &mesh->vertices[mesh->faces[i].vertex_idx[3]].position,
                                  (long *)&pf4->x0,
                                  (long *)&pf4->x1,
                                  (long *)&pf4->x3,

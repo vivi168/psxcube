@@ -8,12 +8,12 @@ typedef struct vertex_t {
     SVECTOR position;
     SVECTOR normal;
     DVECTOR uv;
-    CVECTOR color;
 } Vertex;
 
 typedef struct face_t {
     unsigned int num_vertices;
     unsigned int *vertex_idx;
+    CVECTOR color;
 } Face;
 
 typedef struct mesh_t {
