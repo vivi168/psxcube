@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <libcd.h>
 
+#include "mesh.h"
 #include "renderer.h"
 
 #define HEAP_SIZE (1024 * 1024)
@@ -36,22 +37,26 @@ static int cube_indices[] = {
 // replace with load obj file
 void init_cube()
 {
+    Mesh cube_mesh;
     int i;
+
+    cube_mesh = mesh_load_from_file();
+    mesh_print_mesh(&cube_mesh);
 
     cube.num_faces = 6;
     cube.num_vertices = 8;
 
-    cube.vertices = (SVECTOR*)malloc3(8 * sizeof(SVECTOR));
+    cube.vertices_old = (SVECTOR*)malloc3(8 * sizeof(SVECTOR));
     cube.indices = (unsigned int*)malloc3(6 * 4 * sizeof(unsigned int));
-    cube.colors = (CVECTOR*)malloc3(6 * sizeof(CVECTOR));
+    cube.colors_old = (CVECTOR*)malloc3(6 * sizeof(CVECTOR));
 
-    memcpy(cube.vertices, cube_vertices, (8 * sizeof(SVECTOR)));
+    memcpy(cube.vertices_old, cube_vertices, (8 * sizeof(SVECTOR)));
     memcpy(cube.indices, cube_indices, (6 * 4 * sizeof(unsigned int)));
 
     for (i = 0; i < 6; ++i) {
-        cube.colors[i].r = 255;
-        cube.colors[i].g = 255;
-        cube.colors[i].b = 255;
+        cube.colors_old[i].r = 255;
+        cube.colors_old[i].g = 255;
+        cube.colors_old[i].b = 255;
     }
 
     printf("[INFO]: cube init done !\n");
@@ -60,7 +65,6 @@ void init_cube()
 void mainloop()
 {
     unsigned int frame_start;
-
     quit = 0;
 
     init_cube();

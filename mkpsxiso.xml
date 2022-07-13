@@ -53,6 +53,7 @@
       <!-- provided the name attribute is defined. -->
       <file name="MAIN.EXE" type="data"/>
       <file name="CUBE.TIM" type="data"/>
+      <file name="CUBE.M3D" type="data"/>
 
       <!-- Lastly, some dummy sectors must always be placed at the -->
       <!-- end of the disc image. It must be a pretty large one to -->

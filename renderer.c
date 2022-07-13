@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "types.h"
 #include "io.h"
 #include "renderer.h"
 
@@ -88,7 +89,7 @@ void rdr_create_texture()
     int i;
     int8_t *buff;
 
-    TIM_IMAGE   *image;
+    TIM_IMAGE *image;
 
     buff = load_file("\\CUBE.TIM;1", &file_size);
     if (buff == NULL) {
@@ -161,13 +162,13 @@ void rdr_render_mesh(Mesh *mesh)
         );
         pf4->tpage = texture.tpage;
         pf4->clut = texture.clut;
-        setRGB0(pf4, mesh->colors[i].r, mesh->colors[i].g, mesh->colors[i].b);
+        setRGB0(pf4, mesh->colors_old[i].r, mesh->colors_old[i].g, mesh->colors_old[i].b);
         setPolyFT4(pf4);
 
-        nclip = RotAverageNclip4(&mesh->vertices[mesh->indices[i * 4 + 0]],
-                                 &mesh->vertices[mesh->indices[i * 4 + 1]],
-                                 &mesh->vertices[mesh->indices[i * 4 + 2]],
-                                 &mesh->vertices[mesh->indices[i * 4 + 3]],
+        nclip = RotAverageNclip4(&mesh->vertices_old[mesh->indices[i * 4 + 0]],
+                                 &mesh->vertices_old[mesh->indices[i * 4 + 1]],
+                                 &mesh->vertices_old[mesh->indices[i * 4 + 2]],
+                                 &mesh->vertices_old[mesh->indices[i * 4 + 3]],
                                  (long *)&pf4->x0,
                                  (long *)&pf4->x1,
                                  (long *)&pf4->x3,
