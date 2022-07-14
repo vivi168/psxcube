@@ -180,7 +180,7 @@ void rdr_render_mesh(Mesh *mesh)
         if (nclip <= 0) continue;
 
         if ((otz > 0) && (otz < OTLEN)) {
-            addPrim(cdb->ot, pf4);
+            addPrim(&cdb->ot[otz], pf4);
             nextpri += sizeof(POLY_FT4);
         }
     }
