@@ -128,12 +128,13 @@ void rdr_create_texture()
     free3(buff);
 }
 
-void rdr_render(Mesh *mesh)
+void rdr_render(Mesh *mesh, SVECTOR *rotvec)
 {
     ClearOTagR(cdb->ot, OTLEN);
 
-    rotation.vy += 16;
-    rotation.vz += 16;
+    rotation.vx += rotvec->vx;
+    rotation.vy += rotvec->vy;
+    rotation.vz += rotvec->vz;
 
     RotMatrix(&rotation, &transform);
     TransMatrix(&transform, &translation);

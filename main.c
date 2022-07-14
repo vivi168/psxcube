@@ -5,12 +5,37 @@
 #include "mesh.h"
 #include "renderer.h"
 
+#include "input.h"
+
 #define HEAP_SIZE (1024 * 1024)
 char heap[HEAP_SIZE];
 
 int quit;
 
 Mesh cube;
+
+SVECTOR rotvec;
+
+void process_input()
+{
+    rotvec.vx = 0;
+    rotvec.vy = 0;
+    rotvec.vz = 0;
+
+    if (iptm_is_held(KEY_UP)) {
+        rotvec.vx = -16;
+    }
+    if (iptm_is_held(KEY_DOWN)) {
+        rotvec.vx = 16;
+    }
+    if (iptm_is_held(KEY_LEFT)) {
+        rotvec.vy = -16;
+    }
+    if (iptm_is_held(KEY_RIGHT)) {
+        rotvec.vy = 16;
+    }
+
+}
 
 void init_cube()
 {
@@ -30,7 +55,10 @@ void mainloop()
     while (!quit) {
         frame_start = rdr_getticks();
 
-        rdr_render(&cube);
+        iptm_poll_events();
+        process_input();
+
+        rdr_render(&cube, &rotvec);
         rdr_delay(frame_start);
     }
 }
@@ -41,6 +69,12 @@ int main(int argc, char** argv)
     CdInit();
 
     rdr_init();
+    iptm_init();
+    rotvec.vx = 0;
+    rotvec.vy = 0;
+    rotvec.vz = 0;
+    rotvec.pad = 0;
+
 
     printf("[INFO]: init done !\n");
 
