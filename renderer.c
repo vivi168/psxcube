@@ -196,10 +196,10 @@ void rdr_render_mesh(Mesh *mesh)
             gte_stsxy(&pf4->x2);
 
             // TODO use UVs from mesh
-            setUV4(pf4, texture.u, texture.v,
-                        texture.u + 32, texture.v,
-                        texture.u, texture.v + 32,
-                        texture.u + 32, texture.v + 32);
+            setUV4(pf4, texture.u + mesh->vertices[mesh->faces[i].vertex_idx[0]].uv.vx, texture.v + mesh->vertices[mesh->faces[i].vertex_idx[0]].uv.vy,
+                        texture.u + mesh->vertices[mesh->faces[i].vertex_idx[1]].uv.vx, texture.v + mesh->vertices[mesh->faces[i].vertex_idx[1]].uv.vy,
+                        texture.u + mesh->vertices[mesh->faces[i].vertex_idx[3]].uv.vx, texture.v + mesh->vertices[mesh->faces[i].vertex_idx[3]].uv.vy,
+                        texture.u + mesh->vertices[mesh->faces[i].vertex_idx[2]].uv.vx, texture.v + mesh->vertices[mesh->faces[i].vertex_idx[2]].uv.vy);
 
             pf4->tpage = texture.tpage;
             pf4->clut = texture.clut;
