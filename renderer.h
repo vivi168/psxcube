@@ -38,4 +38,10 @@ void rdr_delay();
     "nop;"                  \
     "cop2 0x168002E;")
 
+#undef gte_avsz3
+#define gte_avsz3() __asm__ volatile (\
+    "nop;"                  \
+    "nop;"                  \
+    "cop2 0x158002D;")
+
 #endif

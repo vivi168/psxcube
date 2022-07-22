@@ -155,7 +155,10 @@ void render_mesh(Mesh *mesh)
     gte_SetTransMatrix(&transform);
 
     for (i = 0; i < mesh->num_faces; i ++) {
-        render_quad(mesh->vertices, &mesh->faces[i]);
+        if (mesh->faces[i].num_vertices == 4)
+            render_quad(mesh->vertices, &mesh->faces[i]);
+        if (mesh->faces[i].num_vertices == 3)
+            render_tri(mesh->vertices, &mesh->faces[i]);
     }
 }
 
@@ -218,6 +221,61 @@ void render_quad(Vertex* vertices, Face *face)
 
     addPrim(&cdb->ot[otz], pf4);
     nextpri += sizeof(POLY_FT4);
+}
+
+void render_tri(Vertex* vertices, Face *face)
+{
+    int32_t otz, nclip;
+    POLY_FT3 *pf4;
+
+    // load first three vertices to GTE (reverse order from blender export)
+    gte_ldv3(&vertices[face->vertex_idx[2]].position,
+             &vertices[face->vertex_idx[1]].position,
+             &vertices[face->vertex_idx[0]].position);
+
+    // rotation, translation, perspective transformation
+    gte_rtpt();
+    // normal clip for backface culling
+    gte_nclip();
+    gte_stopz(&nclip);
+
+    if (nclip <= 0) return;
+
+    // average Z for depth sorting
+    gte_avsz3();
+    gte_stotz(&otz);
+
+    if (otz >= OTLEN) return;
+
+    pf4 = (POLY_FT3*)nextpri;
+    setPolyFT3(pf4);
+
+    /*
+        Poly F3
+        0
+        +
+        | \
+        +--+
+        1  2
+    */
+
+    // set projected vertices to the primitive
+    gte_stsxy0(&pf4->x0);
+    gte_stsxy1(&pf4->x1);
+    gte_stsxy2(&pf4->x2);
+
+    setUV3(pf4, texture.u + vertices[face->vertex_idx[2]].uv.vx, texture.v + vertices[face->vertex_idx[2]].uv.vy,
+                texture.u + vertices[face->vertex_idx[1]].uv.vx, texture.v + vertices[face->vertex_idx[1]].uv.vy,
+                texture.u + vertices[face->vertex_idx[0]].uv.vx, texture.v + vertices[face->vertex_idx[0]].uv.vy);
+
+    pf4->tpage = texture.tpage;
+    pf4->clut = texture.clut;
+    setRGB0(pf4, face->color.r,
+                 face->color.g,
+                 face->color.b);
+
+    addPrim(&cdb->ot[otz], pf4);
+    nextpri += sizeof(POLY_FT3);
 }
 
 void rdr_cleanup()
