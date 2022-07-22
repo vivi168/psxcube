@@ -52,7 +52,7 @@ void rdr_init()
     rotation.pad = 0;
 
     translation.vx = 0;
-    translation.vy = 0;
+    translation.vy = 50;
     translation.vz = (SCREEN_Z * 3) / 2;
     translation.pad = 0;
 
@@ -195,11 +195,10 @@ void rdr_render_mesh(Mesh *mesh)
             gte_rtps();
             gte_stsxy(&pf4->x2);
 
-            // TODO use UVs from mesh
-            setUV4(pf4, texture.u + mesh->vertices[mesh->faces[i].vertex_idx[0]].uv.vx, texture.v + mesh->vertices[mesh->faces[i].vertex_idx[0]].uv.vy,
-                        texture.u + mesh->vertices[mesh->faces[i].vertex_idx[1]].uv.vx, texture.v + mesh->vertices[mesh->faces[i].vertex_idx[1]].uv.vy,
-                        texture.u + mesh->vertices[mesh->faces[i].vertex_idx[3]].uv.vx, texture.v + mesh->vertices[mesh->faces[i].vertex_idx[3]].uv.vy,
-                        texture.u + mesh->vertices[mesh->faces[i].vertex_idx[2]].uv.vx, texture.v + mesh->vertices[mesh->faces[i].vertex_idx[2]].uv.vy);
+            setUV4(pf4, texture.u + mesh->vertices[mesh->faces[i].vertex_idx[3]].uv.vx, texture.v + mesh->vertices[mesh->faces[i].vertex_idx[3]].uv.vy,
+                        texture.u + mesh->vertices[mesh->faces[i].vertex_idx[2]].uv.vx, texture.v + mesh->vertices[mesh->faces[i].vertex_idx[2]].uv.vy,
+                        texture.u + mesh->vertices[mesh->faces[i].vertex_idx[0]].uv.vx, texture.v + mesh->vertices[mesh->faces[i].vertex_idx[0]].uv.vy,
+                        texture.u + mesh->vertices[mesh->faces[i].vertex_idx[1]].uv.vx, texture.v + mesh->vertices[mesh->faces[i].vertex_idx[1]].uv.vy);
 
             pf4->tpage = texture.tpage;
             pf4->clut = texture.clut;
