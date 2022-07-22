@@ -38,8 +38,8 @@ MATRIX transform;
 
 void create_texture();
 void render_mesh(Mesh*);
-void render_quad();
-void render_tri();
+void render_quad(Vertex*, Face*);
+void render_tri(Vertex*, Face*);
 
 void rdr_init()
 {
@@ -165,7 +165,7 @@ void render_mesh(Mesh *mesh)
 void render_quad(Vertex* vertices, Face *face)
 {
     int32_t otz, nclip;
-    POLY_FT4 *pf4;
+    POLY_FT4 *poly;
 
     // load first three vertices to GTE (reverse order from blender export)
     gte_ldv3(&vertices[face->vertex_idx[3]].position,
@@ -186,8 +186,8 @@ void render_quad(Vertex* vertices, Face *face)
 
     if (otz >= OTLEN) return;
 
-    pf4 = (POLY_FT4*)nextpri;
-    setPolyFT4(pf4);
+    poly = (POLY_FT4*)nextpri;
+    setPolyFT4(poly);
 
     /*
         Poly F4
@@ -199,34 +199,34 @@ void render_quad(Vertex* vertices, Face *face)
     */
 
     // set projected vertices to the primitive
-    gte_stsxy0(&pf4->x0);
-    gte_stsxy1(&pf4->x1);
-    gte_stsxy2(&pf4->x3);
+    gte_stsxy0(&poly->x0);
+    gte_stsxy1(&poly->x1);
+    gte_stsxy2(&poly->x3);
 
     // compute last projected vertice
     gte_ldv0(&vertices[face->vertex_idx[0]].position);
     gte_rtps();
-    gte_stsxy(&pf4->x2);
+    gte_stsxy(&poly->x2);
 
-    setUV4(pf4, texture.u + vertices[face->vertex_idx[3]].uv.vx, texture.v + vertices[face->vertex_idx[3]].uv.vy,
-                texture.u + vertices[face->vertex_idx[2]].uv.vx, texture.v + vertices[face->vertex_idx[2]].uv.vy,
-                texture.u + vertices[face->vertex_idx[0]].uv.vx, texture.v + vertices[face->vertex_idx[0]].uv.vy,
-                texture.u + vertices[face->vertex_idx[1]].uv.vx, texture.v + vertices[face->vertex_idx[1]].uv.vy);
+    setUV4(poly, texture.u + vertices[face->vertex_idx[3]].uv.vx, texture.v + vertices[face->vertex_idx[3]].uv.vy,
+                 texture.u + vertices[face->vertex_idx[2]].uv.vx, texture.v + vertices[face->vertex_idx[2]].uv.vy,
+                 texture.u + vertices[face->vertex_idx[0]].uv.vx, texture.v + vertices[face->vertex_idx[0]].uv.vy,
+                 texture.u + vertices[face->vertex_idx[1]].uv.vx, texture.v + vertices[face->vertex_idx[1]].uv.vy);
 
-    pf4->tpage = texture.tpage;
-    pf4->clut = texture.clut;
-    setRGB0(pf4, face->color.r,
+    poly->tpage = texture.tpage;
+    poly->clut = texture.clut;
+    setRGB0(poly, face->color.r,
                  face->color.g,
                  face->color.b);
 
-    addPrim(&cdb->ot[otz], pf4);
+    addPrim(&cdb->ot[otz], poly);
     nextpri += sizeof(POLY_FT4);
 }
 
 void render_tri(Vertex* vertices, Face *face)
 {
     int32_t otz, nclip;
-    POLY_FT3 *pf4;
+    POLY_FT3 *poly;
 
     // load first three vertices to GTE (reverse order from blender export)
     gte_ldv3(&vertices[face->vertex_idx[2]].position,
@@ -247,34 +247,25 @@ void render_tri(Vertex* vertices, Face *face)
 
     if (otz >= OTLEN) return;
 
-    pf4 = (POLY_FT3*)nextpri;
-    setPolyFT3(pf4);
-
-    /*
-        Poly F3
-        0
-        +
-        | \
-        +--+
-        1  2
-    */
+    poly = (POLY_FT3*)nextpri;
+    setPolyFT3(poly);
 
     // set projected vertices to the primitive
-    gte_stsxy0(&pf4->x0);
-    gte_stsxy1(&pf4->x1);
-    gte_stsxy2(&pf4->x2);
+    gte_stsxy0(&poly->x0);
+    gte_stsxy1(&poly->x1);
+    gte_stsxy2(&poly->x2);
 
-    setUV3(pf4, texture.u + vertices[face->vertex_idx[2]].uv.vx, texture.v + vertices[face->vertex_idx[2]].uv.vy,
-                texture.u + vertices[face->vertex_idx[1]].uv.vx, texture.v + vertices[face->vertex_idx[1]].uv.vy,
-                texture.u + vertices[face->vertex_idx[0]].uv.vx, texture.v + vertices[face->vertex_idx[0]].uv.vy);
+    setUV3(poly, texture.u + vertices[face->vertex_idx[2]].uv.vx, texture.v + vertices[face->vertex_idx[2]].uv.vy,
+                 texture.u + vertices[face->vertex_idx[1]].uv.vx, texture.v + vertices[face->vertex_idx[1]].uv.vy,
+                 texture.u + vertices[face->vertex_idx[0]].uv.vx, texture.v + vertices[face->vertex_idx[0]].uv.vy);
 
-    pf4->tpage = texture.tpage;
-    pf4->clut = texture.clut;
-    setRGB0(pf4, face->color.r,
+    poly->tpage = texture.tpage;
+    poly->clut = texture.clut;
+    setRGB0(poly, face->color.r,
                  face->color.g,
                  face->color.b);
 
-    addPrim(&cdb->ot[otz], pf4);
+    addPrim(&cdb->ot[otz], poly);
     nextpri += sizeof(POLY_FT3);
 }
 
