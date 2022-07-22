@@ -36,8 +36,10 @@ SVECTOR rotation;
 VECTOR translation;
 MATRIX transform;
 
-void rdr_create_texture();
-void rdr_render_mesh(Mesh*);
+void create_texture();
+void render_mesh(Mesh*);
+void render_quad();
+void render_tri();
 
 void rdr_init()
 {
@@ -76,7 +78,7 @@ void rdr_init()
     cdb = &db[0];
     nextpri = cdb->pribuff;
 
-    rdr_create_texture();
+    create_texture();
 
     FntLoad( 960, 0 );
     FntOpen( 0, 8, 320, 224, 0, 100 );
@@ -84,7 +86,7 @@ void rdr_init()
     SetDispMask(1);
 }
 
-void rdr_create_texture()
+void create_texture()
 {
     uint32_t file_size;
     int i;
@@ -139,77 +141,83 @@ void rdr_render(Mesh *mesh, SVECTOR *rotvec)
     RotMatrix(&rotation, &transform);
     TransMatrix(&transform, &translation);
 
-    rdr_render_mesh(mesh);
+    render_mesh(mesh);
 
     FntPrint("CUBE DEMO");
     FntFlush(-1);
 }
 
-void rdr_render_mesh(Mesh *mesh)
+void render_mesh(Mesh *mesh)
 {
-    long p, otz;
-    int i, nclip;
-    POLY_FT4 *pf4;
+    int i;
 
     gte_SetRotMatrix(&transform);
     gte_SetTransMatrix(&transform);
 
     for (i = 0; i < mesh->num_faces; i ++) {
-        // load first three vertices to GTE (reverse order from blender export)
-        gte_ldv3(&mesh->vertices[mesh->faces[i].vertex_idx[3]].position,
-                 &mesh->vertices[mesh->faces[i].vertex_idx[2]].position,
-                 &mesh->vertices[mesh->faces[i].vertex_idx[1]].position);
-
-        // rotation, translation, perspective transformation
-        gte_rtpt();
-        // normal clip for backface culling
-        gte_nclip();
-        gte_stopz(&nclip);
-
-        if (nclip <= 0) continue;
-
-        // average Z for depth sorting
-        gte_avsz4();
-        gte_stotz(&otz);
-
-        if ((otz > 0) && (otz < OTLEN)) {
-            pf4 = (POLY_FT4*)nextpri;
-            setPolyFT4(pf4);
-
-            /*
-                Poly F4
-                0  2
-                +--+
-                |  |
-                +--+
-                1  3
-            */
-
-            // set projected vertices to the primitive
-            gte_stsxy0(&pf4->x0);
-            gte_stsxy1(&pf4->x1);
-            gte_stsxy2(&pf4->x3);
-
-            // compute last projected vertice
-            gte_ldv0(&mesh->vertices[mesh->faces[i].vertex_idx[0]].position);
-            gte_rtps();
-            gte_stsxy(&pf4->x2);
-
-            setUV4(pf4, texture.u + mesh->vertices[mesh->faces[i].vertex_idx[3]].uv.vx, texture.v + mesh->vertices[mesh->faces[i].vertex_idx[3]].uv.vy,
-                        texture.u + mesh->vertices[mesh->faces[i].vertex_idx[2]].uv.vx, texture.v + mesh->vertices[mesh->faces[i].vertex_idx[2]].uv.vy,
-                        texture.u + mesh->vertices[mesh->faces[i].vertex_idx[0]].uv.vx, texture.v + mesh->vertices[mesh->faces[i].vertex_idx[0]].uv.vy,
-                        texture.u + mesh->vertices[mesh->faces[i].vertex_idx[1]].uv.vx, texture.v + mesh->vertices[mesh->faces[i].vertex_idx[1]].uv.vy);
-
-            pf4->tpage = texture.tpage;
-            pf4->clut = texture.clut;
-            setRGB0(pf4, mesh->faces[i].color.r,
-                         mesh->faces[i].color.g,
-                         mesh->faces[i].color.b);
-
-            addPrim(&cdb->ot[otz], pf4);
-            nextpri += sizeof(POLY_FT4);
-        }
+        render_quad(mesh->vertices, &mesh->faces[i]);
     }
+}
+
+void render_quad(Vertex* vertices, Face *face)
+{
+    int32_t otz, nclip;
+    POLY_FT4 *pf4;
+
+    // load first three vertices to GTE (reverse order from blender export)
+    gte_ldv3(&vertices[face->vertex_idx[3]].position,
+             &vertices[face->vertex_idx[2]].position,
+             &vertices[face->vertex_idx[1]].position);
+
+    // rotation, translation, perspective transformation
+    gte_rtpt();
+    // normal clip for backface culling
+    gte_nclip();
+    gte_stopz(&nclip);
+
+    if (nclip <= 0) return;
+
+    // average Z for depth sorting
+    gte_avsz4();
+    gte_stotz(&otz);
+
+    if (otz >= OTLEN) return;
+
+    pf4 = (POLY_FT4*)nextpri;
+    setPolyFT4(pf4);
+
+    /*
+        Poly F4
+        0  2
+        +--+
+        |  |
+        +--+
+        1  3
+    */
+
+    // set projected vertices to the primitive
+    gte_stsxy0(&pf4->x0);
+    gte_stsxy1(&pf4->x1);
+    gte_stsxy2(&pf4->x3);
+
+    // compute last projected vertice
+    gte_ldv0(&vertices[face->vertex_idx[0]].position);
+    gte_rtps();
+    gte_stsxy(&pf4->x2);
+
+    setUV4(pf4, texture.u + vertices[face->vertex_idx[3]].uv.vx, texture.v + vertices[face->vertex_idx[3]].uv.vy,
+                texture.u + vertices[face->vertex_idx[2]].uv.vx, texture.v + vertices[face->vertex_idx[2]].uv.vy,
+                texture.u + vertices[face->vertex_idx[0]].uv.vx, texture.v + vertices[face->vertex_idx[0]].uv.vy,
+                texture.u + vertices[face->vertex_idx[1]].uv.vx, texture.v + vertices[face->vertex_idx[1]].uv.vy);
+
+    pf4->tpage = texture.tpage;
+    pf4->clut = texture.clut;
+    setRGB0(pf4, face->color.r,
+                 face->color.g,
+                 face->color.b);
+
+    addPrim(&cdb->ot[otz], pf4);
+    nextpri += sizeof(POLY_FT4);
 }
 
 void rdr_cleanup()

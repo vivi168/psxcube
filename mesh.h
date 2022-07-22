@@ -17,9 +17,6 @@ typedef struct face_t {
 } Face;
 
 typedef struct mesh_t {
-    SVECTOR* vertices_old;
-    CVECTOR* colors_old;
-    unsigned int* indices;
     unsigned int num_faces;
     unsigned int num_vertices;
 
