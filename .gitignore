@@ -8,5 +8,6 @@ vendor/SDL2/*
 *.bin
 *.cue
 *.CPE
+*.ELF
 *.EXE
 *.OBJ

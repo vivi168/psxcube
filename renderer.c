@@ -143,7 +143,7 @@ void rdr_render(Mesh *mesh, SVECTOR *rotvec)
 
     render_mesh(mesh);
 
-    FntPrint("CUBE DEMO");
+    FntPrint("MODEL LOADER");
     FntFlush(-1);
 }
 

@@ -2,6 +2,10 @@
 #include <stdio.h>
 #include <libcd.h>
 
+#ifdef modern_toolchain
+#include "header.h"
+#endif
+
 #include "mesh.h"
 #include "renderer.h"
 
