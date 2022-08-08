@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <libcd.h>
 #include "io.h"

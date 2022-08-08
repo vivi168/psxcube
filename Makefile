@@ -34,7 +34,7 @@ LIB := \
 	$(PSYQ)/lib/libc2.a \
 	$(PSYQ)/lib/libapi.a
 
-CFLAGS := -g -O3 -G0 -ffreestanding $(INC)
+CFLAGS := -g -O3 -G0 -ffreestanding -nostdlib $(INC)
 CFLAGS += -Dmodern_toolchain
 LDFLAGS := -g -T linker.ld
 
