@@ -106,12 +106,19 @@ Face parse_face(char* line)
 	f.vertex_idx = malloc3(sizeof(unsigned int) * f.num_vertices);
 
 	// TODO: rearange here to fix winding order ?
-	f.vertex_idx[0] = numbers[1];
-	f.vertex_idx[1] = numbers[2];
-	f.vertex_idx[2] = numbers[3];
 
-	if (f.num_vertices == 4)
-		f.vertex_idx[3] = numbers[4];
+
+	if (f.num_vertices == 4) {
+        f.vertex_idx[0] = numbers[4];
+        f.vertex_idx[1] = numbers[3];
+        f.vertex_idx[2] = numbers[1];
+        f.vertex_idx[3] = numbers[2];
+    } else {
+        f.vertex_idx[0] = numbers[3];
+        f.vertex_idx[1] = numbers[2];
+        f.vertex_idx[2] = numbers[1];
+    }
+
 
 	return f;
 }

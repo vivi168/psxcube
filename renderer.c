@@ -168,9 +168,9 @@ void render_quad(Vertex* vertices, Face *face)
     POLY_FT4 *poly;
 
     // load first three vertices to GTE (reverse order from blender export)
-    gte_ldv3(&vertices[face->vertex_idx[3]].position,
-             &vertices[face->vertex_idx[2]].position,
-             &vertices[face->vertex_idx[1]].position);
+    gte_ldv3(&vertices[face->vertex_idx[0]].position,
+             &vertices[face->vertex_idx[1]].position,
+             &vertices[face->vertex_idx[2]].position);
 
     // rotation, translation, perspective transformation
     gte_rtpt();
@@ -201,17 +201,17 @@ void render_quad(Vertex* vertices, Face *face)
     // set projected vertices to the primitive
     gte_stsxy0(&poly->x0);
     gte_stsxy1(&poly->x1);
-    gte_stsxy2(&poly->x3);
+    gte_stsxy2(&poly->x2);
 
     // compute last projected vertice
-    gte_ldv0(&vertices[face->vertex_idx[0]].position);
+    gte_ldv0(&vertices[face->vertex_idx[3]].position);
     gte_rtps();
-    gte_stsxy(&poly->x2);
+    gte_stsxy(&poly->x3);
 
-    setUV4(poly, texture.u + vertices[face->vertex_idx[3]].uv.vx, texture.v + vertices[face->vertex_idx[3]].uv.vy,
+    setUV4(poly, texture.u + vertices[face->vertex_idx[0]].uv.vx, texture.v + vertices[face->vertex_idx[0]].uv.vy,
+                 texture.u + vertices[face->vertex_idx[1]].uv.vx, texture.v + vertices[face->vertex_idx[1]].uv.vy,
                  texture.u + vertices[face->vertex_idx[2]].uv.vx, texture.v + vertices[face->vertex_idx[2]].uv.vy,
-                 texture.u + vertices[face->vertex_idx[0]].uv.vx, texture.v + vertices[face->vertex_idx[0]].uv.vy,
-                 texture.u + vertices[face->vertex_idx[1]].uv.vx, texture.v + vertices[face->vertex_idx[1]].uv.vy);
+                 texture.u + vertices[face->vertex_idx[3]].uv.vx, texture.v + vertices[face->vertex_idx[3]].uv.vy);
 
     poly->tpage = texture.tpage;
     poly->clut = texture.clut;
@@ -229,9 +229,9 @@ void render_tri(Vertex* vertices, Face *face)
     POLY_FT3 *poly;
 
     // load first three vertices to GTE (reverse order from blender export)
-    gte_ldv3(&vertices[face->vertex_idx[2]].position,
+    gte_ldv3(&vertices[face->vertex_idx[0]].position,
              &vertices[face->vertex_idx[1]].position,
-             &vertices[face->vertex_idx[0]].position);
+             &vertices[face->vertex_idx[2]].position);
 
     // rotation, translation, perspective transformation
     gte_rtpt();
@@ -255,9 +255,9 @@ void render_tri(Vertex* vertices, Face *face)
     gte_stsxy1(&poly->x1);
     gte_stsxy2(&poly->x2);
 
-    setUV3(poly, texture.u + vertices[face->vertex_idx[2]].uv.vx, texture.v + vertices[face->vertex_idx[2]].uv.vy,
+    setUV3(poly, texture.u + vertices[face->vertex_idx[0]].uv.vx, texture.v + vertices[face->vertex_idx[0]].uv.vy,
                  texture.u + vertices[face->vertex_idx[1]].uv.vx, texture.v + vertices[face->vertex_idx[1]].uv.vy,
-                 texture.u + vertices[face->vertex_idx[0]].uv.vx, texture.v + vertices[face->vertex_idx[0]].uv.vy);
+                 texture.u + vertices[face->vertex_idx[2]].uv.vx, texture.v + vertices[face->vertex_idx[2]].uv.vy);
 
     poly->tpage = texture.tpage;
     poly->clut = texture.clut;
