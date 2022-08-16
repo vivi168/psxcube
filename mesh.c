@@ -1,11 +1,120 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "mesh.h"
 #include "io.h"
 
+#define MAX_DIGIT 10
+
 Mesh parsemesh(char* buffer, uint32_t size);
+
+int parse_single(char* line)
+{
+	char c;
+	int j = 0;
+	int k = 0;
+	char number[MAX_DIGIT] = { 0 };
+
+	while ((c = line[j++]) != '\0') {
+		if (isdigit(c))
+			number[k++] = c;
+	}
+
+	return atoi(number);
+}
+
+Vertex parse_vertex(char* line)
+{
+	Vertex v;
+
+	char c;
+	int num_read = 0;
+	int j = 0;
+	int k = 0;
+	char tmp_num[MAX_DIGIT] = { 0 };
+
+	// TODO: 3 position + 2 UV (3 normals missing)
+	// NEED bone ids, weights
+	// Two functions -> parse_vertex, parse_skinned_vertex
+	int numbers[5];
+	int n = 0;
+
+	while ((c = line[j++]) != '\0') {
+		if ((k == 0 && c == '-') || isdigit(c))
+			tmp_num[k++] = c;
+
+		if (isspace(c) && k > 0) {
+			numbers[n] = atoi(tmp_num);
+
+			n++;
+			k = 0;
+			memset(tmp_num, 0, MAX_DIGIT);
+		}
+	}
+
+	numbers[n] = atoi(tmp_num);
+
+	v.position.vx = numbers[0];
+	v.position.vy = numbers[1];
+	v.position.vz = numbers[2];
+	v.position.pad = 0;
+
+	v.uv.vx = numbers[3];
+	v.uv.vy = numbers[4];
+
+	return v;
+}
+
+Face parse_face(char* line)
+{
+	Face f;
+
+	char c;
+	int num_read = 0;
+	int j = 0;
+	int k = 0;
+	char tmp_num[MAX_DIGIT] = { 0 };
+
+	// face count + max 4 faces = 5
+	int numbers[5];
+	int n = 0;
+
+	// TODO add face color information to model
+	f.color.r = 255;
+	f.color.g = 255;
+	f.color.b = 255;
+
+	while ((c = line[j++]) != '\0') {
+		if ((k == 0 && c == '-') || isdigit(c))
+			tmp_num[k++] = c;
+
+		if (isspace(c) && k > 0) {
+			numbers[n] = atoi(tmp_num);
+
+			n++;
+			k = 0;
+			memset(tmp_num, 0, MAX_DIGIT);
+		}
+	}
+
+	numbers[n] = atoi(tmp_num);
+
+	f.num_vertices = numbers[0];
+
+	f.vertex_idx = malloc3(sizeof(unsigned int) * f.num_vertices);
+
+	// TODO: rearange here to fix winding order ?
+	f.vertex_idx[0] = numbers[1];
+	f.vertex_idx[1] = numbers[2];
+	f.vertex_idx[2] = numbers[3];
+
+	if (f.num_vertices == 4)
+		f.vertex_idx[3] = numbers[4];
+
+	return f;
+}
 
 Mesh mesh_load_from_file()
 {
@@ -32,84 +141,58 @@ Mesh mesh_load_from_file()
 
 Mesh parsemesh(char* buffer, uint32_t size) {
     Mesh m;
+	char line[100] = { 0 };
+	int line_no = 0;
+	int l = 0;
 
-    char *token;
-    char line[100] = {0};
-    int line_no = 0;
-    int l = 0;
-    int has_texture;
+	int vi = 0;
+	int fi = 0;
 
-    int vi = 0;
-    Face f;
-    int vc;
-    int fi = 0;
+	m.num_vertices = 0;
+	m.num_faces = 0;
 
-    uint32_t i;
+	for (long i = 0; i < size; i++) {
+		if (buffer[i] != '\n') {
+			line[l++] = buffer[i];
+			//printf("%c", buffer[i]);
+		}
 
-    for (i = 0; i < size; i++) {
+		else {
+			if (line_no == 0) {
+				// num vertices
+				m.num_vertices = parse_single(line);
+				m.vertices = malloc3(sizeof(Vertex) * m.num_vertices);
 
-        if (buffer[i] != '\n')
-            line[l++] = buffer[i];
-        else {
-            if (line_no == 0) {
-                // vertices count
-                token = strtok(line, " ");
-                token = strtok(NULL, " ");
-                m.num_vertices = atoi(token);
-                m.vertices = malloc3(sizeof(Vertex) * m.num_vertices);
-            } else if (line_no == 1) {
-                // faces count
-                token = strtok(line, " ");
-                token = strtok(NULL, " ");
-                m.num_faces = atoi(token);
-                m.faces = malloc3(sizeof(Vertex) * m.num_faces);
-            } else if (line_no == 2) {
-                // texture name
-                token = strtok(line, " ");
-                token = strtok(NULL, " ");
-                has_texture = strcmp(token, "none");
-                printf("texture: (%s) [%d]\n", token, has_texture);
-            } else if (line_no <= 2 + m.num_vertices) {
-                // vertices
-                token = strtok(line, " ");
-                m.vertices[vi].position.vx = atoi(token);
-                token = strtok(NULL, " ");
-                m.vertices[vi].position.vy = atoi(token);
-                token = strtok(NULL, " ");
-                m.vertices[vi].position.vz = atoi(token);
-                m.vertices[vi].position.pad = 0;
-                token = strtok(NULL, " ");
-                m.vertices[vi].uv.vx = atoi(token);
-                token = strtok(NULL, " ");
-                m.vertices[vi].uv.vy = atoi(token);
+				printf("vertices # %d\n", m.num_vertices);
+			}
+			else if (line_no == 1) {
+				// num faces
+				m.num_faces = parse_single(line);
+				m.faces = malloc3(sizeof(Face) * m.num_faces);
 
-                vi ++;
-            } else {
-                // faces
-                token = strtok(line, " ");
-                f.num_vertices = atoi(token);
-                f.vertex_idx = malloc(sizeof(unsigned int) * f.num_vertices);
+				printf("faces # %d\n", m.num_faces);
+			}
+			else if (line_no == 2) {
+				// texture name
+			}
+			else if (line_no < 3 + m.num_vertices) {
+				// read vertices
+				m.vertices[vi] = parse_vertex(line);
+				vi++;
+			}
+			else if (line_no < 3 + m.num_vertices + m.num_faces) {
+				// read faces
+				m.faces[fi] = parse_face(line);
+				fi++;
+			}
 
-                f.color.r = 255;
-                f.color.g = 255;
-                f.color.b = 255;
+			l = 0;
+			line_no++;
+			memset(line, 0, 100);
+		}
+	}
 
-                for (vc = 0; vc < f.num_vertices; vc++) {
-                    token = strtok(NULL, " ");
-                    f.vertex_idx[vc] = atoi(token);
-                }
-                memcpy(&m.faces[fi], &f, sizeof(Face));
-
-                fi ++;
-            }
-
-            l = 0;
-            line_no++;
-            memset(line, 0, 100);
-        }
-    }
-
-    return m;
+	return m;
 }
 
 void mesh_print_mesh(Mesh* m)
