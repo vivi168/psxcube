@@ -8,7 +8,7 @@
 #include "mesh.h"
 
 void rdr_init();
-void rdr_render(Mesh*, SVECTOR*);
+void rdr_render(ObjMesh*, SVECTOR*);
 void rdr_cleanup();
 
 unsigned int rdr_getticks();

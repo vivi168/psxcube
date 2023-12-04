@@ -6,128 +6,12 @@
 #include "mesh.h"
 #include "io.h"
 
-#define MAX_DIGIT 10
-
-Mesh parsemesh(char* buffer, uint32_t size);
-
-int parse_single(char* line)
+ObjMesh mesh_load_from_file()
 {
-	char c;
-	int j = 0;
-	int k = 0;
-	char number[MAX_DIGIT] = { 0 };
-
-	while ((c = line[j++]) != '\0') {
-		if (isdigit(c))
-			number[k++] = c;
-	}
-
-	return atoi(number);
-}
-
-Vertex parse_vertex(char* line)
-{
-	Vertex v;
-
-	char c;
-	int num_read = 0;
-	int j = 0;
-	int k = 0;
-	char tmp_num[MAX_DIGIT] = { 0 };
-
-	// TODO: 3 position + 2 UV (3 normals missing)
-	// NEED bone ids, weights
-	// Two functions -> parse_vertex, parse_skinned_vertex
-	int numbers[5];
-	int n = 0;
-
-	while ((c = line[j++]) != '\0') {
-		if ((k == 0 && c == '-') || isdigit(c))
-			tmp_num[k++] = c;
-
-		if (isspace(c) && k > 0) {
-			numbers[n] = atoi(tmp_num);
-
-			n++;
-			k = 0;
-			memset(tmp_num, 0, MAX_DIGIT);
-		}
-	}
-
-	numbers[n] = atoi(tmp_num);
-
-	v.position.vx = numbers[0];
-	v.position.vy = numbers[1];
-	v.position.vz = numbers[2];
-	v.position.pad = 0;
-
-	v.uv.vx = numbers[3];
-	v.uv.vy = numbers[4];
-
-	return v;
-}
-
-Face parse_face(char* line)
-{
-	Face f;
-
-	char c;
-	int num_read = 0;
-	int j = 0;
-	int k = 0;
-	char tmp_num[MAX_DIGIT] = { 0 };
-
-	// face count + max 4 faces = 5
-	int numbers[5];
-	int n = 0;
-
-	// TODO add face color information to model
-	f.color.r = 255;
-	f.color.g = 255;
-	f.color.b = 255;
-
-	while ((c = line[j++]) != '\0') {
-		if ((k == 0 && c == '-') || isdigit(c))
-			tmp_num[k++] = c;
-
-		if (isspace(c) && k > 0) {
-			numbers[n] = atoi(tmp_num);
-
-			n++;
-			k = 0;
-			memset(tmp_num, 0, MAX_DIGIT);
-		}
-	}
-
-	numbers[n] = atoi(tmp_num);
-
-	f.num_vertices = numbers[0];
-
-	f.vertex_idx = malloc3(sizeof(unsigned int) * f.num_vertices);
-
-	// TODO: rearange here to fix winding order ?
-
-
-	if (f.num_vertices == 4) {
-        f.vertex_idx[0] = numbers[4];
-        f.vertex_idx[1] = numbers[3];
-        f.vertex_idx[2] = numbers[1];
-        f.vertex_idx[3] = numbers[2];
-    } else {
-        f.vertex_idx[0] = numbers[3];
-        f.vertex_idx[1] = numbers[2];
-        f.vertex_idx[2] = numbers[1];
-    }
-
-
-	return f;
-}
-
-Mesh mesh_load_from_file()
-{
-    Mesh m;
-    uint32_t file_size;
-    int8_t *buff;
+    ObjMesh mesh;
+    unsigned long file_size;
+    unsigned char *buff;
+    int offset = 0, s;
 
     printf("[INFO]: loading mesh\n");
 
@@ -137,90 +21,71 @@ Mesh mesh_load_from_file()
         while(1);
     }
 
-    m = parsemesh(buff, file_size);
+    // header
+    s = sizeof(ObjHeader);
+    mesh.header = malloc3(s);
+    IO_memcpy(mesh.header, buff, s);
+    offset += s;
+
+    // vertices
+    s = sizeof(Vertex) * mesh.header->numVerts;
+    mesh.vertices = malloc(s);
+    IO_memcpy(mesh.vertices, buff + offset, s);
+    offset += s;
+
+    // triangles (indices * 3)
+    s = sizeof(unsigned int) * mesh.header->numTris * 3;
+    mesh.indices = malloc(s);
+    IO_memcpy(mesh.indices, buff + offset, s);
+    offset += s;
+
+    s = sizeof(Subset) * mesh.header->numSubsets;
+    mesh.subsets = malloc(s);
+    IO_memcpy(mesh.subsets, buff + offset, s);
 
     printf("[INFO]: Done reading mesh\n");
 
     free3(buff);
 
-    return m;
+    return mesh;
 }
 
-Mesh parsemesh(char* buffer, uint32_t size) {
-    Mesh m;
-	char line[100] = { 0 };
-	int line_no = 0;
-	int l = 0;
-
-	int vi = 0;
-	int fi = 0;
-
-	m.num_vertices = 0;
-	m.num_faces = 0;
-
-	for (long i = 0; i < size; i++) {
-		if (buffer[i] != '\n') {
-			line[l++] = buffer[i];
-			//printf("%c", buffer[i]);
-		}
-
-		else {
-			if (line_no == 0) {
-				// num vertices
-				m.num_vertices = parse_single(line);
-				m.vertices = malloc3(sizeof(Vertex) * m.num_vertices);
-
-				printf("vertices # %d\n", m.num_vertices);
-			}
-			else if (line_no == 1) {
-				// num faces
-				m.num_faces = parse_single(line);
-				m.faces = malloc3(sizeof(Face) * m.num_faces);
-
-				printf("faces # %d\n", m.num_faces);
-			}
-			else if (line_no == 2) {
-				// texture name
-			}
-			else if (line_no < 3 + m.num_vertices) {
-				// read vertices
-				m.vertices[vi] = parse_vertex(line);
-				vi++;
-			}
-			else if (line_no < 3 + m.num_vertices + m.num_faces) {
-				// read faces
-				m.faces[fi] = parse_face(line);
-				fi++;
-			}
-
-			l = 0;
-			line_no++;
-			memset(line, 0, 100);
-		}
-	}
-
-	return m;
-}
-
-void mesh_print_mesh(Mesh* m)
+void mesh_print_mesh(ObjMesh* mesh)
 {
-    int i, j;
-    printf("num vertices: %d\n", m->num_vertices);
+	printf("*** Obj Mesh ***\n*** Header ***\n");
+    printf("%d %d %d\n", mesh->header->numVerts, mesh->header->numTris, mesh->header->numSubsets);
 
-    for (i = 0; i < m->num_vertices; i++) {
-        printf("vertex #%d:\t[%d %d %d], [%d %d]\n", i,
-                                m->vertices[i].position.vx, m->vertices[i].position.vy, m->vertices[i].position.vz,
-                                m->vertices[i].uv.vx, m->vertices[i].uv.vy);
+    printf("*** Vertices ***\n");
+    for (int i = 0; i < mesh->header->numVerts; i++) {
+        printf("%hd %hd %hd (%hd %hd %hd) [%d %d]\n",
+                        mesh->vertices[i].position.vx,
+                        mesh->vertices[i].position.vy,
+                        mesh->vertices[i].position.vz,
+                        // normals
+                        mesh->vertices[i].normal.vx,
+                        mesh->vertices[i].normal.vy,
+                        mesh->vertices[i].normal.vz,
+                        // uvs
+                        mesh->vertices[i].uv.vx,
+                        mesh->vertices[i].uv.vy
+                        );
     }
 
-    printf("num faces: %d\n", m->num_faces);
+    printf("*** Triangles ***\n");
+    for (int i = 0; i < mesh->header->numTris * 3; i += 3) {
+        printf("%hd %hd %hd\n",
+               mesh->indices[i],
+               mesh->indices[i+1],
+               mesh->indices[i+2]
+               );
+    }
 
-
-    for (i = 0; i < m->num_faces; i++) {
-        printf("face #%d (%d):\t", i, m->faces[i].num_vertices);
-        for (j = 0; j < m->faces[i].num_vertices; j++) {
-            printf("%d ", m->faces[i].vertex_idx[j]);
-        }
-        printf("\n");
+    printf("*** Subsets ***\n");
+    for (int i = 0; i < mesh->header->numSubsets; i++) {
+        printf("%hd %hd %s\n",
+               mesh->subsets[i].start,
+               mesh->subsets[i].count,
+               mesh->subsets[i].name
+               );
     }
 }

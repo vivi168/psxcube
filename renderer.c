@@ -37,9 +37,8 @@ VECTOR translation;
 MATRIX transform;
 
 void create_texture();
-void render_mesh(Mesh*);
-void render_quad(Vertex*, Face*);
-void render_tri(Vertex*, Face*);
+void render_mesh(ObjMesh*);
+void add_tri(Vertex*, Vertex*, Vertex*);
 
 void rdr_init()
 {
@@ -130,7 +129,7 @@ void create_texture()
     free3(buff);
 }
 
-void rdr_render(Mesh *mesh, SVECTOR *rotvec)
+void rdr_render(ObjMesh *mesh, SVECTOR *rotvec)
 {
     ClearOTagR(cdb->ot, OTLEN);
 
@@ -147,91 +146,34 @@ void rdr_render(Mesh *mesh, SVECTOR *rotvec)
     FntFlush(-1);
 }
 
-void render_mesh(Mesh *mesh)
+void render_mesh(ObjMesh *mesh)
 {
     int i;
 
     gte_SetRotMatrix(&transform);
     gte_SetTransMatrix(&transform);
 
-    for (i = 0; i < mesh->num_faces; i ++) {
-        if (mesh->faces[i].num_vertices == 4)
-            render_quad(mesh->vertices, &mesh->faces[i]);
-        if (mesh->faces[i].num_vertices == 3)
-            render_tri(mesh->vertices, &mesh->faces[i]);
+    for (i = 0; i < mesh->header->numTris * 3; i += 3) {
+        int i1 = mesh->indices[i];
+        int i2 = mesh->indices[i+1];
+        int i3 = mesh->indices[i+2];
+
+        add_tri(&mesh->vertices[i1],
+                &mesh->vertices[i2],
+                &mesh->vertices[i3]
+                );
     }
 }
 
-void render_quad(Vertex* vertices, Face *face)
-{
-    int32_t otz, nclip;
-    POLY_FT4 *poly;
-
-    // load first three vertices to GTE (reverse order from blender export)
-    gte_ldv3(&vertices[face->vertex_idx[0]].position,
-             &vertices[face->vertex_idx[1]].position,
-             &vertices[face->vertex_idx[2]].position);
-
-    // rotation, translation, perspective transformation
-    gte_rtpt();
-    // normal clip for backface culling
-    gte_nclip();
-    gte_stopz(&nclip);
-
-    if (nclip <= 0) return;
-
-    // average Z for depth sorting
-    gte_avsz4();
-    gte_stotz(&otz);
-
-    if (otz >= OTLEN) return;
-
-    poly = (POLY_FT4*)nextpri;
-    setPolyFT4(poly);
-
-    /*
-        Poly F4
-        0  2
-        +--+
-        |  |
-        +--+
-        1  3
-    */
-
-    // set projected vertices to the primitive
-    gte_stsxy0(&poly->x0);
-    gte_stsxy1(&poly->x1);
-    gte_stsxy2(&poly->x2);
-
-    // compute last projected vertice
-    gte_ldv0(&vertices[face->vertex_idx[3]].position);
-    gte_rtps();
-    gte_stsxy(&poly->x3);
-
-    setUV4(poly, texture.u + vertices[face->vertex_idx[0]].uv.vx, texture.v + vertices[face->vertex_idx[0]].uv.vy,
-                 texture.u + vertices[face->vertex_idx[1]].uv.vx, texture.v + vertices[face->vertex_idx[1]].uv.vy,
-                 texture.u + vertices[face->vertex_idx[2]].uv.vx, texture.v + vertices[face->vertex_idx[2]].uv.vy,
-                 texture.u + vertices[face->vertex_idx[3]].uv.vx, texture.v + vertices[face->vertex_idx[3]].uv.vy);
-
-    poly->tpage = texture.tpage;
-    poly->clut = texture.clut;
-    setRGB0(poly, face->color.r,
-                 face->color.g,
-                 face->color.b);
-
-    addPrim(&cdb->ot[otz], poly);
-    nextpri += sizeof(POLY_FT4);
-}
-
-void render_tri(Vertex* vertices, Face *face)
+void add_tri(Vertex* v1, Vertex* v2, Vertex* v3)
 {
     int32_t otz, nclip;
     POLY_FT3 *poly;
 
     // load first three vertices to GTE (reverse order from blender export)
-    gte_ldv3(&vertices[face->vertex_idx[0]].position,
-             &vertices[face->vertex_idx[1]].position,
-             &vertices[face->vertex_idx[2]].position);
+    gte_ldv3(&v1->position,
+             &v2->position,
+             &v3->position);
 
     // rotation, translation, perspective transformation
     gte_rtpt();
@@ -255,24 +197,20 @@ void render_tri(Vertex* vertices, Face *face)
     gte_stsxy1(&poly->x1);
     gte_stsxy2(&poly->x2);
 
-    setUV3(poly, texture.u + vertices[face->vertex_idx[0]].uv.vx, texture.v + vertices[face->vertex_idx[0]].uv.vy,
-                 texture.u + vertices[face->vertex_idx[1]].uv.vx, texture.v + vertices[face->vertex_idx[1]].uv.vy,
-                 texture.u + vertices[face->vertex_idx[2]].uv.vx, texture.v + vertices[face->vertex_idx[2]].uv.vy);
+    setUV3(poly, texture.u + v1->uv.vx, texture.v + v1->uv.vy,
+                 texture.u + v2->uv.vx, texture.v + v2->uv.vy,
+                 texture.u + v3->uv.vx, texture.v + v3->uv.vy);
 
     poly->tpage = texture.tpage;
     poly->clut = texture.clut;
-    setRGB0(poly, face->color.r,
-                 face->color.g,
-                 face->color.b);
+    setRGB0(poly, 255,
+                 255,
+                 255);
 
     addPrim(&cdb->ot[otz], poly);
     nextpri += sizeof(POLY_FT3);
 }
 
-void rdr_cleanup()
-{
-    // TODO
-}
 
 unsigned int rdr_getticks()
 {

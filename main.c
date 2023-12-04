@@ -16,7 +16,7 @@ char heap[HEAP_SIZE];
 
 int quit;
 
-Mesh cube;
+ObjMesh cube;
 
 SVECTOR rotvec;
 
@@ -83,8 +83,6 @@ int main(int argc, char** argv)
     printf("[INFO]: init done !\n");
 
     mainloop();
-
-    rdr_cleanup();
 
     return 0;
 }

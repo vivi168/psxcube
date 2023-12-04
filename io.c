@@ -3,6 +3,17 @@
 #include <libcd.h>
 #include "io.h"
 
+void *IO_memcpy(void *restrict dest, const void *restrict src, int count)
+{
+    unsigned char       *_dest = (unsigned char *) dest;
+    const unsigned char *_src  = (const unsigned char *) src;
+
+    for (; count; count--)
+        *(_dest++) = *(_src++);
+
+    return dest;
+}
+
 char* load_file(char* filename, u_long *size)
 {
     CdlFILE file;
