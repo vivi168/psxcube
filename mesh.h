@@ -25,13 +25,13 @@ typedef struct subset_t {
 } Subset;
 
 typedef struct obj_mesh_t {
-    ObjHeader* header;
+    ObjHeader header;
     Vertex* vertices;
     unsigned int* indices;
     Subset* subsets;
 } ObjMesh;
 
-ObjMesh mesh_load_from_file();
+void read_objmesh(ObjMesh*);
 void mesh_print_mesh(ObjMesh*);
 
 #endif

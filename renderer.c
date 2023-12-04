@@ -153,7 +153,7 @@ void render_mesh(ObjMesh *mesh)
     gte_SetRotMatrix(&transform);
     gte_SetTransMatrix(&transform);
 
-    for (i = 0; i < mesh->header->numTris * 3; i += 3) {
+    for (i = 0; i < mesh->header.numTris * 3; i += 3) {
         int i1 = mesh->indices[i];
         int i2 = mesh->indices[i+1];
         int i3 = mesh->indices[i+2];
