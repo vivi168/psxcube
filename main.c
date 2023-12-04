@@ -43,7 +43,7 @@ void process_input()
 
 void init_cube()
 {
-    read_objmesh(&cube);
+    read_objmesh("\\CUBE.M3D;1", &cube);
     mesh_print_mesh(&cube);
 
     printf("[INFO]: cube init done !\n");

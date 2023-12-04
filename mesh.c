@@ -6,7 +6,7 @@
 #include "mesh.h"
 #include "io.h"
 
-void read_objmesh(ObjMesh* mesh)
+void read_objmesh(const char* filename, ObjMesh* mesh)
 {
     unsigned long file_size;
     unsigned char *buff;
@@ -14,7 +14,7 @@ void read_objmesh(ObjMesh* mesh)
 
     printf("[INFO]: loading mesh\n");
 
-    buff = load_file("\\CUBE.M3D;1", &file_size);
+    buff = load_file(filename, &file_size);
     if (buff == NULL) {
         printf("[ERROR]: error while loading model file\n");
         while(1);

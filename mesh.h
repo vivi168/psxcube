@@ -31,7 +31,7 @@ typedef struct obj_mesh_t {
     Subset* subsets;
 } ObjMesh;
 
-void read_objmesh(ObjMesh*);
+void read_objmesh(const char* filename, ObjMesh*);
 void mesh_print_mesh(ObjMesh*);
 
 #endif
