@@ -106,7 +106,7 @@ class Subset:
 
 class Mesh:
     SCALE = 75
-    SCALE_12 = 4096
+    ONE = 4096
     def __init__(self):
         self.vertices = []
         self.tris = []
@@ -147,9 +147,9 @@ class Mesh:
                 elif line.startswith('vn '):
                     data = parse.search('vn {nx:g} {ny:g} {nz:g}', line)
                     # TODO: transform
-                    x = data['nx'] * Mesh.SCALE_12
-                    x = data['ny'] * Mesh.SCALE_12
-                    x = data['nz'] * Mesh.SCALE_12
+                    x = data['nx'] * Mesh.ONE
+                    x = data['ny'] * Mesh.ONE
+                    x = data['nz'] * Mesh.ONE
                     normals.append(Vec3(x, y, z))
 
                 elif line.startswith('usemtl'):
@@ -210,7 +210,7 @@ class Mesh:
 
         print('*** Header ***')
         print(len(self.vertices), len(self.tris), len(self.subsets))
-        data += struct.pack('<iii', len(self.vertices), len(self.tris), len(self.subsets))
+        data += struct.pack('<III', len(self.vertices), len(self.tris), len(self.subsets))
 
         print('*** Vertices ***')
         for v in self.vertices:

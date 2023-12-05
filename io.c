@@ -5,11 +5,11 @@
 
 void *IO_memcpy(void *restrict dest, const void *restrict src, int count)
 {
-    unsigned char       *_dest = (unsigned char *) dest;
-    const unsigned char *_src  = (const unsigned char *) src;
+    unsigned char       *pdest = (unsigned char *) dest;
+    const unsigned char *psrc  = (const unsigned char *) src;
 
     for (; count; count--)
-        *(_dest++) = *(_src++);
+        *(pdest++) = *(psrc++);
 
     return dest;
 }

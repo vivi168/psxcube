@@ -17,6 +17,7 @@ char heap[HEAP_SIZE];
 int quit;
 
 ObjMesh cube;
+MD5Model cubeguy;
 
 SVECTOR rotvec;
 
@@ -45,6 +46,9 @@ void init_cube()
 {
     read_objmesh("\\CUBE.M3D;1", &cube);
     mesh_print_mesh(&cube);
+
+    read_md5model("\\CUBEGUY.MD5M;1", &cubeguy);
+
 
     printf("[INFO]: cube init done !\n");
 }

@@ -54,6 +54,7 @@
       <file name="MAIN.EXE" type="data"/>
       <file name="CUBE.TIM" type="data" source="assets/CUBE.TIM"/>
       <file name="CUBE.M3D" type="data" source="assets/CUBE.M3D"/>
+      <file name="CUBEGUY.MD5M" type="data" source="assets/CUBEGUY.MD5M"/>
 
       <!-- Lastly, some dummy sectors must always be placed at the -->
       <!-- end of the disc image. It must be a pretty large one to -->
