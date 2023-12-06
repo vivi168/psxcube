@@ -292,7 +292,13 @@ class MD5Model:
                             mesh.verts = [None] * mesh.numVerts
                         elif meshLine.startswith('vert'):
                             vertData = parse.search('vert {idx:d} ( {s:g} {t:g} ) {sw:d} {cw:d}', meshLine)
-                            st = Vec2(vertData['s'], vertData['t'])
+                            # TODO: determine image size
+                            tex_w = 96
+                            tex_h = 64
+                            u = round(vertData['s'] * tex_w)
+                            v = round((1 - vertData['t']) * tex_h)
+                            st = Vec2(u, v)
+                            print('TEXTURE {} {}'.format(u, v));
                             mesh.verts[vertData['idx']] = MD5Vertex(
                                 st,
                                 vertData['sw'],

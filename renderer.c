@@ -42,7 +42,7 @@ void rdr_init()
     ResetGraph(0);
     InitGeom();
 
-    int sc = 75;
+    int sc = 35;
     setVector(&scale, sc, sc, sc);
     setVector(&rotation, 0, 0, 0);
     setVector(&translation, 0, 50, (SCREEN_Z * 3) / 2);

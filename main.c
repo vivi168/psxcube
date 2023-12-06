@@ -45,8 +45,8 @@ void init_cube()
     read_md5model("\\CUBEGUY.MD5M;1", &cubeguy);
     read_md5anim("\\RUNNING.MD5A;1", &running);
 
-    prepare_mesh(&cubeguy, running.frameJoints[7], &cubeguy_mesh);
-    mesh_print_mesh(&cubeguy_mesh);
+    prepare_mesh(&cubeguy, running.frameJoints[3], &cubeguy_mesh);
+    // mesh_print_mesh(&cubeguy_mesh);
 
     printf("[INFO]: cube init done !\n");
 }
@@ -64,7 +64,7 @@ void mainloop()
         iptm_poll_events();
         process_input();
 
-        rdr_render(&cube, &rotvec);
+        rdr_render(&cubeguy_mesh, &rotvec);
         rdr_delay(frame_start);
     }
 }
