@@ -1,7 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <libcd.h>
-#include "io.h"
+#include "stdafx.h"
 
 void *IO_memcpy(void *restrict dest, const void *restrict src, int count)
 {

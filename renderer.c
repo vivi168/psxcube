@@ -1,10 +1,4 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <inline_c.h>
-
-#include "types.h"
-#include "io.h"
-#include "renderer.h"
+#include "stdafx.h"
 
 #define SCREEN_W 320
 #define SCREEN_H 240

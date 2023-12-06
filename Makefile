@@ -39,7 +39,7 @@ CFLAGS := -g -O2 -G0 -ffreestanding -nostdlib -mno-unaligned-access -Wall -Wextr
 CFLAGS += -Dmodern_toolchain
 LDFLAGS := -T linker.ld
 
-SRC := input.c io.c main.c mesh.c renderer.c
+SRC := stdafx.c input.c io.c main.c mesh.c renderer.c linalg.c
 
 OBJ := $(SRC:.c=.o)
 

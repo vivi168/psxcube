@@ -1,7 +1,4 @@
-#include <stdio.h>
-#include <sys/types.h>
-#include "input.h"
-#include <libapi.h>
+#include "stdafx.h"
 
 typedef struct _PADTYPE
 {

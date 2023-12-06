@@ -1,10 +1,4 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-
-#include "mesh.h"
-#include "io.h"
+#include "stdafx.h"
 
 void read_objmesh(const char* filename, ObjMesh* mesh)
 {

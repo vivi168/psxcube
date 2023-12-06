@@ -1,9 +1,6 @@
 #ifndef MESH_H
 #define MESH_H
 
-#include "types.h"
-#include <libgte.h>
-
 typedef char STRING20[20];
 
 typedef struct obj_header_t {
@@ -41,16 +38,7 @@ void mesh_print_mesh(ObjMesh*);
     // MD5
 // ****************
 
-enum {
-    X = 0, Y, Z, W
-};
 
-typedef int FLOAT;
-typedef int DOUBLE;
-
-typedef FLOAT vec2[2];
-typedef FLOAT vec3[3];
-typedef FLOAT quat[4];
 
 typedef struct md5_vertex_t {
     vec2 st; // UV

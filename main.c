@@ -1,15 +1,8 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <libcd.h>
+#include "stdafx.h"
 
 #ifdef modern_toolchain
 #include "header.h"
 #endif
-
-#include "mesh.h"
-#include "renderer.h"
-
-#include "input.h"
 
 #define HEAP_SIZE (1024 * 1024)
 char heap[HEAP_SIZE];
