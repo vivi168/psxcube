@@ -10,6 +10,7 @@ char heap[HEAP_SIZE];
 int quit;
 
 ObjMesh cube;
+ObjMesh cubeguy_mesh;
 MD5Model cubeguy;
 MD5Anim running;
 
@@ -44,6 +45,8 @@ void init_cube()
     read_md5model("\\CUBEGUY.MD5M;1", &cubeguy);
     read_md5anim("\\RUNNING.MD5A;1", &running);
 
+    prepare_mesh(&cubeguy, running.frameJoints[7], &cubeguy_mesh);
+    mesh_print_mesh(&cubeguy_mesh);
 
     printf("[INFO]: cube init done !\n");
 }

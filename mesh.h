@@ -108,7 +108,7 @@ typedef struct md5_anim_info_t {
 void read_md5model(const char* filename, MD5Model* model);
 void read_md5anim(const char* filename, MD5Anim* anim);
 
-void prepare_obj_mesh(const MD5Model* model, const MD5Joint* joints, ObjMesh* mesh);
+void prepare_mesh(const MD5Model* model, const MD5Joint* joints, ObjMesh* mesh);
 
 void animate(const MD5Anim* anim, MD5AnimInfo* animInfo, int dt);
 

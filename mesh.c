@@ -231,3 +231,74 @@ void read_md5anim(const char* filename, MD5Anim* anim)
     free3(buff);
 }
 
+void prepare_vertices(const MD5Mesh* mesh, const MD5Joint* joints, Vertex** vertices, const int offset)
+{
+    for (int k = 0; k < mesh->header.numVerts; k++) {
+        MD5Vertex* v = &mesh->vertices[k];
+        vec3 finalPos = { 0, 0, 0 };
+
+        for (int i = 0; i < v->countWeight; i++) {
+            MD5Weight* w = &mesh->weights[v->startWeight + i];
+            const MD5Joint* joint = &joints[w->jointIndex];
+
+            vec3 wv;
+            quat_rotate_point(joint->orient, w->pos, wv);
+
+            finalPos[X] += FixedMulFixed((joint->pos[X] + wv[X]), w->bias);
+            finalPos[Y] += FixedMulFixed((joint->pos[Y] + wv[Y]), w->bias);
+            finalPos[Z] += FixedMulFixed((joint->pos[Z] + wv[Z]), w->bias);
+        }
+
+        (*vertices)[k + offset].position.vx = finalPos[X];
+        (*vertices)[k + offset].position.vy = finalPos[Z];
+        (*vertices)[k + offset].position.vz = -finalPos[Y];
+        (*vertices)[k + offset].position.pad = 0;
+
+        setVector(&(*vertices)[k + offset].normal, 0, 0, 0);
+
+        (*vertices)[k + offset].uv.vx = v->st[X];
+        (*vertices)[k + offset].uv.vy = v->st[Y];
+    }
+}
+
+void prepare_mesh(const MD5Model* model, const MD5Joint* joints, ObjMesh* mesh)
+{
+    int numVerts = 0;
+    int numTris = 0;
+    int start = 0;
+
+    mesh->header.numSubsets = model->header.numMeshes;
+    mesh->subsets = malloc3(sizeof(Subset) * mesh->header.numSubsets);
+
+    for (int i = 0; i < model->header.numMeshes; i++) {
+        numVerts += model->meshes[i].header.numVerts;
+        numTris += model->meshes[i].header.numTris;
+
+        mesh->subsets[i].start = start;
+        mesh->subsets[i].count = model->meshes[i].header.numTris * 3;
+        IO_memcpy(mesh->subsets[i].name, model->meshes[i].name, sizeof(STRING20));
+
+        start += model->meshes[i].header.numTris * 3;
+    }
+
+    mesh->header.numVerts = numVerts;
+    mesh->header.numTris = numTris;
+
+    mesh->vertices = malloc3(sizeof(Vertex) * numVerts);
+    mesh->indices = malloc3(sizeof(unsigned int) * numTris * 3);
+
+    int vertOffset = 0;
+    int triOffset = 0;
+    for (int i = 0; i < model->header.numMeshes; i++) {
+        prepare_vertices(&model->meshes[i], joints, &mesh->vertices, vertOffset);
+
+        for (int t = 0; t < model->meshes[i].header.numTris * 3; t++) {
+            mesh->indices[triOffset + t] = model->meshes[i].indices[t] + vertOffset;
+        }
+
+        vertOffset += model->meshes[i].header.numVerts;
+        triOffset += model->meshes[i].header.numTris * 3;
+    }
+}
+
+

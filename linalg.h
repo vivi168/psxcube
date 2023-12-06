@@ -2,7 +2,9 @@
 #define LINALG_H
 
 #define SCALE 12
+#ifndef ONE
 #define ONE (1 << SCALE)
+#endif
 
 #define FloatToFixed(x) ((int16_t)((x) * (float)(1 << SCALE)))
 #define FixedToFloat(x) ((float)(x) / (float)(1 << SCALE))
@@ -26,5 +28,7 @@ typedef int DOUBLE;
 typedef FLOAT vec2[2];
 typedef FLOAT vec3[3];
 typedef FLOAT quat[4];
+
+void quat_rotate_point(const quat q, const vec3 in, vec3 out);
 
 #endif
