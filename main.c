@@ -71,11 +71,7 @@ int main(int argc, char** argv)
 
     rdr_init();
     iptm_init();
-    rotvec.vx = 0;
-    rotvec.vy = 0;
-    rotvec.vz = 0;
-    rotvec.pad = 0;
-
+    setVector(&rotvec, 0, 0, 0);
 
     printf("[INFO]: init done !\n");
 

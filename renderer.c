@@ -44,16 +44,8 @@ void rdr_init()
 
     int sc = 75;
     setVector(&scale, sc, sc, sc);
-
-    rotation.vx = 0;
-    rotation.vy = 0;
-    rotation.vz = 0;
-    rotation.pad = 0;
-
-    translation.vx = 0;
-    translation.vy = 50;
-    translation.vz = (SCREEN_Z * 3) / 2;
-    translation.pad = 0;
+    setVector(&rotation, 0, 0, 0);
+    setVector(&translation, 0, 50, (SCREEN_Z * 3) / 2);
 
     SetGeomOffset(SCREEN_W / 2, SCREEN_H / 2);
     SetGeomScreen(SCREEN_Z);
