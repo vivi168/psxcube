@@ -186,3 +186,48 @@ void read_md5model(const char* filename, MD5Model* model)
     free3(buff);
 }
 
+void read_md5anim(const char* filename, MD5Anim* anim)
+{
+    unsigned long file_size;
+    unsigned char *buff;
+    int offset = 0, s;
+
+    printf("[INFO]: loading md5 animation\n");
+
+    buff = load_file(filename, &file_size);
+    if (buff == NULL) {
+        printf("[ERROR]: error while loading md5 animation file\n");
+        while(1);
+    }
+
+    // header
+    s = sizeof(MD5AnimHeader);
+    IO_memcpy(&anim->header, buff, s);
+    offset += s;
+
+    printf("MD5 anim\n%d, %d, %d\n", anim->header.numFrames, anim->header.numJoints, anim->header.frameRate);
+
+    anim->frameJoints = malloc3(sizeof(MD5Joint*) * anim->header.numFrames);
+
+    for (int i = 0; i < anim->header.numFrames; i++) {
+        s = sizeof(MD5Joint) * anim->header.numJoints;
+        anim->frameJoints[i] = malloc3(s);
+        IO_memcpy(anim->frameJoints[i], buff + offset, s);
+        offset += s;
+
+        for (int k = 0; k < anim->header.numJoints; k++) {
+            MD5Joint* j = &anim->frameJoints[i][k];
+
+            printf("parent: %d (%d %d %d) (%d %d %d %d)\n",
+             j->parent,
+             j->pos[X], j->pos[Y], j->pos[Z],
+             j->orient[X], j->orient[Y], j->orient[Z], j->orient[W]
+            );
+        }
+    }
+
+    printf("[INFO]: Done reading md5 animation\n");
+
+    free3(buff);
+}
+

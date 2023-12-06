@@ -11,6 +11,7 @@ int quit;
 
 ObjMesh cube;
 MD5Model cubeguy;
+MD5Anim running;
 
 SVECTOR rotvec;
 
@@ -41,6 +42,7 @@ void init_cube()
     mesh_print_mesh(&cube);
 
     read_md5model("\\CUBEGUY.MD5M;1", &cubeguy);
+    read_md5anim("\\RUNNING.MD5A;1", &running);
 
 
     printf("[INFO]: cube init done !\n");
