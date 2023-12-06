@@ -105,7 +105,6 @@ class Subset:
         return data + bytes(self.texture.ljust(Subset.MAX_TEX_CHAR, '\0'), 'ascii')
 
 class Mesh:
-    SCALE = 75
     ONE = 4096
     def __init__(self):
         self.vertices = []
@@ -130,9 +129,9 @@ class Mesh:
                 if line.startswith('v '):
                     data = parse.search('v {px:g} {py:g} {pz:g}', line)
 
-                    x = data['px'] * Mesh.SCALE
-                    y = data['py'] * Mesh.SCALE
-                    z = data['pz'] * Mesh.SCALE
+                    x = data['px'] * Mesh.ONE
+                    y = data['py'] * Mesh.ONE
+                    z = data['pz'] * Mesh.ONE
                     positions.append(Vec3(x, y, z))
 
                 elif line.startswith('vt '):

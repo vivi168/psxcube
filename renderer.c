@@ -34,6 +34,7 @@ int8_t *nextpri;
 
 SVECTOR rotation;
 VECTOR translation;
+VECTOR scale;
 MATRIX transform;
 
 void create_texture();
@@ -46,6 +47,9 @@ void rdr_init()
 
     ResetGraph(0);
     InitGeom();
+
+    int sc = 75;
+    setVector(&scale, sc, sc, sc);
 
     rotation.vx = 0;
     rotation.vy = 0;
@@ -139,6 +143,7 @@ void rdr_render(ObjMesh *mesh, SVECTOR *rotvec)
 
     RotMatrix(&rotation, &transform);
     TransMatrix(&transform, &translation);
+    ScaleMatrix(&transform, &scale);
 
     render_mesh(mesh);
 
