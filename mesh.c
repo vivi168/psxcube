@@ -259,11 +259,11 @@ void prepare_vertices(const MD5Mesh* mesh, const MD5Joint* joints, Vertex** vert
         (*vertices)[k + offset].uv.vx = v->st[X] >> SCALE;
         (*vertices)[k + offset].uv.vy = v->st[Y] >> SCALE;
 
-        printf("st: %d %d\n", v->st[X] >> SCALE, v->st[Y] >> SCALE);
+        // printf("st: %d %d\n", v->st[X] >> SCALE, v->st[Y] >> SCALE);
     }
 }
 
-void prepare_mesh(const MD5Model* model, const MD5Joint* joints, ObjMesh* mesh)
+void init_mesh(const MD5Model* model, ObjMesh* mesh)
 {
     int numVerts = 0;
     int numTris = 0;
@@ -288,7 +288,10 @@ void prepare_mesh(const MD5Model* model, const MD5Joint* joints, ObjMesh* mesh)
 
     mesh->vertices = malloc3(sizeof(Vertex) * numVerts);
     mesh->indices = malloc3(sizeof(unsigned int) * numTris * 3);
+}
 
+void update_mesh(const MD5Model* model, const MD5Joint* joints, ObjMesh* mesh)
+{
     int vertOffset = 0;
     int triOffset = 0;
     for (int i = 0; i < model->header.numMeshes; i++) {
@@ -302,5 +305,3 @@ void prepare_mesh(const MD5Model* model, const MD5Joint* joints, ObjMesh* mesh)
         triOffset += model->meshes[i].header.numTris * 3;
     }
 }
-
-

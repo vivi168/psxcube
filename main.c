@@ -8,6 +8,8 @@
 char heap[HEAP_SIZE];
 
 int quit;
+unsigned long long frameCounter;
+unsigned long long timeCounter;
 
 ObjMesh cube;
 ObjMesh cubeguy_mesh;
@@ -45,7 +47,8 @@ void init_cube()
     read_md5model("\\CUBEGUY.MD5M;1", &cubeguy);
     read_md5anim("\\RUNNING.MD5A;1", &running);
 
-    prepare_mesh(&cubeguy, running.frameJoints[3], &cubeguy_mesh);
+    init_mesh(&cubeguy, &cubeguy_mesh);
+    update_mesh(&cubeguy, running.frameJoints[0], &cubeguy_mesh);
     // mesh_print_mesh(&cubeguy_mesh);
 
     printf("[INFO]: cube init done !\n");
@@ -56,10 +59,22 @@ void mainloop()
     unsigned int frame_start;
     quit = 0;
 
+    int curr_frame = 0;
+
     init_cube();
 
     while (!quit) {
         frame_start = rdr_getticks();
+
+        int frameDuration = 60 / running.header.frameRate;
+        if (frameCounter % frameDuration == 0) {
+            curr_frame ++;
+            if (curr_frame > running.header.numFrames - 1)
+                curr_frame = 0;
+
+            update_mesh(&cubeguy, running.frameJoints[curr_frame], &cubeguy_mesh);
+            // printf("Animate !! %d %d\n", curr_frame, running.header.frameRate);
+        }
 
         iptm_poll_events();
         process_input();
@@ -69,10 +84,26 @@ void mainloop()
     }
 }
 
+void vsync_callback()
+{
+    // VSync(-1);
+    frameCounter ++;
+
+    if (frameCounter % 60 == 59) {
+        timeCounter ++;
+        // printf("Time: %d\n" , timeCounter);
+    }
+}
+
 int main(int argc, char** argv)
 {
     InitHeap3((void*)&heap, HEAP_SIZE);
     CdInit();
+
+    frameCounter = 0;
+    timeCounter = 0;
+
+    VSyncCallback(vsync_callback);
 
     rdr_init();
     iptm_init();
