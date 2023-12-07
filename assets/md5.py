@@ -296,7 +296,7 @@ class MD5Model:
                             tex_w = 96
                             tex_h = 64
                             u = round(vertData['s'] * tex_w)
-                            v = round((1 - vertData['t']) * tex_h)
+                            v = round((vertData['t']) * tex_h)
                             st = Vec2(u, v)
                             print('TEXTURE {} {}'.format(u, v));
                             mesh.verts[vertData['idx']] = MD5Vertex(
