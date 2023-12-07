@@ -6,6 +6,18 @@ import struct
 
 ONE = 4096
 
+class Vec2i:
+    def __init__(self, x=0, y=0):
+        self.x = x
+        self.y = y
+
+    def pack(self):
+        return struct.pack('<ii', int(self.x), int(self.y))
+
+    def __str__(self):
+        return '{:.6f} {:.6f}'.format(self.x, self.y)
+
+
 class Vec2:
     def __init__(self, x=0, y=0):
         self.x = x
@@ -296,8 +308,8 @@ class MD5Model:
                             tex_w = 96
                             tex_h = 64
                             u = round(vertData['s'] * tex_w)
-                            v = round((vertData['t']) * tex_h)
-                            st = Vec2(u, v)
+                            v = round(vertData['t'] * tex_h)
+                            st = Vec2i(u, v)
                             print('TEXTURE {} {}'.format(u, v));
                             mesh.verts[vertData['idx']] = MD5Vertex(
                                 st,

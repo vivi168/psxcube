@@ -256,10 +256,8 @@ void prepare_vertices(const MD5Mesh* mesh, const MD5Joint* joints, Vertex** vert
 
         setVector(&(*vertices)[k + offset].normal, 0, 0, 0);
 
-        (*vertices)[k + offset].uv.vx = v->st[X] >> SCALE;
-        (*vertices)[k + offset].uv.vy = v->st[Y] >> SCALE;
-
-        // printf("st: %d %d\n", v->st[X] >> SCALE, v->st[Y] >> SCALE);
+        (*vertices)[k + offset].uv.vx = v->st[X];
+        (*vertices)[k + offset].uv.vy = v->st[Y];
     }
 }
 
