@@ -39,4 +39,7 @@ $(ELF): $(OBJ)
 clean:
 	rm -f $(ELF) $(EXE) $(OBJ) $(ISO)
 
+run:
+	cd log && pcsx-redux -bios openbios.bin -fastboot -interpreter -debugger -iso ../$(ISO) -run -logfile development.log
+
 .PHONY: all clean
