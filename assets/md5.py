@@ -3,6 +3,7 @@ import os
 import numpy as np
 import parse
 import struct
+import argparse
 
 ONE = 4096
 
@@ -515,15 +516,22 @@ class MD5Anim:
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 4:
-        print('usage: obj.py infile_model outfile_model infile_anim outfile_anim')
-        exit()
+    parser = argparse.ArgumentParser(description='Convert md5 mesh/animation file')
+    parser.add_argument('infile', help='Input file path')
+    parser.add_argument('outfile', help='Output file path (optional)', nargs='?')
+    parser.add_argument('--anim', action='store_true', help='Convert animation file')
 
-    model = MD5Model()
-    model.from_file(sys.argv[1])
-    model.export(sys.argv[2])
+    args = parser.parse_args()
 
-    anim = MD5Anim()
-    anim.from_file(sys.argv[3])
-    anim.export(sys.argv[4])
+    if args.outfile == None:
+        outfile = os.path.splitext(os.path.basename(args.infile))[0] + ".bin"
+    else:
+        outfile = args.outfile
 
+    if args.anim:
+        obj = MD5Anim()
+    else:
+        obj = MD5Model()
+
+    obj.from_file(args.infile)
+    obj.export(outfile)

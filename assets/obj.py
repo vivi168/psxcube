@@ -4,9 +4,7 @@ import parse
 import struct
 import sys
 import os
-
-# TODO: fixed point
-# object space coord = int16
+import argparse
 
 class Vec2:
     def __init__(self, x=0, y=0):
@@ -229,21 +227,21 @@ class Mesh:
         with open(outfile, 'wb') as f:
             f.write(data)
 
+
 if __name__ == '__main__':
-    outfile = 'model.bin'
+    parser = argparse.ArgumentParser(description='Convert obj mesh file')
+    parser.add_argument('infile', help='Input file path')
+    parser.add_argument('outfile', help='Output file path (optional)', nargs='?')
 
-    if len(sys.argv) > 2:
-        infile = sys.argv[1]
-        outfile = sys.argv[2]
-    elif len(sys.argv) > 1:
-        infile = sys.argv[1]
+    args = parser.parse_args()
+
+    if args.outfile == None:
+        outfile = os.path.splitext(os.path.basename(args.infile))[0] + ".bin"
     else:
-        print('usage: obj.py infile [outfile]')
-        exit()
+        outfile = args.outfile
 
-    print(infile, outfile)
+    print(args)
 
     m = Mesh()
-    m.from_file(infile)
+    m.from_file(args.infile)
     m.pack(outfile)
-
