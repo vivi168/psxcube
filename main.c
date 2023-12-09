@@ -1,8 +1,5 @@
 #include "stdafx.h"
-
-#ifdef modern_toolchain
 #include "header.h"
-#endif
 
 #define HEAP_SIZE (1024 * 1024)
 char heap[HEAP_SIZE];

@@ -16,7 +16,6 @@ INC := -I$(PSYQ_PATH)/include
 LIB := -L$(PSYQ_PATH)/lib -lgpu -lgte -lcd -letc -lsn -lsnd -lspu -lcard -lpad -lc2 -lapi -lextra
 
 CFLAGS := -g -O2 -G0 -ffreestanding -nostdlib -mno-unaligned-access -Wall -Wextra $(INC)
-CFLAGS += -Dmodern_toolchain
 LDFLAGS := -T linker.ld
 
 SRC := stdafx.c input.c io.c main.c mesh.c renderer.c linalg.c
