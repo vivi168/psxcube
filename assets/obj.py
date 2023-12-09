@@ -1,10 +1,12 @@
 # Export as Z forward, -Y up
+# usemtl format -> usemtl image.bmp
 import numpy as np
 import parse
 import struct
 import sys
 import os
 import argparse
+from PIL import Image
 
 class Vec2:
     def __init__(self, x=0, y=0):
@@ -12,7 +14,6 @@ class Vec2:
         self.y = y
 
     def pack(self):
-        # Texture coordinates, 16 bits ?
         return struct.pack('<hh', int(self.x), int(self.y))
 
     def __str__(self):
@@ -77,10 +78,11 @@ class ObjVert:
 
 
 class ObjFace:
-    def __init__(self, v0=ObjVert(), v1=ObjVert(), v2=ObjVert()):
+    def __init__(self, v0=ObjVert(), v1=ObjVert(), v2=ObjVert(), tex_size=(0,0)):
         self.v0 = v0
         self.v1 = v1
         self.v2 = v2
+        self.tex_w, self.tex_h = tex_size
 
     def __str__(self):
         return '{} {} {}'.format(self.v0, self.v1, self.v2)
@@ -92,15 +94,17 @@ class Subset:
         self.start = start
         self.count = 0
         tex = os.path.splitext(os.path.basename(texture))[0]
-        self.texture = tex[:Subset.MAX_TEX_CHAR-1] # limit to 20 chars
+        self.texture_path = texture
+        self.texture_name = tex[:Subset.MAX_TEX_CHAR-1] # limit to 20 chars
+        self.texture_size = Image.open(texture).size
 
     def __str__(self):
-        return '{} {} [{}] ({})'.format(self.start, self.count, len(self.texture), self.texture)
+        return '{} {} [{}] ({})'.format(self.start, self.count, len(self.texture_name), self.texture_name)
 
     def pack(self):
         data = struct.pack('<II', self.start, self.count)
 
-        return data + bytes(self.texture.ljust(Subset.MAX_TEX_CHAR, '\0'), 'ascii')
+        return data + bytes(self.texture_name.ljust(Subset.MAX_TEX_CHAR, '\0'), 'ascii')
 
 class Mesh:
     ONE = 4096
@@ -134,12 +138,7 @@ class Mesh:
 
                 elif line.startswith('vt '):
                     data = parse.search('vt {tu:g} {tv:g}', line)
-                    # TODO: determine image size
-                    tex_w = 96
-                    tex_h = 64
-                    u = round(data['tu'] * tex_w)
-                    v = round((1 - data['tv']) * tex_h)
-                    uvs.append(Vec2(u, v))
+                    uvs.append(Vec2(data['tu'], data['tv']))
 
                 elif line.startswith('vn '):
                     data = parse.search('vn {nx:g} {ny:g} {nz:g}', line)
@@ -159,17 +158,20 @@ class Mesh:
                     v0 = ObjVert(data['v0_vi'], data['v0_vni'], data['v0_vti'])
                     v1 = ObjVert(data['v1_vi'], data['v1_vni'], data['v1_vti'])
                     v2 = ObjVert(data['v2_vi'], data['v2_vni'], data['v2_vti'])
-                    faces.append(ObjFace(v0, v1, v2))
 
-                    if subset != None:
-                        self.subsets[subset].count += 1
-                        start += 1
+                    if subset == None: exit('Error - no subset')
+
+                    faces.append(ObjFace(v0, v1, v2, self.subsets[subset].texture_size))
+                    self.subsets[subset].count += 1
+                    start += 1
+
 
         for f in faces:
             # ---- v0
+            uv0 = Vec2(round(uvs[f.v0.uv].x * f.tex_w), round((1 - uvs[f.v0.uv].y) * f.tex_h))
             v0 = Vertex(positions[f.v0.position],
                         normals[f.v0.normal],
-                        uvs[f.v0.uv])
+                        uv0)
 
             try:
                 v0_i = self.vertices.index(v0)
@@ -178,9 +180,10 @@ class Mesh:
                 v0_i = len(self.vertices) - 1
 
             # ---- v1
+            uv1 = Vec2(round(uvs[f.v1.uv].x * f.tex_w), round((1 - uvs[f.v1.uv].y) * f.tex_h))
             v1 = Vertex(positions[f.v1.position],
                         normals[f.v1.normal],
-                        uvs[f.v1.uv])
+                        uv1)
 
             try:
                 v1_i = self.vertices.index(v1)
@@ -189,9 +192,10 @@ class Mesh:
                 v1_i = len(self.vertices) - 1
 
             # ---- v2
+            uv2 = Vec2(round(uvs[f.v2.uv].x * f.tex_w), round((1 - uvs[f.v2.uv].y) * f.tex_h))
             v2 = Vertex(positions[f.v2.position],
                         normals[f.v2.normal],
-                        uvs[f.v2.uv])
+                        uv2)
 
             try:
                 v2_i = self.vertices.index(v2)
