@@ -17,7 +17,6 @@ class Vec2i:
     def __str__(self):
         return '{:.6f} {:.6f}'.format(self.x, self.y)
 
-
 class Vec2:
     def __init__(self, x=0, y=0):
         self.x = x
@@ -310,7 +309,6 @@ class MD5Model:
                             u = round(vertData['s'] * tex_w)
                             v = round(vertData['t'] * tex_h)
                             st = Vec2i(u, v)
-                            print('TEXTURE {} {}'.format(u, v));
                             mesh.verts[vertData['idx']] = MD5Vertex(
                                 st,
                                 vertData['sw'],

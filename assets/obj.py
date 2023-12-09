@@ -230,8 +230,6 @@ class Mesh:
             f.write(data)
 
 if __name__ == '__main__':
-
-
     outfile = 'model.bin'
 
     if len(sys.argv) > 2:
