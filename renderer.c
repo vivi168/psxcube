@@ -21,8 +21,6 @@ typedef struct texture_t {
     uint16_t tpage, clut;
 } Texture;
 
-// Texture texture;
-// Texture thead, thelmet, tlantern, tlanttop;
 DB db[2];
 DB *cdb;
 int8_t *nextpri;
@@ -46,7 +44,7 @@ void rdr_init()
     int sc = 35;
     setVector(&scale, sc, sc, sc);
     setVector(&rotation, 0, 0, 0);
-    setVector(&translation, 0, 50, (SCREEN_Z * 3) / 2);
+    setVector(&translation, 0, 100, (SCREEN_Z * 3) / 2);
 
     SetGeomOffset(SCREEN_W / 2, SCREEN_H / 2);
     SetGeomScreen(SCREEN_Z);
@@ -76,21 +74,13 @@ void rdr_init()
 
 void rdr_init_textures(const ObjMesh* mesh)
 {
-    // create_texture("\\CUBE.TIM;1", &texture);
-
-    // create_texture("\\BODY.TIM;1", &texture);
-    // create_texture("\\HEAD.TIM;1", &thead);
-    // create_texture("\\HELMET.TIM;1", &thelmet);
-    // create_texture("\\LANTERN.TIM;1", &tlantern);
-    // create_texture("\\LANTTOP.TIM;1", &tlanttop);
-
-    printf("numSubsets SIZE %d\n", mesh->header.numSubsets);
     for (int i = 0; i < mesh->header.numSubsets; i++) {
         STRING20 tmp;
         sprintf(tmp, "\\%s.TIM;1", mesh->subsets[i].name);
         printf("Texture[%d]: %s\n", i, tmp);
 
         mesh->subsets[i].texture = malloc3(sizeof(Texture));
+        // TODO: when loading/unloading mesh, don't forget to free everything
         create_texture(tmp, mesh->subsets[i].texture);
     }
 }
@@ -166,16 +156,21 @@ void render_mesh(ObjMesh *mesh)
     gte_SetTransMatrix(&transform);
 
     // TODO: here use subset to render.
-    for (i = 0; i < mesh->header.numTris * 3; i += 3) {
-        int i1 = mesh->indices[i];
-        int i2 = mesh->indices[i+1];
-        int i3 = mesh->indices[i+2];
+    for (int s = 0; s < mesh->header.numSubsets; s++) {
+        unsigned int offset = mesh->subsets[s].start;
 
-        add_tri(&mesh->vertices[i1],
-                &mesh->vertices[i2],
-                &mesh->vertices[i3],
-                mesh->subsets[0].texture
-                );
+        for (int i = 0; i < mesh->subsets[s].count; i += 3) {
+            int i1 = mesh->indices[i   + offset];
+            int i2 = mesh->indices[i+1 + offset];
+            int i3 = mesh->indices[i+2 + offset];
+
+            add_tri(&mesh->vertices[i1],
+                    &mesh->vertices[i2],
+                    &mesh->vertices[i3],
+                    mesh->subsets[s].texture
+                    );
+        }
+
     }
 }
 

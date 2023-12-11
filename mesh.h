@@ -18,7 +18,7 @@ typedef struct vertex_t {
 struct texture_t;
 
 typedef struct subset_t {
-    unsigned int start, count;
+    unsigned int start, count; // indices (not tri)
     struct texture_t* texture;
     STRING20 name;
     // TODO: add color

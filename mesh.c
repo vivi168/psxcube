@@ -279,14 +279,24 @@ void init_mesh(const MD5Model* model, ObjMesh* mesh)
         IO_memcpy(mesh->subsets[i].name, model->meshes[i].name, sizeof(STRING20));
         mesh->subsets[i].texture = NULL;
 
+        // TODO: assert start & count % 3 == 0
+        printf("Subset: %d %d %s\n",
+               mesh->subsets[i].start,
+               mesh->subsets[i].count,
+               mesh->subsets[i].name
+               );
+
         start += model->meshes[i].header.numTris * 3;
     }
 
     mesh->header.numVerts = numVerts;
+    // TODO: assert % 3 == 0
     mesh->header.numTris = numTris;
 
     mesh->vertices = malloc3(sizeof(Vertex) * numVerts);
     mesh->indices = malloc3(sizeof(unsigned int) * numTris * 3);
+
+    printf("Mesh: %d %d\n", numVerts, numTris);
 }
 
 void update_mesh(const MD5Model* model, const MD5Joint* joints, ObjMesh* mesh)
