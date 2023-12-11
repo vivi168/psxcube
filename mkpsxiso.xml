@@ -57,6 +57,14 @@
       <file name="CUBEGUY.MD5M" type="data" source="assets/CUBEGUY.MD5M"/>
       <file name="RUNNING.MD5A" type="data" source="assets/RUNNING.MD5A"/>
 
+      <file name="BOB.MD5M" type="data" source="assets/Bob/BOB.MD5M"/>
+      <file name="BOB.MD5A" type="data" source="assets/Bob/BOB.MD5A"/>
+      <file name="BODY.TIM" type="data" source="assets/Bob/BODY.TIM" />
+      <file name="HEAD.TIM" type="data" source="assets/Bob/HEAD.TIM" />
+      <file name="HELMET.TIM" type="data" source="assets/Bob/HELMET.TIM" />
+      <file name="LANTERN.TIM" type="data" source="assets/Bob/LANTERN.TIM" />
+      <file name="LANTTOP.TIM" type="data" source="assets/Bob/LANTTOP.TIM" />
+
       <!-- Lastly, some dummy sectors must always be placed at the -->
       <!-- end of the disc image. It must be a pretty large one to -->
       <!-- make sure the console does not go run-away when it -->

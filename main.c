@@ -39,10 +39,12 @@ void process_input()
 void init_cube()
 {
     read_objmesh("\\CUBE.M3D;1", &cube);
-    mesh_print_mesh(&cube);
+    // mesh_print_mesh(&cube);
 
-    read_md5model("\\CUBEGUY.MD5M;1", &cubeguy);
-    read_md5anim("\\RUNNING.MD5A;1", &running);
+    // read_md5model("\\CUBEGUY.MD5M;1", &cubeguy);
+    // read_md5anim("\\RUNNING.MD5A;1", &running);
+    read_md5model("\\BOB.MD5M;1", &cubeguy);
+    read_md5anim("\\BOB.MD5A;1", &running);
 
     init_mesh(&cubeguy, &cubeguy_mesh);
     update_mesh(&cubeguy, running.frameJoints[0], &cubeguy_mesh);
@@ -57,8 +59,6 @@ void mainloop()
     quit = 0;
 
     int curr_frame = 0;
-
-    init_cube();
 
     while (!quit) {
         frame_start = rdr_getticks();
@@ -103,6 +103,10 @@ int main(int argc, char** argv)
     VSyncCallback(vsync_callback);
 
     rdr_init();
+
+    init_cube();
+    rdr_init_textures(&cubeguy_mesh);
+
     iptm_init();
     setVector(&rotvec, 0, 0, 0);
 

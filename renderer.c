@@ -21,7 +21,8 @@ typedef struct texture_t {
     uint16_t tpage, clut;
 } Texture;
 
-Texture texture;
+// Texture texture;
+// Texture thead, thelmet, tlantern, tlanttop;
 DB db[2];
 DB *cdb;
 int8_t *nextpri;
@@ -31,9 +32,9 @@ VECTOR translation;
 VECTOR scale;
 MATRIX transform;
 
-void create_texture();
+void create_texture(const char* filename, Texture *tex);
 void render_mesh(ObjMesh*);
-void add_tri(Vertex*, Vertex*, Vertex*);
+void add_tri(Vertex*, Vertex*, Vertex*, Texture *tex);
 
 void rdr_init()
 {
@@ -67,15 +68,34 @@ void rdr_init()
     cdb = &db[0];
     nextpri = cdb->pribuff;
 
-    create_texture();
-
     FntLoad( 960, 0 );
     FntOpen( 0, 8, 320, 224, 0, 100 );
 
     SetDispMask(1);
 }
 
-void create_texture()
+void rdr_init_textures(const ObjMesh* mesh)
+{
+    // create_texture("\\CUBE.TIM;1", &texture);
+
+    // create_texture("\\BODY.TIM;1", &texture);
+    // create_texture("\\HEAD.TIM;1", &thead);
+    // create_texture("\\HELMET.TIM;1", &thelmet);
+    // create_texture("\\LANTERN.TIM;1", &tlantern);
+    // create_texture("\\LANTTOP.TIM;1", &tlanttop);
+
+    printf("numSubsets SIZE %d\n", mesh->header.numSubsets);
+    for (int i = 0; i < mesh->header.numSubsets; i++) {
+        STRING20 tmp;
+        sprintf(tmp, "\\%s.TIM;1", mesh->subsets[i].name);
+        printf("Texture[%d]: %s\n", i, tmp);
+
+        mesh->subsets[i].texture = malloc3(sizeof(Texture));
+        create_texture(tmp, mesh->subsets[i].texture);
+    }
+}
+
+void create_texture(const char* filename, Texture* texture)
 {
     uint32_t file_size;
     int i;
@@ -83,7 +103,7 @@ void create_texture()
 
     TIM_IMAGE *image;
 
-    buff = load_file("\\CUBE.TIM;1", &file_size);
+    buff = load_file(filename, &file_size);
     if (buff == NULL) {
         printf("[ERROR]: error while loading texture\n");
         while(1);
@@ -104,17 +124,17 @@ void create_texture()
 
     // copy properties
     printf("[INFO]: %d %d %d\n", image->mode, image->prect->x, image->prect->y);
-    texture.prect = *image->prect;
-    texture.crect = *image->crect;
-    texture.mode = image->mode;
+    texture->prect = *image->prect;
+    texture->crect = *image->crect;
+    texture->mode = image->mode;
 
-    texture.u = (texture.prect.x % 0x40) << ( 2 - (texture.mode & 0x3));
-    texture.v = (texture.prect.y & 0xff);
+    texture->u = (texture->prect.x % 0x40) << ( 2 - (texture->mode & 0x3));
+    texture->v = (texture->prect.y & 0xff);
 
-    texture.tpage = getTPage(texture.mode & 0x3, 0, texture.prect.x, texture.prect.y);
-    texture.clut = getClut(texture.crect.x, texture.crect.y);
+    texture->tpage = getTPage(texture->mode & 0x3, 0, texture->prect.x, texture->prect.y);
+    texture->clut = getClut(texture->crect.x, texture->crect.y);
 
-    printf("[INFO]: %d %d %d\n", texture.mode, texture.prect.x, texture.prect.y);
+    printf("[INFO]: %d %d %d\n", texture->mode, texture->prect.x, texture->prect.y);
 
     free3(buff);
 }
@@ -141,9 +161,11 @@ void render_mesh(ObjMesh *mesh)
 {
     int i;
 
+    // TODO: have a model instead. (mesh + model matrix)
     gte_SetRotMatrix(&transform);
     gte_SetTransMatrix(&transform);
 
+    // TODO: here use subset to render.
     for (i = 0; i < mesh->header.numTris * 3; i += 3) {
         int i1 = mesh->indices[i];
         int i2 = mesh->indices[i+1];
@@ -151,12 +173,13 @@ void render_mesh(ObjMesh *mesh)
 
         add_tri(&mesh->vertices[i1],
                 &mesh->vertices[i2],
-                &mesh->vertices[i3]
+                &mesh->vertices[i3],
+                mesh->subsets[0].texture
                 );
     }
 }
 
-void add_tri(Vertex* v1, Vertex* v2, Vertex* v3)
+void add_tri(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
 {
     int32_t otz, nclip;
     POLY_FT3 *poly;
@@ -188,12 +211,12 @@ void add_tri(Vertex* v1, Vertex* v2, Vertex* v3)
     gte_stsxy1(&poly->x1);
     gte_stsxy2(&poly->x2);
 
-    setUV3(poly, texture.u + v1->uv.vx, texture.v + v1->uv.vy,
-                 texture.u + v2->uv.vx, texture.v + v2->uv.vy,
-                 texture.u + v3->uv.vx, texture.v + v3->uv.vy);
+    setUV3(poly, texture->u + v1->uv.vx, texture->v + v1->uv.vy,
+                 texture->u + v2->uv.vx, texture->v + v2->uv.vy,
+                 texture->u + v3->uv.vx, texture->v + v3->uv.vy);
 
-    poly->tpage = texture.tpage;
-    poly->clut = texture.clut;
+    poly->tpage = texture->tpage;
+    poly->clut = texture->clut;
     setRGB0(poly, 255,
                  255,
                  255);

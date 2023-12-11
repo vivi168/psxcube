@@ -14,7 +14,7 @@ joints {
 }
 
 mesh {
-  shader "CUBE"
+  shader "cube.bmp"
 
   numverts 86
   vert 0 ( 0.1250000000 0.2500000000 ) 0 1

@@ -2,6 +2,7 @@
 #define RENDERER_H
 
 void rdr_init();
+void rdr_init_textures(const ObjMesh*);
 void rdr_render(ObjMesh*, SVECTOR*);
 void rdr_cleanup();
 
