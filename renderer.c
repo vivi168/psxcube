@@ -24,14 +24,14 @@ typedef struct texture_t {
 DB db[2];
 DB *cdb;
 int8_t *nextpri;
+MATRIX transform;
 
 SVECTOR rotation;
 VECTOR translation;
 VECTOR scale;
-MATRIX transform;
 
 void create_texture(const char* filename, Texture *tex);
-void render_mesh(ObjMesh*);
+void render_mesh(Mesh3D*);
 void add_tri(Vertex*, Vertex*, Vertex*, Texture *tex);
 
 void rdr_init()
@@ -72,7 +72,7 @@ void rdr_init()
     SetDispMask(1);
 }
 
-void rdr_init_textures(const ObjMesh* mesh)
+void rdr_init_textures(const Mesh3D* mesh)
 {
     for (int i = 0; i < mesh->header.numSubsets; i++) {
         STRING20 tmp;
@@ -129,7 +129,7 @@ void create_texture(const char* filename, Texture* texture)
     free3(buff);
 }
 
-void rdr_render(ObjMesh *mesh, SVECTOR *rotvec)
+void rdr_render(Mesh3D *mesh, SVECTOR *rotvec)
 {
     ClearOTagR(cdb->ot, OTLEN);
 
@@ -147,7 +147,7 @@ void rdr_render(ObjMesh *mesh, SVECTOR *rotvec)
     FntFlush(-1);
 }
 
-void render_mesh(ObjMesh *mesh)
+void render_mesh(Mesh3D *mesh)
 {
     int i;
 

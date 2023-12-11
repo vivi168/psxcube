@@ -8,10 +8,12 @@ int quit;
 unsigned long long frameCounter;
 unsigned long long timeCounter;
 
-ObjMesh cube;
-ObjMesh cubeguy_mesh;
+Mesh3D cube;
+Mesh3D cubeguy_mesh;
 MD5Model cubeguy;
 MD5Anim running;
+
+Model3D bob;
 
 SVECTOR rotvec;
 
@@ -38,17 +40,20 @@ void process_input()
 
 void init_cube()
 {
-    read_objmesh("\\CUBE.M3D;1", &cube);
-    // mesh_print_mesh(&cube);
+    read_obj("\\CUBE.M3D;1", &cube);
+    // print_mesh3d(&cube);
 
     // read_md5model("\\CUBEGUY.MD5M;1", &cubeguy);
     // read_md5anim("\\RUNNING.MD5A;1", &running);
     read_md5model("\\BOB.MD5M;1", &cubeguy);
     read_md5anim("\\BOB.MD5A;1", &running);
 
-    init_mesh(&cubeguy, &cubeguy_mesh);
-    update_mesh(&cubeguy, running.frameJoints[0], &cubeguy_mesh);
-    // mesh_print_mesh(&cubeguy_mesh);
+    init_mesh3d(&cubeguy, &cubeguy_mesh);
+    update_mesh3d(&cubeguy, running.frameJoints[0], &cubeguy_mesh);
+    // print_mesh3d(&cubeguy_mesh);
+
+    // print_md5model(&cubeguy);
+    // print_md5anim(&running);
 
     printf("[INFO]: cube init done !\n");
 }
@@ -69,7 +74,7 @@ void mainloop()
             if (curr_frame > running.header.numFrames - 1)
                 curr_frame = 0;
 
-            update_mesh(&cubeguy, running.frameJoints[curr_frame], &cubeguy_mesh);
+            update_mesh3d(&cubeguy, running.frameJoints[curr_frame], &cubeguy_mesh);
             // printf("Animate !! %d %d\n", curr_frame, running.header.frameRate);
         }
 

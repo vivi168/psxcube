@@ -1,15 +1,10 @@
-*.exe
 *.o
-vendor/SDL2/*
-!vendor/SDL2/.keep
-
-*.dll
-
 *.bin
 *.cue
 *.CPE
 *.ELF
 *.EXE
-*.OBJ
 *.log
+log/*
+!log/.keep
 .DS_Store

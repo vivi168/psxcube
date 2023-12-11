@@ -29,12 +29,10 @@ typedef struct obj_mesh_t {
     Vertex* vertices;
     unsigned int* indices;
     Subset* subsets;
-} ObjMesh;
+} Mesh3D;
 
-
-
-void read_objmesh(const char* filename, ObjMesh*);
-void mesh_print_mesh(ObjMesh*);
+void read_obj(const char* filename, Mesh3D*);
+void print_mesh3d(Mesh3D*);
 
 
 // ****************
@@ -111,12 +109,28 @@ typedef struct md5_anim_info_t {
 void read_md5model(const char* filename, MD5Model* model);
 void read_md5anim(const char* filename, MD5Anim* anim);
 
-void init_mesh(const MD5Model* model, ObjMesh* mesh);
-void update_mesh(const MD5Model* model, const MD5Joint* joints, ObjMesh* mesh);
+void init_mesh3d(const MD5Model* model, Mesh3D* mesh);
+void update_mesh3d(const MD5Model* model, const MD5Joint* joints, Mesh3D* mesh);
+
+void print_md5model(const MD5Model* model);
+void print_md5anim(const MD5Anim* anim);
 
 void animate(const MD5Anim* anim, MD5AnimInfo* animInfo, int dt);
 
+// MODEL
 
+typedef struct model_3d_t {
+    Mesh3D *mesh;
+    SVECTOR rotate;
+    VECTOR translate;
+    VECTOR scale;
+
+    MD5Model* md5_model;
+    MD5Anim** md5_anims; // TODO: hashmap?
+} Model3D;
+
+
+void model_mat(const Model3D* model, MATRIX* mat);
 
 
 #endif
