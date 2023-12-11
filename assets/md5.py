@@ -4,6 +4,7 @@ import numpy as np
 import parse
 import struct
 import argparse
+from PIL import Image
 
 ONE = 4096
 
@@ -221,7 +222,7 @@ class MD5Weight:
             self.pos.x, self.pos.y, self.pos.z)
 
 class MD5Mesh:
-    MAX_TEX_CHAR = 20
+    MAX_TEX_CHAR = 20 # TODO: change to 8 ? (Don't forget to adjust STRING20)
     def __init__(self):
         self.shader = ""
 
@@ -286,6 +287,8 @@ class MD5Model:
 
                 elif line.startswith('mesh {'):
                     mesh = MD5Mesh()
+                    tex_w = None
+                    tex_h = None
                     while True:
                         meshLine = rawfile.readline().lstrip()
                         if meshLine == "}\n":
@@ -296,7 +299,9 @@ class MD5Model:
                             # TODO save shader information (use it as texture filename)
                             data = parse.search('shader "{shader:S}"', meshLine)
                             tex = os.path.splitext(os.path.basename(data['shader']))[0]
-                            mesh.shader = tex[:MD5Mesh.MAX_TEX_CHAR-1]
+                            if len(tex) > MD5Mesh.MAX_TEX_CHAR - 1: exit('Tex name too long')
+                            mesh.shader = tex[:MD5Mesh.MAX_TEX_CHAR-1].upper()
+                            tex_w, tex_h = Image.open(data['shader']).size
 
                         # vertices
                         elif meshLine.startswith('numverts'):
@@ -304,9 +309,6 @@ class MD5Model:
                             mesh.verts = [None] * mesh.numVerts
                         elif meshLine.startswith('vert'):
                             vertData = parse.search('vert {idx:d} ( {s:g} {t:g} ) {sw:d} {cw:d}', meshLine)
-                            # TODO: determine image size
-                            tex_w = 96
-                            tex_h = 64
                             u = round(vertData['s'] * tex_w)
                             v = round(vertData['t'] * tex_h)
                             st = Vec2i(u, v)
