@@ -302,6 +302,7 @@ class MD5Model:
                             if len(tex) > MD5Mesh.MAX_TEX_CHAR - 1: exit('Tex name too long')
                             mesh.shader = tex[:MD5Mesh.MAX_TEX_CHAR-1].upper()
                             tex_w, tex_h = Image.open(data['shader']).size
+                            print(data['shader'], tex_w, tex_h)
 
                         # vertices
                         elif meshLine.startswith('numverts'):

@@ -89,7 +89,7 @@ class ObjFace:
 
 
 class Subset:
-    MAX_TEX_CHAR = 20
+    MAX_TEX_CHAR = 20 # TODO: change to 8 ? (Don't forget to adjust STRING20)
     def __init__(self, texture='', start=0):
         self.start = start
         self.count = 0
