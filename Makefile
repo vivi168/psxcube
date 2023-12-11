@@ -1,6 +1,6 @@
 TOOLCHAIN := mipsel-none-elf-
 
-ifeq ($(PSYQ),)
+ifeq ($(PSYQ_PATH),)
 $(error PSYQ SDK path is not set)
 endif
 
@@ -12,33 +12,13 @@ CC := $(TOOLCHAIN)gcc
 LD := $(TOOLCHAIN)ld
 OBJCOPY := $(TOOLCHAIN)objcopy
 
-INC := -I$(PSYQ)/include
+INC := -I$(PSYQ_PATH)/include
+LIB := -L$(PSYQ_PATH)/lib -lgpu -lgte -lcd -letc -lsn -lsnd -lspu -lcard -lpad -lc2 -lapi -lextra
 
-LIB := \
-	$(PSYQ)/lib/libcard.a \
-	$(PSYQ)/lib/libpress.a \
-	$(PSYQ)/lib/libgpu.a \
-	$(PSYQ)/lib/libgs.a \
-	$(PSYQ)/lib/libgte.a \
-	$(PSYQ)/lib/libcd.a \
-	$(PSYQ)/lib/libetc.a \
-	$(PSYQ)/lib/libsn.a \
-	$(PSYQ)/lib/libsnd.a \
-	$(PSYQ)/lib/libspu.a \
-	$(PSYQ)/lib/libmath.a \
-	$(PSYQ)/lib/libcomb.a \
-	$(PSYQ)/lib/libcard.a \
-	$(PSYQ)/lib/libtap.a \
-	$(PSYQ)/lib/libsio.a \
-	$(PSYQ)/lib/libpad.a \
-	$(PSYQ)/lib/libc2.a \
-	$(PSYQ)/lib/libapi.a
+CFLAGS := -g -O2 -G0 -ffreestanding -nostdlib -mno-unaligned-access -Wall -Wextra $(INC)
+LDFLAGS := -T linker.ld
 
-CFLAGS := -g -O3 -G0 -ffreestanding -nostdlib $(INC)
-CFLAGS += -Dmodern_toolchain
-LDFLAGS := -g -T linker.ld
-
-SRC := input.c io.c main.c mesh.c renderer.c
+SRC := stdafx.c input.c io.c main.c mesh.c renderer.c linalg.c
 
 OBJ := $(SRC:.c=.o)
 
@@ -51,12 +31,15 @@ $(EXE): $(ELF)
 	$(OBJCOPY) -O binary $< $@
 
 $(ELF): $(OBJ)
-	$(LD) -o $@ $(LDFLAGS) $^ $(LIB)
+	$(LD) $(LDFLAGS) -o $@ $^ $(LIB)
 
 .c.o:
 	$(CC) -c $(CFLAGS) $<
 
 clean:
 	rm -f $(ELF) $(EXE) $(OBJ) $(ISO)
+
+run:
+	cd log && pcsx-redux -bios openbios.bin -fastboot -interpreter -debugger -iso ../$(ISO) -run -logfile development.log
 
 .PHONY: all clean

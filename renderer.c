@@ -1,10 +1,4 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <inline_c.h>
-
-#include "types.h"
-#include "io.h"
-#include "renderer.h"
+#include "stdafx.h"
 
 #define SCREEN_W 320
 #define SCREEN_H 240
@@ -27,19 +21,18 @@ typedef struct texture_t {
     uint16_t tpage, clut;
 } Texture;
 
-Texture texture;
 DB db[2];
 DB *cdb;
 int8_t *nextpri;
 
 SVECTOR rotation;
 VECTOR translation;
+VECTOR scale;
 MATRIX transform;
 
-void create_texture();
-void render_mesh(Mesh*);
-void render_quad(Vertex*, Face*);
-void render_tri(Vertex*, Face*);
+void create_texture(const char* filename, Texture *tex);
+void render_mesh(ObjMesh*);
+void add_tri(Vertex*, Vertex*, Vertex*, Texture *tex);
 
 void rdr_init()
 {
@@ -48,15 +41,10 @@ void rdr_init()
     ResetGraph(0);
     InitGeom();
 
-    rotation.vx = 0;
-    rotation.vy = 0;
-    rotation.vz = 0;
-    rotation.pad = 0;
-
-    translation.vx = 0;
-    translation.vy = 50;
-    translation.vz = (SCREEN_Z * 3) / 2;
-    translation.pad = 0;
+    int sc = 35;
+    setVector(&scale, sc, sc, sc);
+    setVector(&rotation, 0, 0, 0);
+    setVector(&translation, 0, 100, (SCREEN_Z * 3) / 2);
 
     SetGeomOffset(SCREEN_W / 2, SCREEN_H / 2);
     SetGeomScreen(SCREEN_Z);
@@ -78,15 +66,26 @@ void rdr_init()
     cdb = &db[0];
     nextpri = cdb->pribuff;
 
-    create_texture();
-
     FntLoad( 960, 0 );
     FntOpen( 0, 8, 320, 224, 0, 100 );
 
     SetDispMask(1);
 }
 
-void create_texture()
+void rdr_init_textures(const ObjMesh* mesh)
+{
+    for (int i = 0; i < mesh->header.numSubsets; i++) {
+        STRING20 tmp;
+        sprintf(tmp, "\\%s.TIM;1", mesh->subsets[i].name);
+        printf("Texture[%d]: %s\n", i, tmp);
+
+        mesh->subsets[i].texture = malloc3(sizeof(Texture));
+        // TODO: when loading/unloading mesh, don't forget to free everything
+        create_texture(tmp, mesh->subsets[i].texture);
+    }
+}
+
+void create_texture(const char* filename, Texture* texture)
 {
     uint32_t file_size;
     int i;
@@ -94,7 +93,7 @@ void create_texture()
 
     TIM_IMAGE *image;
 
-    buff = load_file("\\CUBE.TIM;1", &file_size);
+    buff = load_file(filename, &file_size);
     if (buff == NULL) {
         printf("[ERROR]: error while loading texture\n");
         while(1);
@@ -115,22 +114,22 @@ void create_texture()
 
     // copy properties
     printf("[INFO]: %d %d %d\n", image->mode, image->prect->x, image->prect->y);
-    texture.prect = *image->prect;
-    texture.crect = *image->crect;
-    texture.mode = image->mode;
+    texture->prect = *image->prect;
+    texture->crect = *image->crect;
+    texture->mode = image->mode;
 
-    texture.u = (texture.prect.x % 0x40) << ( 2 - (texture.mode & 0x3));
-    texture.v = (texture.prect.y & 0xff);
+    texture->u = (texture->prect.x % 0x40) << ( 2 - (texture->mode & 0x3));
+    texture->v = (texture->prect.y & 0xff);
 
-    texture.tpage = getTPage(texture.mode & 0x3, 0, texture.prect.x, texture.prect.y);
-    texture.clut = getClut(texture.crect.x, texture.crect.y);
+    texture->tpage = getTPage(texture->mode & 0x3, 0, texture->prect.x, texture->prect.y);
+    texture->clut = getClut(texture->crect.x, texture->crect.y);
 
-    printf("[INFO]: %d %d %d\n", texture.mode, texture.prect.x, texture.prect.y);
+    printf("[INFO]: %d %d %d\n", texture->mode, texture->prect.x, texture->prect.y);
 
     free3(buff);
 }
 
-void rdr_render(Mesh *mesh, SVECTOR *rotvec)
+void rdr_render(ObjMesh *mesh, SVECTOR *rotvec)
 {
     ClearOTagR(cdb->ot, OTLEN);
 
@@ -140,6 +139,7 @@ void rdr_render(Mesh *mesh, SVECTOR *rotvec)
 
     RotMatrix(&rotation, &transform);
     TransMatrix(&transform, &translation);
+    ScaleMatrix(&transform, &scale);
 
     render_mesh(mesh);
 
@@ -147,91 +147,42 @@ void rdr_render(Mesh *mesh, SVECTOR *rotvec)
     FntFlush(-1);
 }
 
-void render_mesh(Mesh *mesh)
+void render_mesh(ObjMesh *mesh)
 {
     int i;
 
+    // TODO: have a model instead. (mesh + model matrix)
     gte_SetRotMatrix(&transform);
     gte_SetTransMatrix(&transform);
 
-    for (i = 0; i < mesh->num_faces; i ++) {
-        if (mesh->faces[i].num_vertices == 4)
-            render_quad(mesh->vertices, &mesh->faces[i]);
-        if (mesh->faces[i].num_vertices == 3)
-            render_tri(mesh->vertices, &mesh->faces[i]);
+    // TODO: here use subset to render.
+    for (int s = 0; s < mesh->header.numSubsets; s++) {
+        unsigned int offset = mesh->subsets[s].start;
+
+        for (int i = 0; i < mesh->subsets[s].count; i += 3) {
+            int i1 = mesh->indices[i   + offset];
+            int i2 = mesh->indices[i+1 + offset];
+            int i3 = mesh->indices[i+2 + offset];
+
+            add_tri(&mesh->vertices[i1],
+                    &mesh->vertices[i2],
+                    &mesh->vertices[i3],
+                    mesh->subsets[s].texture
+                    );
+        }
+
     }
 }
 
-void render_quad(Vertex* vertices, Face *face)
-{
-    int32_t otz, nclip;
-    POLY_FT4 *poly;
-
-    // load first three vertices to GTE (reverse order from blender export)
-    gte_ldv3(&vertices[face->vertex_idx[0]].position,
-             &vertices[face->vertex_idx[1]].position,
-             &vertices[face->vertex_idx[2]].position);
-
-    // rotation, translation, perspective transformation
-    gte_rtpt();
-    // normal clip for backface culling
-    gte_nclip();
-    gte_stopz(&nclip);
-
-    if (nclip <= 0) return;
-
-    // average Z for depth sorting
-    gte_avsz4();
-    gte_stotz(&otz);
-
-    if (otz >= OTLEN) return;
-
-    poly = (POLY_FT4*)nextpri;
-    setPolyFT4(poly);
-
-    /*
-        Poly F4
-        0  2
-        +--+
-        |  |
-        +--+
-        1  3
-    */
-
-    // set projected vertices to the primitive
-    gte_stsxy0(&poly->x0);
-    gte_stsxy1(&poly->x1);
-    gte_stsxy2(&poly->x2);
-
-    // compute last projected vertice
-    gte_ldv0(&vertices[face->vertex_idx[3]].position);
-    gte_rtps();
-    gte_stsxy(&poly->x3);
-
-    setUV4(poly, texture.u + vertices[face->vertex_idx[0]].uv.vx, texture.v + vertices[face->vertex_idx[0]].uv.vy,
-                 texture.u + vertices[face->vertex_idx[1]].uv.vx, texture.v + vertices[face->vertex_idx[1]].uv.vy,
-                 texture.u + vertices[face->vertex_idx[2]].uv.vx, texture.v + vertices[face->vertex_idx[2]].uv.vy,
-                 texture.u + vertices[face->vertex_idx[3]].uv.vx, texture.v + vertices[face->vertex_idx[3]].uv.vy);
-
-    poly->tpage = texture.tpage;
-    poly->clut = texture.clut;
-    setRGB0(poly, face->color.r,
-                 face->color.g,
-                 face->color.b);
-
-    addPrim(&cdb->ot[otz], poly);
-    nextpri += sizeof(POLY_FT4);
-}
-
-void render_tri(Vertex* vertices, Face *face)
+void add_tri(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
 {
     int32_t otz, nclip;
     POLY_FT3 *poly;
 
     // load first three vertices to GTE (reverse order from blender export)
-    gte_ldv3(&vertices[face->vertex_idx[0]].position,
-             &vertices[face->vertex_idx[1]].position,
-             &vertices[face->vertex_idx[2]].position);
+    gte_ldv3(&v1->position,
+             &v2->position,
+             &v3->position);
 
     // rotation, translation, perspective transformation
     gte_rtpt();
@@ -255,24 +206,20 @@ void render_tri(Vertex* vertices, Face *face)
     gte_stsxy1(&poly->x1);
     gte_stsxy2(&poly->x2);
 
-    setUV3(poly, texture.u + vertices[face->vertex_idx[0]].uv.vx, texture.v + vertices[face->vertex_idx[0]].uv.vy,
-                 texture.u + vertices[face->vertex_idx[1]].uv.vx, texture.v + vertices[face->vertex_idx[1]].uv.vy,
-                 texture.u + vertices[face->vertex_idx[2]].uv.vx, texture.v + vertices[face->vertex_idx[2]].uv.vy);
+    setUV3(poly, texture->u + v1->uv.vx, texture->v + v1->uv.vy,
+                 texture->u + v2->uv.vx, texture->v + v2->uv.vy,
+                 texture->u + v3->uv.vx, texture->v + v3->uv.vy);
 
-    poly->tpage = texture.tpage;
-    poly->clut = texture.clut;
-    setRGB0(poly, face->color.r,
-                 face->color.g,
-                 face->color.b);
+    poly->tpage = texture->tpage;
+    poly->clut = texture->clut;
+    setRGB0(poly, 255,
+                 255,
+                 255);
 
     addPrim(&cdb->ot[otz], poly);
     nextpri += sizeof(POLY_FT3);
 }
 
-void rdr_cleanup()
-{
-    // TODO
-}
 
 unsigned int rdr_getticks()
 {

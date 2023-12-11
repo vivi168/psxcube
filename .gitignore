@@ -11,3 +11,5 @@ vendor/SDL2/*
 *.ELF
 *.EXE
 *.OBJ
+*.log
+.DS_Store

@@ -1,7 +1,15 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <libcd.h>
-#include "io.h"
+#include "stdafx.h"
+
+void *IO_memcpy(void *restrict dest, const void *restrict src, int count)
+{
+    unsigned char       *pdest = (unsigned char *) dest;
+    const unsigned char *psrc  = (const unsigned char *) src;
+
+    for (; count; count--)
+        *(pdest++) = *(psrc++);
+
+    return dest;
+}
 
 char* load_file(char* filename, u_long *size)
 {
