@@ -103,7 +103,7 @@ class Subset:
         return '{} {} [{}] ({})'.format(self.start, self.count, len(self.texture_name), self.texture_name)
 
     def pack(self):
-        data = struct.pack('<II', self.start, self.count)
+        data = struct.pack('<IIi', self.start, self.count, 0) # pad Texture pointer
 
         return data + bytes(self.texture_name.ljust(Subset.MAX_TEX_CHAR, '\0'), 'ascii')
 

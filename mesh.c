@@ -277,6 +277,7 @@ void init_mesh(const MD5Model* model, ObjMesh* mesh)
         mesh->subsets[i].start = start;
         mesh->subsets[i].count = model->meshes[i].header.numTris * 3;
         IO_memcpy(mesh->subsets[i].name, model->meshes[i].name, sizeof(STRING20));
+        mesh->subsets[i].texture = NULL;
 
         start += model->meshes[i].header.numTris * 3;
     }

@@ -15,8 +15,11 @@ typedef struct vertex_t {
     DVECTOR uv;
 } Vertex;
 
+struct texture_t;
+
 typedef struct subset_t {
     unsigned int start, count;
+    struct texture_t* texture;
     STRING20 name;
     // TODO: add color
 } Subset;
