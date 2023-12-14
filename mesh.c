@@ -109,10 +109,6 @@ void read_md5model(const char* filename, MD5Model* model)
     IO_memcpy(model->joints, buff + offset, s);
     offset += s;
 
-    for (int i = 0; i < model->header.numJoints; i++) {
-		MD5Joint* j = &model->joints[i];
-	}
-
 	// meshes
 	model->meshes = malloc3(sizeof(MD5Mesh) * model->header.numMeshes);
 
@@ -338,7 +334,7 @@ void print_md5anim(const MD5Anim* anim)
     }
 }
 
-void model_mat(const Model3D* model, MATRIX* mat)
+void model_mat(Model3D* model, MATRIX* mat)
 {
     RotMatrix(&model->rotate, mat);
     TransMatrix(mat, &model->translate);

@@ -2,18 +2,28 @@
 #include "header.h"
 
 #define HEAP_SIZE (1024 * 1024)
-char heap[HEAP_SIZE];
+static char heap[HEAP_SIZE];
 
 int quit;
+
+// TODO declare these 3 as extern ?
+unsigned long long vsyncCounter;
 unsigned long long frameCounter;
 unsigned long long timeCounter;
 
-Mesh3D cube;
-Mesh3D cubeguy_mesh;
-MD5Model cubeguy;
-MD5Anim running;
 
-Model3D bob;
+// models/meshes/md5_models
+#define CUBE_MESH 0
+#define BOB_MESH 1
+#define CUBEGUY_MESH 2
+// anims
+#define BOB_ANIM 0
+#define CUBEGUY_RUNNING 1
+
+Mesh3D meshes[5];
+Model3D models[5];
+MD5Model md5_models[5];
+MD5Anim md5_anims[10];
 
 SVECTOR rotvec;
 
@@ -38,24 +48,28 @@ void process_input()
 
 }
 
-void init_cube()
+// TODO better way
+void init_assets()
 {
-    read_obj("\\CUBE.M3D;1", &cube);
-    // print_mesh3d(&cube);
+    // Bob
+    read_md5model("\\BOB.MD5M;1", &md5_models[BOB_MESH]);
+    read_md5anim("\\BOB.MD5A;1", &md5_anims[BOB_ANIM]);
 
-    // read_md5model("\\CUBEGUY.MD5M;1", &cubeguy);
-    // read_md5anim("\\RUNNING.MD5A;1", &running);
-    read_md5model("\\BOB.MD5M;1", &cubeguy);
-    read_md5anim("\\BOB.MD5A;1", &running);
+    init_mesh3d(&md5_models[BOB_MESH], &meshes[BOB_MESH]);
+    update_mesh3d(&md5_models[BOB_MESH], md5_anims[BOB_ANIM].frameJoints[0], &meshes[BOB_MESH]);
+    rdr_init_textures(&meshes[BOB_MESH]);
 
-    init_mesh3d(&cubeguy, &cubeguy_mesh);
-    update_mesh3d(&cubeguy, running.frameJoints[0], &cubeguy_mesh);
-    // print_mesh3d(&cubeguy_mesh);
+    models[BOB_MESH].mesh = &meshes[BOB_MESH];
+    models[BOB_MESH].md5_model = &md5_models[BOB_MESH];
+    /* models[BOB_MESH].md5_anims = malloc3(sizeof(MD5Anim) * 1); */
+    models[BOB_MESH].md5_anim = &md5_anims[BOB_ANIM];
 
-    // print_md5model(&cubeguy);
-    // print_md5anim(&running);
+    int sc = 35;
+    setVector(&models[BOB_MESH].scale, sc, sc, sc);
+    setVector(&models[BOB_MESH].rotate, 0, 0, 0);
+    setVector(&models[BOB_MESH].translate, 0, 100, (SCREEN_Z * 3) / 2);
 
-    printf("[INFO]: cube init done !\n");
+    printf("[INFO]: assets init done !\n");
 }
 
 void mainloop()
@@ -66,42 +80,47 @@ void mainloop()
     int curr_frame = 0;
 
     while (!quit) {
-        frame_start = rdr_getticks();
+        frame_start = VSync(-1);
 
-        int frameDuration = 60 / running.header.frameRate;
+        int frameDuration = 60 / models[BOB_MESH].md5_anim->header.frameRate;
         if (frameCounter % frameDuration == 0) {
             curr_frame ++;
-            if (curr_frame > running.header.numFrames - 1)
+            if (curr_frame > models[BOB_MESH].md5_anim->header.numFrames - 1)
                 curr_frame = 0;
 
-            update_mesh3d(&cubeguy, running.frameJoints[curr_frame], &cubeguy_mesh);
+            update_mesh3d(models[BOB_MESH].md5_model,
+                          models[BOB_MESH].md5_anim->frameJoints[curr_frame],
+                          models[BOB_MESH].mesh);
             // printf("Animate !! %d %d\n", curr_frame, running.header.frameRate);
         }
 
         iptm_poll_events();
         process_input();
 
-        rdr_render(&cubeguy_mesh, &rotvec);
-        rdr_delay(frame_start);
+        rdr_render(&models[BOB_MESH], &rotvec);
+        frameCounter ++;
+        // now we can compute of many frame per seconds
+        rdr_delay();
     }
 }
 
 void vsync_callback()
 {
     // VSync(-1);
-    frameCounter ++;
+    vsyncCounter ++;
 
-    if (frameCounter % 60 == 59) {
+    if (vsyncCounter % 60 == 59) {
         timeCounter ++;
         // printf("Time: %d\n" , timeCounter);
     }
 }
 
-int main(int argc, char** argv)
+int main(void)
 {
     InitHeap3((void*)&heap, HEAP_SIZE);
     CdInit();
 
+    vsyncCounter = 0;
     frameCounter = 0;
     timeCounter = 0;
 
@@ -109,8 +128,7 @@ int main(int argc, char** argv)
 
     rdr_init();
 
-    init_cube();
-    rdr_init_textures(&cubeguy_mesh);
+    init_assets();
 
     iptm_init();
     setVector(&rotvec, 0, 0, 0);

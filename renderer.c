@@ -1,10 +1,8 @@
 #include "stdafx.h"
 
-#define SCREEN_W 320
-#define SCREEN_H 240
-#define SCREEN_Z 512
-
 #define OTLEN 4096
+
+unsigned int numTri, effectiveNumTri;
 
 typedef struct db_t {
     DISPENV disp;
@@ -20,15 +18,15 @@ typedef struct texture_t {
 
     uint16_t tpage, clut;
 } Texture;
+// TODO: all of these static ?
+// make struct to hold these following three ?
+static DB db[2];
+static DB *cdb; // int instead. make macro to get current cdb ?
+         // #define CBD (db[cdb])
+         // swap buffer with cdb ^= 1
+static int8_t *nextpri;
 
-DB db[2];
-DB *cdb;
-int8_t *nextpri;
-MATRIX transform;
-
-SVECTOR rotation;
-VECTOR translation;
-VECTOR scale;
+static MATRIX transform;
 
 void create_texture(const char* filename, Texture *tex);
 void render_mesh(Mesh3D*);
@@ -40,11 +38,6 @@ void rdr_init()
 
     ResetGraph(0);
     InitGeom();
-
-    int sc = 35;
-    setVector(&scale, sc, sc, sc);
-    setVector(&rotation, 0, 0, 0);
-    setVector(&translation, 0, 100, (SCREEN_Z * 3) / 2);
 
     SetGeomOffset(SCREEN_W / 2, SCREEN_H / 2);
     SetGeomScreen(SCREEN_Z);
@@ -72,6 +65,7 @@ void rdr_init()
     SetDispMask(1);
 }
 
+// TODO: move this as part of mesh ?
 void rdr_init_textures(const Mesh3D* mesh)
 {
     for (int i = 0; i < mesh->header.numSubsets; i++) {
@@ -129,22 +123,31 @@ void create_texture(const char* filename, Texture* texture)
     free3(buff);
 }
 
-void rdr_render(Mesh3D *mesh, SVECTOR *rotvec)
+// TODO phase 1: pass camera, and model instead
+// TODO phase 2: pass scene
+// scene is a graph
+// when being done with model->rotate +=, switch to const
+void rdr_render(Model3D *model, SVECTOR *rotvec)
 {
     ClearOTagR(cdb->ot, OTLEN);
 
-    rotation.vx += rotvec->vx;
-    rotation.vy += rotvec->vy;
-    rotation.vz += rotvec->vz;
+    model->rotate.vx += rotvec->vx;
+    model->rotate.vy += rotvec->vy;
+    model->rotate.vz += rotvec->vz;
 
-    RotMatrix(&rotation, &transform);
-    TransMatrix(&transform, &translation);
-    ScaleMatrix(&transform, &scale);
+    model_mat(model, &transform);
 
-    render_mesh(mesh);
+    numTri = 0;
+    effectiveNumTri = 0;
+    // TODO: here a loop, to render each node of the scene
+    render_mesh(model->mesh);
 
-    FntPrint("MODEL LOADER");
-    FntFlush(-1);
+    /* FntPrint("MODEL LOADER\n"); */
+    FntPrint("vsync %d\n", VSync(-1));
+    /* int fps = 0; */
+    /* if (tc > 0) fps = fc/tc; */
+    /* FntPrint("vsync %d fc %d tc %d fps %d\n", VSync(-1), fc, tc, fps); */
+    FntPrint("nt %d ent %d\n", numTri, effectiveNumTri);
 }
 
 void render_mesh(Mesh3D *mesh)
@@ -164,6 +167,7 @@ void render_mesh(Mesh3D *mesh)
             int i2 = mesh->indices[i+1 + offset];
             int i3 = mesh->indices[i+2 + offset];
 
+            numTri++;
             add_tri(&mesh->vertices[i1],
                     &mesh->vertices[i2],
                     &mesh->vertices[i3],
@@ -218,25 +222,21 @@ void add_tri(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
 
     addPrim(&cdb->ot[otz], poly);
     nextpri += sizeof(POLY_FT3);
+    effectiveNumTri ++;
 }
 
-
-unsigned int rdr_getticks()
-{
-    // TODO
-    return 0;
-}
-
-void rdr_delay(int frame_start)
+void rdr_delay()
 {
     DrawSync(0);
     VSync(0);
 
-    PutDispEnv(&cdb->disp);
     PutDrawEnv(&cdb->draw);
+    PutDispEnv(&cdb->disp);
 
     DrawOTag(&cdb->ot[OTLEN - 1]);
+    FntFlush(-1);
 
+    // TODO: extract to function swap_buffer ?
     cdb = (cdb == &db[0]) ? &db[1] : &db[0];
     nextpri = cdb->pribuff;
 }

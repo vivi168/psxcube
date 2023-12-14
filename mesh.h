@@ -121,16 +121,15 @@ void animate(const MD5Anim* anim, MD5AnimInfo* animInfo, int dt);
 
 typedef struct model_3d_t {
     Mesh3D *mesh;
+    MD5Model* md5_model;
+    MD5Anim* md5_anim; // TODO: support multiple animations
+
     SVECTOR rotate;
     VECTOR translate;
     VECTOR scale;
-
-    MD5Model* md5_model;
-    MD5Anim** md5_anims; // TODO: hashmap?
 } Model3D;
 
 
-void model_mat(const Model3D* model, MATRIX* mat);
-
+void model_mat(Model3D* model, MATRIX* mat);
 
 #endif

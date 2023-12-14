@@ -34,6 +34,7 @@ void iptm_update()
 
             input_manager.keys_pressed =  (input_manager.old_keystate ^ input_manager.new_keystate) & input_manager.new_keystate;
             input_manager.keys_held = input_manager.old_keystate & input_manager.new_keystate;
+            // TODO: bug
             input_manager.keys_released = input_manager.old_keystate ^ input_manager.new_keystate;
         }
     }
