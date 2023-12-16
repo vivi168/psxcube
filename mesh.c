@@ -334,9 +334,9 @@ void print_md5anim(const MD5Anim* anim)
     }
 }
 
-void model_mat(Model3D* model, MATRIX* mat)
+void model_mat(const Model3D* model, MATRIX* mat)
 {
-    RotMatrix(&model->rotate, mat);
+    RotMatrix_gte(&model->rotate, mat);
     TransMatrix(mat, &model->translate);
     ScaleMatrix(mat, &model->scale);
 }

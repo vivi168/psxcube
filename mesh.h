@@ -130,6 +130,6 @@ typedef struct model_3d_t {
 } Model3D;
 
 
-void model_mat(Model3D* model, MATRIX* mat);
+void model_mat(const Model3D* model, MATRIX* mat);
 
 #endif

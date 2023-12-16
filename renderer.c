@@ -27,6 +27,7 @@ static DB *cdb; // int instead. make macro to get current cdb ?
 static int8_t *nextpri;
 
 static MATRIX transform;
+static RECT screenClip;
 
 void create_texture(const char* filename, Texture *tex);
 void render_mesh(Mesh3D*);
@@ -39,8 +40,8 @@ void rdr_init()
     ResetGraph(0);
     InitGeom();
 
-    SetGeomOffset(SCREEN_W / 2, SCREEN_H / 2);
-    SetGeomScreen(SCREEN_Z);
+    gte_SetGeomOffset(SCREEN_W / 2, SCREEN_H / 2);
+    gte_SetGeomScreen(SCREEN_Z);
 
     // First buffer
     SetDefDispEnv(&db[0].disp, 0, 0, SCREEN_W, SCREEN_H);
@@ -63,6 +64,8 @@ void rdr_init()
     FntOpen( 0, 8, 320, 224, 0, 100 );
 
     SetDispMask(1);
+
+    setRECT(&screenClip, 0, 0, SCREEN_W, SCREEN_H);
 }
 
 // TODO: move this as part of mesh ?
@@ -91,6 +94,8 @@ void create_texture(const char* filename, Texture* texture)
     if (buff == NULL) {
         printf("[ERROR]: error while loading texture\n");
         while(1);
+        // TODO: add assert instead
+        // TODO 2: if not able to load texture fallback to rendering face color
     }
 
     OpenTIM((uint32_t*)buff);
@@ -123,24 +128,36 @@ void create_texture(const char* filename, Texture* texture)
     free3(buff);
 }
 
+// TODO: rename
 // TODO phase 1: pass camera, and model instead
 // TODO phase 2: pass scene
 // scene is a graph
 // when being done with model->rotate +=, switch to const
-void rdr_render(Model3D *model, SVECTOR *rotvec)
+void rdr_render(Model3D *model, Camera *camera)
 {
+    // TODO: where to put this exactly, in relation to rdr_delay()?
     ClearOTagR(cdb->ot, OTLEN);
 
-    model->rotate.vx += rotvec->vx;
-    model->rotate.vy += rotvec->vy;
-    model->rotate.vz += rotvec->vz;
-
-    model_mat(model, &transform);
+    // model->rotate.vx += rotvec->vx;
+    // model->rotate.vy += rotvec->vy;
+    // model->rotate.vz += rotvec->vz;
 
     numTri = 0;
     effectiveNumTri = 0;
+
     // TODO: here a loop, to render each node of the scene
-    render_mesh(model->mesh);
+    // TODO: function ?
+    {
+        MATRIX modelMat;
+
+        model_mat(model, &modelMat);
+        CompMatrixLV(&camera->matrix, &modelMat, &modelMat);
+
+        gte_SetRotMatrix(&modelMat);
+        gte_SetTransMatrix(&modelMat);
+
+        render_mesh(model->mesh);
+    }
 
     /* FntPrint("MODEL LOADER\n"); */
     FntPrint("vsync %d\n", VSync(-1));
@@ -153,10 +170,6 @@ void rdr_render(Model3D *model, SVECTOR *rotvec)
 void render_mesh(Mesh3D *mesh)
 {
     int i;
-
-    // TODO: have a model instead. (mesh + model matrix)
-    gte_SetRotMatrix(&transform);
-    gte_SetTransMatrix(&transform);
 
     // TODO: here use subset to render.
     for (int s = 0; s < mesh->header.numSubsets; s++) {
@@ -198,9 +211,11 @@ void add_tri(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
 
     // average Z for depth sorting
     gte_avsz3();
-    gte_stotz(&otz);
+    gte_stotz(&otz); // screen_z >>= 2
 
-    if (otz >= OTLEN) return;
+#define NEAR_PLANE 16
+#define FAR_PLANE 512
+    if (otz <= NEAR_PLANE || otz >= FAR_PLANE) return;
 
     poly = (POLY_FT3*)nextpri;
     setPolyFT3(poly);
@@ -209,6 +224,12 @@ void add_tri(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
     gte_stsxy0(&poly->x0);
     gte_stsxy1(&poly->x1);
     gte_stsxy2(&poly->x2);
+
+    if (tri_clip(&screenClip,
+                 (DVECTOR*)&poly->x0,
+                 (DVECTOR*)&poly->x1,
+                 (DVECTOR*)&poly->x2
+                 )) return;
 
     setUV3(poly, texture->u + v1->uv.vx, texture->v + v1->uv.vy,
                  texture->u + v2->uv.vx, texture->v + v2->uv.vy,
@@ -225,6 +246,7 @@ void add_tri(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
     effectiveNumTri ++;
 }
 
+// TODO rename Draw() ?
 void rdr_delay()
 {
     DrawSync(0);

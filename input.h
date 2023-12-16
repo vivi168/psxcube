@@ -8,8 +8,10 @@
 #define KEY_RIGHT   5
 #define KEY_DOWN    6
 #define KEY_LEFT    7
-#define KEY_RESTART 12   // triangle 1 << 12
-#define KEY_QUIT    15   // square   1 << 15
+#define KEY_TRIANGLE 12   // triangle 1 << 12
+#define KEY_CIRCLE   13
+#define KEY_CROSS    14
+#define KEY_SQUARE   15   // square   1 << 15
 
 typedef struct input_manager_t {
     int quit;
@@ -17,6 +19,7 @@ typedef struct input_manager_t {
     unsigned int keys_pressed, keys_held, keys_released;
 } InputManager;
 
+// TODO: rename this iptm shit
 void iptm_init();
 void iptm_update();
 void iptm_poll_events();

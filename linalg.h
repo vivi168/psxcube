@@ -31,4 +31,15 @@ typedef FLOAT quat[4];
 
 void quat_rotate_point(const quat q, const vec3 in, vec3 out);
 
+
+// trigonometry
+int iSin(int x);
+#define iCos(x) (iSin(x + 1024))
+
+
+// clip
+
+int tri_clip(RECT *clip, DVECTOR *v0, DVECTOR *v1, DVECTOR *v2);
+int quad_clip(RECT *clip, DVECTOR *v0, DVECTOR *v1, DVECTOR *v2, DVECTOR *v3);
+
 #endif
