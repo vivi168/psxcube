@@ -96,7 +96,7 @@ class Subset:
         tex = os.path.splitext(os.path.basename(texture))[0]
         if len(tex) > Subset.MAX_TEX_CHAR - 1: exit('Tex name too long')
         self.texture_path = texture
-        self.texture_name = tex[:Subset.MAX_TEX_CHAR-1] # limit to 20 chars
+        self.texture_name = tex[:Subset.MAX_TEX_CHAR-1].upper() # limit to 20 chars
         self.texture_size = Image.open(texture).size
 
     def __str__(self):
