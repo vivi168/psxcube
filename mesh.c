@@ -334,6 +334,21 @@ void print_md5anim(const MD5Anim* anim)
     }
 }
 
+void model_setScale(Model3D* model, int scale)
+{
+    setVector(&model->scale, scale, scale, scale);
+}
+
+void model_setRotation(Model3D* model, int x, int y, int z)
+{
+    setVector(&model->rotate, x, y, z);
+}
+
+void model_setTranslation(Model3D* model, int x, int y, int z)
+{
+    setVector(&model->translate, x, y, z);
+}
+
 void model_mat(const Model3D* model, MATRIX* mat)
 {
     RotMatrix_gte(&model->rotate, mat);

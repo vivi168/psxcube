@@ -21,3 +21,8 @@ void Cam_Update(Camera* cam)
         // Set translation matrix
         TransMatrix(&cam->matrix, &cam->tpos);
 }
+
+void Cam_SetPos(Camera* cam, int x, int y, int z)
+{
+    setVector(&cam->pos, x * ONE, y * ONE, z * ONE);
+}

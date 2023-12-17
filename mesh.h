@@ -130,6 +130,9 @@ typedef struct model_3d_t {
 } Model3D;
 
 
+void model_setScale(Model3D*, int);
+void model_setRotation(Model3D*, int, int, int);
+void model_setTranslation(Model3D*, int, int, int);
 void model_mat(const Model3D* model, MATRIX* mat);
 
 #endif

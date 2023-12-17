@@ -82,6 +82,18 @@ void process_input()
 // TODO better way
 void init_assets()
 {
+    // Cube
+    read_obj("\\CUBE.M3D;1", &meshes[CUBE_MESH]);
+    print_mesh3d(&meshes[CUBE_MESH]);
+    // TODO: if multiple models share same texture
+    rdr_init_textures(&meshes[CUBE_MESH]);
+
+    models[CUBE_MESH].mesh = &meshes[CUBE_MESH];
+    model_setScale(&models[CUBE_MESH], 100);
+    model_setRotation(&models[CUBE_MESH], 0, 0, 0);
+    model_setTranslation(&models[CUBE_MESH], 500, 0, 500);
+
+
     // Bob
     read_md5model("\\BOB.MD5M;1", &md5_models[BOB_MESH]);
     read_md5anim("\\BOB.MD5A;1", &md5_anims[BOB_ANIM]);
@@ -90,17 +102,16 @@ void init_assets()
     update_mesh3d(&md5_models[BOB_MESH], md5_anims[BOB_ANIM].frameJoints[0], &meshes[BOB_MESH]);
     rdr_init_textures(&meshes[BOB_MESH]);
 
-    print_mesh3d(&meshes[BOB_MESH]);
+    // print_mesh3d(&meshes[BOB_MESH]);
 
     models[BOB_MESH].mesh = &meshes[BOB_MESH];
     models[BOB_MESH].md5_model = &md5_models[BOB_MESH];
     /* models[BOB_MESH].md5_anims = malloc3(sizeof(MD5Anim) * 1); */
     models[BOB_MESH].md5_anim = &md5_anims[BOB_ANIM];
 
-    int sc = 35;
-    setVector(&models[BOB_MESH].scale, sc, sc, sc);
-    setVector(&models[BOB_MESH].rotate, 0, 0, 0);
-    setVector(&models[BOB_MESH].translate, 0, 0, 500);
+    model_setScale(&models[BOB_MESH], 100);
+    model_setRotation(&models[BOB_MESH], 0, 0, 0);
+    model_setTranslation(&models[BOB_MESH], 0, 0, 500);
 
     printf("[INFO]: assets init done !\n");
 }
@@ -112,7 +123,7 @@ void mainloop()
     int curr_frame = 0;
 
     {
-        setVector(&camera.pos, 0, ONE * -200, 0);
+        Cam_SetPos(&camera, 0, -300, 0);
         setVector(&camera.rot, 0, 0, 0);
     }
 

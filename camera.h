@@ -11,5 +11,6 @@ typedef struct camera_t {
 } Camera;
 
 void Cam_Update(Camera* cam);
+void Cam_SetPos(Camera* cam, int, int, int);
 
 #endif

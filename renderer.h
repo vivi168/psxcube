@@ -7,7 +7,7 @@
 
 void rdr_init();
 void rdr_init_textures(const Mesh3D*);
-void rdr_render(Model3D*, Camera*);
+void rdr_render(const Model3D*, Camera*);
 void rdr_cleanup();
 
 void rdr_delay();

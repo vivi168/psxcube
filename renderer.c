@@ -26,7 +26,6 @@ static DB *cdb; // int instead. make macro to get current cdb ?
          // swap buffer with cdb ^= 1
 static int8_t *nextpri;
 
-static MATRIX transform;
 static RECT screenClip;
 
 void create_texture(const char* filename, Texture *tex);
@@ -133,7 +132,7 @@ void create_texture(const char* filename, Texture* texture)
 // TODO phase 2: pass scene
 // scene is a graph
 // when being done with model->rotate +=, switch to const
-void rdr_render(Model3D *model, Camera *camera)
+void rdr_render(const Model3D *model, Camera *camera)
 {
     // TODO: where to put this exactly, in relation to rdr_delay()?
     ClearOTagR(cdb->ot, OTLEN);
@@ -215,7 +214,7 @@ void add_tri(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
 
 #define NEAR_PLANE 16
 #define FAR_PLANE 512
-    if (otz <= NEAR_PLANE || otz >= FAR_PLANE) return;
+    if (otz < NEAR_PLANE || otz >= FAR_PLANE) return;
 
     poly = (POLY_FT3*)nextpri;
     setPolyFT3(poly);
