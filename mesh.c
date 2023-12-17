@@ -9,10 +9,7 @@ void read_obj(const char* filename, Mesh3D* mesh)
     printf("[INFO]: loading mesh\n");
 
     buff = load_file(filename, &file_size);
-    if (buff == NULL) {
-        printf("[ERROR]: error while loading model file\n");
-        while(1);
-    }
+    assert(buff != NULL);
 
     // header
     s = sizeof(ObjHeader);
@@ -93,10 +90,7 @@ void read_md5model(const char* filename, MD5Model* model)
     printf("[INFO]: loading md5 model\n");
 
     buff = load_file(filename, &file_size);
-    if (buff == NULL) {
-        printf("[ERROR]: error while loading md5 model file\n");
-        while(1);
-    }
+    assert(buff != NULL);
 
     // header
     s = sizeof(MD5ModelHeader);
@@ -157,10 +151,7 @@ void read_md5anim(const char* filename, MD5Anim* anim)
     printf("[INFO]: loading md5 animation\n");
 
     buff = load_file(filename, &file_size);
-    if (buff == NULL) {
-        printf("[ERROR]: error while loading md5 animation file\n");
-        while(1);
-    }
+    assert(buff != NULL);
 
     // header
     s = sizeof(MD5AnimHeader);

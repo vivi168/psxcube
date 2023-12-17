@@ -107,12 +107,8 @@ void create_texture(const char* filename, Texture* texture)
     TIM_IMAGE *image;
 
     buff = load_file(filename, &file_size);
-    if (buff == NULL) {
-        printf("[ERROR]: error while loading texture\n");
-        while(1);
-        // TODO: add assert instead
-        // TODO 2: if not able to load texture fallback to rendering face color
-    }
+    // TODO: if not able to load texture fallback to rendering face color?
+    assert(buff != NULL);
 
     OpenTIM((uint32_t*)buff);
     ReadTIM(image);
