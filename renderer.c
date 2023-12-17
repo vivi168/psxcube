@@ -18,6 +18,20 @@ typedef struct texture_t {
 
     uint16_t tpage, clut;
 } Texture;
+
+typedef struct scene_node_t {
+   Model3D *model;
+   struct scene_node_t *next;
+} SceneNode;
+
+// TODO: tree instead ? group by TPAGE ?
+typedef struct scene_list_t {
+    SceneNode *head;
+    SceneNode *tail;
+
+    Camera* camera;
+} Scene;
+
 // TODO: all of these static ?
 // make struct to hold these following three ?
 static DB db[2];
@@ -26,15 +40,19 @@ static DB *cdb; // int instead. make macro to get current cdb ?
          // swap buffer with cdb ^= 1
 static int8_t *nextpri;
 
+static Scene scene;
 static RECT screenClip;
 
 void create_texture(const char* filename, Texture *tex);
-void render_mesh(Mesh3D*);
+void add_mesh(Mesh3D*);
 void add_tri(Vertex*, Vertex*, Vertex*, Texture *tex);
 
 void rdr_init()
 {
     printf("[INFO]: init\n");
+
+    scene.head = NULL;
+    scene.tail = NULL;
 
     ResetGraph(0);
     InitGeom();
@@ -84,7 +102,6 @@ void rdr_init_textures(const Mesh3D* mesh)
 void create_texture(const char* filename, Texture* texture)
 {
     uint32_t file_size;
-    int i;
     int8_t *buff;
 
     TIM_IMAGE *image;
@@ -127,35 +144,62 @@ void create_texture(const char* filename, Texture* texture)
     free3(buff);
 }
 
-// TODO: rename
-// TODO phase 1: pass camera, and model instead
-// TODO phase 2: pass scene
-// scene is a graph
-// when being done with model->rotate +=, switch to const
-void rdr_render(const Model3D *model, Camera *camera)
+void rdr_prependToScene(Model3D* model)
 {
+    SceneNode *new_node = malloc3(sizeof(SceneNode));
+    new_node->model = model;
+
+    new_node->next = scene.head;
+    scene.tail = scene.head;
+    scene.head = new_node;
+}
+
+void rdr_appendToScene(Model3D* model)
+{
+    SceneNode *new_node = malloc3(sizeof(SceneNode));
+    new_node->model = model;
+    new_node->next = NULL;
+
+    if (scene.head == NULL) {
+        scene.head = new_node;
+        scene.tail = new_node;
+        return;
+    }
+
+    scene.tail->next = new_node;
+    scene.tail = new_node;
+}
+
+void rdr_setSceneCamera(Camera* camera)
+{
+    scene.camera = camera;
+}
+
+void rdr_processScene()
+{
+    SceneNode* curr;
     // TODO: where to put this exactly, in relation to rdr_delay()?
     ClearOTagR(cdb->ot, OTLEN);
 
-    // model->rotate.vx += rotvec->vx;
-    // model->rotate.vy += rotvec->vy;
-    // model->rotate.vz += rotvec->vz;
+    assert(scene.camera != NULL);
 
     numTri = 0;
     effectiveNumTri = 0;
 
-    // TODO: here a loop, to render each node of the scene
-    // TODO: function ?
-    {
+    curr = scene.head;
+
+    while(curr != NULL) {
         MATRIX modelMat;
 
-        model_mat(model, &modelMat);
-        CompMatrixLV(&camera->matrix, &modelMat, &modelMat);
+        model_mat(curr->model, &modelMat);
+        CompMatrixLV(&scene.camera->matrix, &modelMat, &modelMat);
 
         gte_SetRotMatrix(&modelMat);
         gte_SetTransMatrix(&modelMat);
 
-        render_mesh(model->mesh);
+        add_mesh(curr->model->mesh);
+
+        curr = curr->next;
     }
 
     /* FntPrint("MODEL LOADER\n"); */
@@ -166,10 +210,8 @@ void rdr_render(const Model3D *model, Camera *camera)
     FntPrint("nt %d ent %d\n", numTri, effectiveNumTri);
 }
 
-void render_mesh(Mesh3D *mesh)
+void add_mesh(Mesh3D *mesh)
 {
-    int i;
-
     // TODO: here use subset to render.
     for (int s = 0; s < mesh->header.numSubsets; s++) {
         unsigned int offset = mesh->subsets[s].start;
@@ -245,8 +287,7 @@ void add_tri(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
     effectiveNumTri ++;
 }
 
-// TODO rename Draw() ?
-void rdr_delay()
+void rdr_draw()
 {
     DrawSync(0);
     VSync(0);

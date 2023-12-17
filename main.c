@@ -93,6 +93,7 @@ void init_assets()
     model_setRotation(&models[CUBE_MESH], 0, 0, 0);
     model_setTranslation(&models[CUBE_MESH], 500, 0, 500);
 
+    rdr_appendToScene(&models[CUBE_MESH]);
 
     // Bob
     read_md5model("\\BOB.MD5M;1", &md5_models[BOB_MESH]);
@@ -113,6 +114,8 @@ void init_assets()
     model_setRotation(&models[BOB_MESH], 0, 0, 0);
     model_setTranslation(&models[BOB_MESH], 0, 0, 500);
 
+    rdr_appendToScene(&models[BOB_MESH]);
+
     printf("[INFO]: assets init done !\n");
 }
 
@@ -123,6 +126,7 @@ void mainloop()
     int curr_frame = 0;
 
     {
+        rdr_setSceneCamera(&camera);
         Cam_SetPos(&camera, 0, -300, 0);
         setVector(&camera.rot, 0, 0, 0);
     }
@@ -149,10 +153,10 @@ void mainloop()
             }
         }
 
-        rdr_render(&models[BOB_MESH], &camera);
+        rdr_processScene();
         frameCounter ++;
         // now we can compute how many frame per seconds
-        rdr_delay();
+        rdr_draw();
     }
 }
 

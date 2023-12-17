@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 #include <inline_c.h>
 #include <string.h>
 #include <ctype.h>
