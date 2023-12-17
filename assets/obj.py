@@ -100,10 +100,10 @@ class Subset:
         self.texture_size = Image.open(texture).size
 
     def __str__(self):
-        return '{} {} [{}] ({})'.format(self.start, self.count, len(self.texture_name), self.texture_name)
+        return '{} {} [{}] ({})'.format(self.start * 3, self.count * 3, len(self.texture_name), self.texture_name)
 
     def pack(self):
-        data = struct.pack('<IIi', self.start, self.count, 0) # pad Texture pointer
+        data = struct.pack('<IIi', self.start * 3, self.count * 3, 0) # pad Texture pointer
 
         return data + bytes(self.texture_name.ljust(Subset.MAX_TEX_CHAR, '\0'), 'ascii')
 
