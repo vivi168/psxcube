@@ -245,8 +245,6 @@ if __name__ == '__main__':
     else:
         outfile = args.outfile
 
-    print(args)
-
     m = Mesh()
     m.from_file(args.infile)
     m.pack(outfile)
