@@ -117,8 +117,8 @@ typedef struct model_3d_t {
 
     bool animated;
     struct anim_info_t {
-        int curr_animation; // TODO: index of animation inf md5_anims array above;
-                            // pointer to current anim instead?
+        int anim_count;
+        MD5Anim* curr_anim;
         int curr_frame;
     } anim_info;
 

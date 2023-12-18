@@ -233,7 +233,7 @@ void add_tri(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
     int32_t otz, nclip;
     POLY_FT3 *poly;
 
-    // load first three vertices to GTE (reverse order from blender export)
+    // load first three vertices to GTE
     gte_ldv3(&v1->position,
              &v2->position,
              &v3->position);
@@ -251,7 +251,7 @@ void add_tri(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
     gte_stotz(&otz); // screen_z >>= 2
 
 #define NEAR_PLANE 16
-#define FAR_PLANE 512
+#define FAR_PLANE OTLEN
     if (otz < NEAR_PLANE || otz >= FAR_PLANE) return;
 
     poly = (POLY_FT3*)nextpri;

@@ -30,7 +30,8 @@ class Vec3:
         self.z = z
 
     def pack(self):
-        return struct.pack('<hhhh', int(self.x), int(self.y), int(self.z), 0) # SVECTOR are padded
+        SCALE = 128
+        return struct.pack('<hhhh', int(self.x * SCALE), int(self.y * SCALE), int(self.z * SCALE), 0) # SVECTOR are padded
 
     def __str__(self):
         return '{:.6f} {:.6f} {:.6f}'.format(self.x, self.y, self.z)
@@ -108,7 +109,6 @@ class Subset:
         return data + bytes(self.texture_name.ljust(Subset.MAX_TEX_CHAR, '\0'), 'ascii')
 
 class Mesh:
-    ONE = 4096
     def __init__(self):
         self.vertices = []
         self.tris = []
@@ -132,9 +132,9 @@ class Mesh:
                 if line.startswith('v '):
                     data = parse.search('v {px:g} {py:g} {pz:g}', line)
 
-                    x = data['px'] * Mesh.ONE
-                    y = data['py'] * Mesh.ONE
-                    z = data['pz'] * Mesh.ONE
+                    x = data['px']
+                    y = data['py']
+                    z = data['pz']
                     positions.append(Vec3(x, y, z))
 
                 elif line.startswith('vt '):
@@ -144,9 +144,9 @@ class Mesh:
                 elif line.startswith('vn '):
                     data = parse.search('vn {nx:g} {ny:g} {nz:g}', line)
                     # TODO: transform
-                    x = data['nx'] * Mesh.ONE
-                    x = data['ny'] * Mesh.ONE
-                    x = data['nz'] * Mesh.ONE
+                    x = data['nx']
+                    x = data['ny']
+                    x = data['nz']
                     normals.append(Vec3(x, y, z))
 
                 elif line.startswith('usemtl'):

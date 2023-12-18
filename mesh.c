@@ -191,9 +191,10 @@ void prepare_vertices(const MD5Mesh* mesh, const MD5Joint* joints, Vertex** vert
             finalPos[Z] += FixedMulFixed((joint->pos[Z] + wv[Z]), w->bias);
         }
 
-        (*vertices)[k + offset].position.vx = finalPos[X];
-        (*vertices)[k + offset].position.vy = -finalPos[Z];
-        (*vertices)[k + offset].position.vz = finalPos[Y];
+        // obj model are scaled by 128 int(blender export coord * 128)
+        (*vertices)[k + offset].position.vx = finalPos[X] >> 5;
+        (*vertices)[k + offset].position.vy = -finalPos[Z] >> 5;
+        (*vertices)[k + offset].position.vz = finalPos[Y] >> 5;
         (*vertices)[k + offset].position.pad = 0;
 
         setVector(&(*vertices)[k + offset].normal, 0, 0, 0);

@@ -36,6 +36,7 @@ void process_input()
     camera.trot.vz = FixedToInt(camera.rot.vz);
 
 #define CAM_ROT_SPEED (ONE * 12)
+#define MOVE_SCALE 6
 
     if (iptm_is_held(KEY_UP)) {
         camera.rot.vx -= CAM_ROT_SPEED;
@@ -50,22 +51,22 @@ void process_input()
         camera.rot.vy -= CAM_ROT_SPEED;
     }
     if (iptm_is_held(KEY_TRIANGLE)) {
-        camera.pos.vx -= FixedMulFixed(iSin(camera.trot.vy), iCos(camera.trot.vx)) << 2;
-        // camera.pos.vy += iSin(camera.trot.vx) << 2;
-        camera.pos.vz += FixedMulFixed(iCos(camera.trot.vy), iCos(camera.trot.vx)) << 2;
+        camera.pos.vx -= FixedMulFixed(iSin(camera.trot.vy), iCos(camera.trot.vx)) << MOVE_SCALE;
+        camera.pos.vy += iSin(camera.trot.vx) << MOVE_SCALE;
+        camera.pos.vz += FixedMulFixed(iCos(camera.trot.vy), iCos(camera.trot.vx)) << MOVE_SCALE;
     }
     if (iptm_is_held(KEY_CROSS)) {
-        camera.pos.vx += FixedMulFixed(iSin(camera.trot.vy), iCos(camera.trot.vx)) << 2;
-        // camera.pos.vy -= iSin(camera.trot.vx) << 2;
-        camera.pos.vz -= FixedMulFixed(iCos(camera.trot.vy), iCos(camera.trot.vx)) << 2;
+        camera.pos.vx += FixedMulFixed(iSin(camera.trot.vy), iCos(camera.trot.vx)) << MOVE_SCALE;
+        camera.pos.vy -= iSin(camera.trot.vx) << MOVE_SCALE;
+        camera.pos.vz -= FixedMulFixed(iCos(camera.trot.vy), iCos(camera.trot.vx)) << MOVE_SCALE;
     }
     if (iptm_is_held(KEY_SQUARE)) {
-        camera.pos.vx -= iCos(camera.trot.vy) << 2;
-        camera.pos.vz -= iSin(camera.trot.vy) << 2;
+        camera.pos.vx -= iCos(camera.trot.vy) << MOVE_SCALE;
+        camera.pos.vz -= iSin(camera.trot.vy) << MOVE_SCALE;
     }
     if (iptm_is_held(KEY_CIRCLE)) {
-        camera.pos.vx += iCos(camera.trot.vy) << 2;
-        camera.pos.vz += iSin(camera.trot.vy) << 2;
+        camera.pos.vx += iCos(camera.trot.vy) << MOVE_SCALE;
+        camera.pos.vz += iSin(camera.trot.vy) << MOVE_SCALE;
     }
 
     if (iptm_is_pressed(KEY_TRIANGLE)) printf("TRIANGLE\n");
@@ -88,7 +89,7 @@ void init_assets()
 
         model_initStaticModel(&models[CUBE_MESH], &meshes[CUBE_MESH]);
 
-        model_setScale(&models[CUBE_MESH], 100);
+        model_setScale(&models[CUBE_MESH], ONE);
         model_setRotation(&models[CUBE_MESH], 0, 0, 0);
         model_setTranslation(&models[CUBE_MESH], 500, 0, 500);
 
@@ -105,7 +106,7 @@ void init_assets()
         rdr_init_textures(models[CUBEGUY_MESH].mesh);
         print_mesh3d(models[CUBEGUY_MESH].mesh);
 
-        model_setScale(&models[CUBEGUY_MESH], 100);
+        model_setScale(&models[CUBEGUY_MESH], ONE);
         model_setRotation(&models[CUBEGUY_MESH], 0, 0, 0);
         model_setTranslation(&models[CUBEGUY_MESH], -500, 0, 500);
 
@@ -123,7 +124,7 @@ void init_assets()
         rdr_init_textures(models[BOB_MESH].mesh); // TODO: be careful of doing this after initing the mesh.
         // print_mesh3d(models[BOB_MESH].mesh);
 
-        model_setScale(&models[BOB_MESH], 100);
+        model_setScale(&models[BOB_MESH], ONE);
         model_setRotation(&models[BOB_MESH], 0, 0, 0);
         model_setTranslation(&models[BOB_MESH], 0, 0, 500);
 
@@ -141,7 +142,7 @@ void mainloop()
 
     {
         rdr_setSceneCamera(&camera);
-        Cam_SetPos(&camera, 0, -300, 0);
+        Cam_SetPos(&camera, 0, -1000, 0);
         setVector(&camera.rot, 0, 0, 0);
     }
 
