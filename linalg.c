@@ -13,11 +13,11 @@ void print_quat(quat q)
 void quat_normalize(quat q)
 {
     int x = ((q[X] * q[X]) + (q[Y] * q[Y]) + (q[Z] * q[Z]) + (q[W] * q[W])) >> SCALE;
-    FLOAT mag = SquareRoot12(x);
+    int mag = SquareRoot12(x);
 
     if (mag > 0)
     {
-        FLOAT one_over_mag = ONE / mag;
+        int one_over_mag = ONE / mag;
 
         q[X] *= one_over_mag;
         q[Y] *= one_over_mag;

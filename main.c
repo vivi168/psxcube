@@ -31,10 +31,6 @@ SVECTOR rotvec;
 // TODO: different camera types ?
 void process_input()
 {
-    // rotvec.vx = 0;
-    // rotvec.vy = 0;
-    // rotvec.vz = 0;
-
     camera.trot.vx = FixedToInt(camera.rot.vx);
     camera.trot.vy = FixedToInt(camera.rot.vy);
     camera.trot.vz = FixedToInt(camera.rot.vz);
@@ -83,38 +79,56 @@ void process_input()
 void init_assets()
 {
     // Cube
-    read_obj("\\CUBE.M3D;1", &meshes[CUBE_MESH]);
-    print_mesh3d(&meshes[CUBE_MESH]);
-    // TODO: if multiple models share same texture
-    rdr_init_textures(&meshes[CUBE_MESH]);
+    {
+        read_obj("\\CUBE.M3D;1", &meshes[CUBE_MESH]);
+        print_mesh3d(&meshes[CUBE_MESH]);
+        // TODO: if multiple models share same texture
+        // no need to reload texture
+        rdr_init_textures(&meshes[CUBE_MESH]);
 
-    models[CUBE_MESH].mesh = &meshes[CUBE_MESH];
-    model_setScale(&models[CUBE_MESH], 100);
-    model_setRotation(&models[CUBE_MESH], 0, 0, 0);
-    model_setTranslation(&models[CUBE_MESH], 500, 0, 500);
+        model_initStaticModel(&models[CUBE_MESH], &meshes[CUBE_MESH]);
 
-    rdr_appendToScene(&models[CUBE_MESH]);
+        model_setScale(&models[CUBE_MESH], 100);
+        model_setRotation(&models[CUBE_MESH], 0, 0, 0);
+        model_setTranslation(&models[CUBE_MESH], 500, 0, 500);
+
+        rdr_appendToScene(&models[CUBE_MESH]);
+    }
+
+    // CubeGuy
+    {
+        read_md5model("\\CUBEGUY.MD5M;1", &md5_models[CUBEGUY_MESH]);
+        read_md5anim("\\RUNNING.MD5A;1", &md5_anims[CUBEGUY_RUNNING]);
+
+        model_initAnimatedModel(&models[CUBEGUY_MESH], &md5_models[CUBEGUY_MESH], &md5_anims[CUBEGUY_RUNNING]);
+        // TODO: do not load same texture file twice
+        rdr_init_textures(models[CUBEGUY_MESH].mesh);
+        print_mesh3d(models[CUBEGUY_MESH].mesh);
+
+        model_setScale(&models[CUBEGUY_MESH], 100);
+        model_setRotation(&models[CUBEGUY_MESH], 0, 0, 0);
+        model_setTranslation(&models[CUBEGUY_MESH], -500, 0, 500);
+
+        rdr_appendToScene(&models[CUBEGUY_MESH]);
+    }
 
     // Bob
-    read_md5model("\\BOB.MD5M;1", &md5_models[BOB_MESH]);
-    read_md5anim("\\BOB.MD5A;1", &md5_anims[BOB_ANIM]);
+    {
+        read_md5model("\\BOB.MD5M;1", &md5_models[BOB_MESH]);
+        read_md5anim("\\BOB.MD5A;1", &md5_anims[BOB_ANIM]);
 
-    init_mesh3d(&md5_models[BOB_MESH], &meshes[BOB_MESH]);
-    update_mesh3d(&md5_models[BOB_MESH], md5_anims[BOB_ANIM].frameJoints[0], &meshes[BOB_MESH]);
-    rdr_init_textures(&meshes[BOB_MESH]);
+        // TODO: what if multiple animations
+        // animated model has mesh on heap ? can't share mesh because it's animated and thus modified.
+        model_initAnimatedModel(&models[BOB_MESH], &md5_models[BOB_MESH], &md5_anims[BOB_ANIM]);
+        rdr_init_textures(models[BOB_MESH].mesh); // TODO: be careful of doing this after initing the mesh.
+        // print_mesh3d(models[BOB_MESH].mesh);
 
-    // print_mesh3d(&meshes[BOB_MESH]);
+        model_setScale(&models[BOB_MESH], 100);
+        model_setRotation(&models[BOB_MESH], 0, 0, 0);
+        model_setTranslation(&models[BOB_MESH], 0, 0, 500);
 
-    models[BOB_MESH].mesh = &meshes[BOB_MESH];
-    models[BOB_MESH].md5_model = &md5_models[BOB_MESH];
-    /* models[BOB_MESH].md5_anims = malloc3(sizeof(MD5Anim) * 1); */
-    models[BOB_MESH].md5_anim = &md5_anims[BOB_ANIM];
-
-    model_setScale(&models[BOB_MESH], 100);
-    model_setRotation(&models[BOB_MESH], 0, 0, 0);
-    model_setTranslation(&models[BOB_MESH], 0, 0, 500);
-
-    rdr_appendToScene(&models[BOB_MESH]);
+        rdr_appendToScene(&models[BOB_MESH]);
+    }
 
     printf("[INFO]: assets init done !\n");
 }
@@ -123,7 +137,7 @@ void mainloop()
 {
     unsigned int frame_start;
     int quit = 0;
-    int curr_frame = 0;
+    // int curr_frame = 0;
 
     {
         rdr_setSceneCamera(&camera);
@@ -138,20 +152,10 @@ void mainloop()
         process_input();
         Cam_Update(&camera);
 
-        // TODO: extract animation to function
-        {
-            int frameDuration = 60 / models[BOB_MESH].md5_anim->header.frameRate;
-            if (frameCounter % frameDuration == 0) {
-                curr_frame ++;
-                if (curr_frame > models[BOB_MESH].md5_anim->header.numFrames - 1)
-                    curr_frame = 0;
-
-                update_mesh3d(models[BOB_MESH].md5_model,
-                              models[BOB_MESH].md5_anim->frameJoints[curr_frame],
-                              models[BOB_MESH].mesh);
-                // printf("Animate !! %d %d\n", curr_frame, running.header.frameRate);
-            }
-        }
+        // TODO: function to loop through scene linked list and update animated models.
+        // TODO 2: also loop through scene to update if model is visible or not ?
+        model_updateAnim(&models[CUBEGUY_MESH], frameCounter);
+        model_updateAnim(&models[BOB_MESH], frameCounter);
 
         rdr_processScene();
         frameCounter ++;

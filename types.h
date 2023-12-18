@@ -11,4 +11,9 @@ typedef unsigned short     uint16_t;
 typedef unsigned long      uint32_t;
 typedef unsigned long long uint64_t;
 
+typedef enum bool_t {
+    false = 0,
+    true = 1
+} bool;
+
 #endif

@@ -3,6 +3,7 @@
 
 typedef char STRING20[20];
 
+// TODO: anonymous struct for headers?
 typedef struct obj_header_t {
     int numVerts;
     int numTris;
@@ -49,7 +50,7 @@ typedef struct md5_vertex_t {
 
 typedef struct MD5_weight_t {
     int jointIndex;
-    FLOAT bias;
+    int bias;
     vec3 pos;
 } MD5Weight;
 
@@ -98,14 +99,6 @@ typedef struct md5_anim_t {
     MD5Joint** frameJoints; // frameJoints[numFrames][numJoints]
 } MD5Anim;
 
-typedef struct md5_anim_info_t {
-    int currFrame;
-    int nextFrame;
-
-    DOUBLE time;
-    DOUBLE frameDuration;
-} MD5AnimInfo;
-
 void read_md5model(const char* filename, MD5Model* model);
 void read_md5anim(const char* filename, MD5Anim* anim);
 
@@ -115,8 +108,6 @@ void update_mesh3d(const MD5Model* model, const MD5Joint* joints, Mesh3D* mesh);
 void print_md5model(const MD5Model* model);
 void print_md5anim(const MD5Anim* anim);
 
-void animate(const MD5Anim* anim, MD5AnimInfo* animInfo, int dt);
-
 // MODEL
 
 typedef struct model_3d_t {
@@ -124,11 +115,21 @@ typedef struct model_3d_t {
     MD5Model* md5_model;
     MD5Anim* md5_anim; // TODO: support multiple animations
 
+    bool animated;
+    struct anim_info_t {
+        int curr_animation; // TODO: index of animation inf md5_anims array above;
+                            // pointer to current anim instead?
+        int curr_frame;
+    } anim_info;
+
     SVECTOR rotate;
     VECTOR translate;
     VECTOR scale;
 } Model3D;
 
+void model_initStaticModel(Model3D* model, Mesh3D* mesh);
+void model_initAnimatedModel(Model3D* model, MD5Model* md5_model, MD5Anim* md5_anim);
+void model_updateAnim(Model3D*, int frame_counter);
 
 void model_setScale(Model3D*, int);
 void model_setRotation(Model3D*, int, int, int);

@@ -166,10 +166,6 @@ void read_md5anim(const char* filename, MD5Anim* anim)
         anim->frameJoints[i] = malloc3(s);
         IO_memcpy(anim->frameJoints[i], buff + offset, s);
         offset += s;
-
-        for (int k = 0; k < anim->header.numJoints; k++) {
-            MD5Joint* j = &anim->frameJoints[i][k];
-        }
     }
 
     printf("[INFO]: Done reading md5 animation\n");
@@ -322,6 +318,45 @@ void print_md5anim(const MD5Anim* anim)
                 j->orient[X], j->orient[Y], j->orient[Z], j->orient[W]
             );
         }
+    }
+}
+
+void model_initStaticModel(Model3D* model, Mesh3D* mesh)
+{
+    model->animated = false;
+
+    model->mesh = mesh;
+}
+
+// void model_initAnimatedModel(Model3D* model)
+void model_initAnimatedModel(Model3D* model, MD5Model* md5_model, MD5Anim* md5_anim)
+{
+    model->animated = true;
+
+    model->mesh = malloc3(sizeof(Mesh3D));
+    model->md5_model = md5_model;
+    /* model->md5_anims = malloc3(sizeof(MD5Anim) * 1); */
+    model->md5_anim = md5_anim;
+
+
+    init_mesh3d(model->md5_model, model->mesh);
+    // TODO: here replace by initial anmation.
+    update_mesh3d(model->md5_model,
+                  model->md5_anim->frameJoints[0],
+                  model->mesh);
+}
+
+void model_updateAnim(Model3D* model, int frame_counter)
+{
+    int duration = 60 / model->md5_anim->header.frameRate;
+    if (frame_counter % duration == 0) {
+        model->anim_info.curr_frame++;
+        if (model->anim_info.curr_frame > model->md5_anim->header.numFrames - 1)
+            model->anim_info.curr_frame = 0;
+
+        update_mesh3d(model->md5_model,
+                      model->md5_anim->frameJoints[model->anim_info.curr_frame],
+                      model->mesh);
     }
 }
 
