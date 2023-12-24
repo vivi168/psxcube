@@ -27,54 +27,39 @@ MD5Anim md5_anims[10];
 
 SVECTOR rotvec;
 
-// TODO: pass camera instead of global var?
-// TODO: Cam_ProcessInput
-// TODO: different camera types ?
+// TODO: pass camera to be able to have different camera types ?
 void process_input()
 {
-    camera.trot.vx = FixedToInt(camera.rot.vx);
-    camera.trot.vy = FixedToInt(camera.rot.vy);
-    camera.trot.vz = FixedToInt(camera.rot.vz);
-
-#define CAM_ROT_SPEED (ONE * 12)
-#define MOVE_SCALE 6
-
     if (iptm_is_held(KEY_UP)) {
-        camera.rot.vx -= CAM_ROT_SPEED;
+        camera.trot.vx -= CAM_ROT_SPEED;
     }
     if (iptm_is_held(KEY_DOWN)) {
-        camera.rot.vx += CAM_ROT_SPEED;
+        camera.trot.vx += CAM_ROT_SPEED;
     }
     if (iptm_is_held(KEY_LEFT)) {
-        camera.rot.vy += CAM_ROT_SPEED;
+        camera.trot.vy += CAM_ROT_SPEED;
     }
     if (iptm_is_held(KEY_RIGHT)) {
-        camera.rot.vy -= CAM_ROT_SPEED;
+        camera.trot.vy -= CAM_ROT_SPEED;
     }
     if (iptm_is_held(KEY_TRIANGLE)) {
-        camera.pos.vx -= FixedMulFixed(iSin(camera.trot.vy), iCos(camera.trot.vx)) << MOVE_SCALE;
-        camera.pos.vy += iSin(camera.trot.vx) << MOVE_SCALE;
-        camera.pos.vz += FixedMulFixed(iCos(camera.trot.vy), iCos(camera.trot.vx)) << MOVE_SCALE;
+        camera.pos.vx -= FixedMulFixed(iSin(camera.trot.vy), iCos(camera.trot.vx)) << CAM_MOV_SCALE;
+        camera.pos.vy += iSin(camera.trot.vx) << CAM_MOV_SCALE;
+        camera.pos.vz += FixedMulFixed(iCos(camera.trot.vy), iCos(camera.trot.vx)) << CAM_MOV_SCALE;
     }
     if (iptm_is_held(KEY_CROSS)) {
-        camera.pos.vx += FixedMulFixed(iSin(camera.trot.vy), iCos(camera.trot.vx)) << MOVE_SCALE;
-        camera.pos.vy -= iSin(camera.trot.vx) << MOVE_SCALE;
-        camera.pos.vz -= FixedMulFixed(iCos(camera.trot.vy), iCos(camera.trot.vx)) << MOVE_SCALE;
+        camera.pos.vx += FixedMulFixed(iSin(camera.trot.vy), iCos(camera.trot.vx)) << CAM_MOV_SCALE;
+        camera.pos.vy -= iSin(camera.trot.vx) << CAM_MOV_SCALE;
+        camera.pos.vz -= FixedMulFixed(iCos(camera.trot.vy), iCos(camera.trot.vx)) << CAM_MOV_SCALE;
     }
     if (iptm_is_held(KEY_SQUARE)) {
-        camera.pos.vx -= iCos(camera.trot.vy) << MOVE_SCALE;
-        camera.pos.vz -= iSin(camera.trot.vy) << MOVE_SCALE;
+        camera.pos.vx -= iCos(camera.trot.vy) << CAM_MOV_SCALE;
+        camera.pos.vz -= iSin(camera.trot.vy) << CAM_MOV_SCALE;
     }
     if (iptm_is_held(KEY_CIRCLE)) {
-        camera.pos.vx += iCos(camera.trot.vy) << MOVE_SCALE;
-        camera.pos.vz += iSin(camera.trot.vy) << MOVE_SCALE;
+        camera.pos.vx += iCos(camera.trot.vy) << CAM_MOV_SCALE;
+        camera.pos.vz += iSin(camera.trot.vy) << CAM_MOV_SCALE;
     }
-
-    if (iptm_is_pressed(KEY_TRIANGLE)) printf("TRIANGLE\n");
-    if (iptm_is_pressed(KEY_CIRCLE)) printf("CIRCLE\n");
-    if (iptm_is_pressed(KEY_CROSS)) printf("CROSS\n");
-    if (iptm_is_pressed(KEY_SQUARE)) printf("SQUARE\n");
-
 }
 
 // TODO better way
@@ -161,7 +146,7 @@ void mainloop()
     {
         rdr_setSceneCamera(&camera);
         Cam_SetPos(&camera, 0, -1000, 0);
-        setVector(&camera.rot, 0, 0, 0);
+        setVector(&camera.trot, 0, 0, 0);
     }
 
     while (!quit) {
