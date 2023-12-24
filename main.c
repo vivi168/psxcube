@@ -31,34 +31,34 @@ SVECTOR rotvec;
 void process_input()
 {
     if (iptm_is_held(KEY_UP)) {
-        camera.trot.vx -= CAM_ROT_SPEED;
+        camera.rotation.vx -= CAM_ROT_SPEED;
     }
     if (iptm_is_held(KEY_DOWN)) {
-        camera.trot.vx += CAM_ROT_SPEED;
+        camera.rotation.vx += CAM_ROT_SPEED;
     }
     if (iptm_is_held(KEY_LEFT)) {
-        camera.trot.vy += CAM_ROT_SPEED;
+        camera.rotation.vy += CAM_ROT_SPEED;
     }
     if (iptm_is_held(KEY_RIGHT)) {
-        camera.trot.vy -= CAM_ROT_SPEED;
+        camera.rotation.vy -= CAM_ROT_SPEED;
     }
     if (iptm_is_held(KEY_TRIANGLE)) {
-        camera.pos.vx -= FixedMulFixed(iSin(camera.trot.vy), iCos(camera.trot.vx)) << CAM_MOV_SCALE;
-        camera.pos.vy += iSin(camera.trot.vx) << CAM_MOV_SCALE;
-        camera.pos.vz += FixedMulFixed(iCos(camera.trot.vy), iCos(camera.trot.vx)) << CAM_MOV_SCALE;
+        camera.translate.vx -= FixedMulFixed(iSin(camera.rotation.vy), iCos(camera.rotation.vx)) << CAM_MOV_SCALE;
+        camera.translate.vy += iSin(camera.rotation.vx) << CAM_MOV_SCALE;
+        camera.translate.vz += FixedMulFixed(iCos(camera.rotation.vy), iCos(camera.rotation.vx)) << CAM_MOV_SCALE;
     }
     if (iptm_is_held(KEY_CROSS)) {
-        camera.pos.vx += FixedMulFixed(iSin(camera.trot.vy), iCos(camera.trot.vx)) << CAM_MOV_SCALE;
-        camera.pos.vy -= iSin(camera.trot.vx) << CAM_MOV_SCALE;
-        camera.pos.vz -= FixedMulFixed(iCos(camera.trot.vy), iCos(camera.trot.vx)) << CAM_MOV_SCALE;
+        camera.translate.vx += FixedMulFixed(iSin(camera.rotation.vy), iCos(camera.rotation.vx)) << CAM_MOV_SCALE;
+        camera.translate.vy -= iSin(camera.rotation.vx) << CAM_MOV_SCALE;
+        camera.translate.vz -= FixedMulFixed(iCos(camera.rotation.vy), iCos(camera.rotation.vx)) << CAM_MOV_SCALE;
     }
     if (iptm_is_held(KEY_SQUARE)) {
-        camera.pos.vx -= iCos(camera.trot.vy) << CAM_MOV_SCALE;
-        camera.pos.vz -= iSin(camera.trot.vy) << CAM_MOV_SCALE;
+        camera.translate.vx -= iCos(camera.rotation.vy) << CAM_MOV_SCALE;
+        camera.translate.vz -= iSin(camera.rotation.vy) << CAM_MOV_SCALE;
     }
     if (iptm_is_held(KEY_CIRCLE)) {
-        camera.pos.vx += iCos(camera.trot.vy) << CAM_MOV_SCALE;
-        camera.pos.vz += iSin(camera.trot.vy) << CAM_MOV_SCALE;
+        camera.translate.vx += iCos(camera.rotation.vy) << CAM_MOV_SCALE;
+        camera.translate.vz += iSin(camera.rotation.vy) << CAM_MOV_SCALE;
     }
 }
 
@@ -145,8 +145,8 @@ void mainloop()
 
     {
         rdr_setSceneCamera(&camera);
-        Cam_SetPos(&camera, 0, -1000, 0);
-        setVector(&camera.trot, 0, 0, 0);
+        Cam_setTranslation(&camera, 0, -1000, 0);
+        setVector(&camera.rotation, 0, 0, 0);
     }
 
     while (!quit) {

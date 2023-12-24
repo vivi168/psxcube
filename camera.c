@@ -3,26 +3,24 @@
 // TODO: tracking / fps mode ?
 void Cam_Update(Camera* cam)
 {
-        // Set rotation to the matrix
-        RotMatrix_gte(&cam->trot, &cam->matrix);
+        VECTOR translate;
+        RotMatrix_gte(&cam->rotation, &cam->matrix);
 
         // Divide out the fractions of camera coordinates and invert
         // the sign, so camera coordinates will line up to world
         // (or geometry) coordinates
-        cam->tpos.vx = FixedToInt(-cam->pos.vx);
-        cam->tpos.vy = FixedToInt(-cam->pos.vy);
-        cam->tpos.vz = FixedToInt(-cam->pos.vz);
+        translate.vx = FixedToInt(-cam->translate.vx);
+        translate.vy = FixedToInt(-cam->translate.vy);
+        translate.vz = FixedToInt(-cam->translate.vz);
 
         // Apply rotation of matrix to translation value to achieve a
         // first person perspective
         // m_in * v_in = v_out
-        ApplyMatrixLV(&cam->matrix, &cam->tpos, &cam->tpos);
-
-        // Set translation matrix
-        TransMatrix(&cam->matrix, &cam->tpos);
+        ApplyMatrixLV(&cam->matrix, &translate, &translate);
+        TransMatrix(&cam->matrix, &translate);
 }
 
-void Cam_SetPos(Camera* cam, int x, int y, int z)
+void Cam_setTranslation(Camera* cam, int x, int y, int z)
 {
-    setVector(&cam->pos, x * ONE, y * ONE, z * ONE);
+    setVector(&cam->translate, x * ONE, y * ONE, z * ONE);
 }

@@ -5,14 +5,12 @@
 #define CAM_MOV_SCALE 6
 
 typedef struct camera_t {
-    VECTOR pos;
-
-    VECTOR tpos; // discard
-    SVECTOR trot; // rename
+    VECTOR translate;
+    SVECTOR rotation;
     MATRIX matrix;
 } Camera;
 
 void Cam_Update(Camera* cam);
-void Cam_SetPos(Camera* cam, int, int, int);
+void Cam_setTranslation(Camera* cam, int, int, int);
 
 #endif
