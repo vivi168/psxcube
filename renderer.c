@@ -1,13 +1,14 @@
 #include "stdafx.h"
 
-#define OTLEN 4096
+#define NEAR_PLANE 16
+#define FAR_PLANE 4096
 
 unsigned int numTri, effectiveNumTri;
 
 typedef struct db_t {
     DISPENV disp;
     DRAWENV draw;
-    uint32_t ot[OTLEN];
+    uint32_t ot[FAR_PLANE];
     int8_t pribuff[32768];
 } DB;
 
@@ -85,7 +86,9 @@ void rdr_init()
     setRECT(&screenClip, 0, 0, SCREEN_W, SCREEN_H);
 }
 
-// TODO: move this as part of mesh ?
+// TODO: do not reload already loaded textures shared between meshes
+// keep a hash map of already loaded textures ?
+// TODO: when unloading a mesh, also need to unload its texture if no longer used
 void rdr_init_textures(const Mesh3D* mesh)
 {
     for (int i = 0; i < mesh->header.numSubsets; i++) {
@@ -175,7 +178,7 @@ void rdr_processScene()
 {
     SceneNode* curr;
     // TODO: where to put this exactly, in relation to rdr_delay()?
-    ClearOTagR(cdb->ot, OTLEN);
+    ClearOTagR(cdb->ot, FAR_PLANE);
 
     assert(scene.camera != NULL);
 
@@ -250,8 +253,6 @@ void add_tri(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
     gte_avsz3();
     gte_stotz(&otz); // screen_z >>= 2
 
-#define NEAR_PLANE 16
-#define FAR_PLANE OTLEN
     if (otz < NEAR_PLANE || otz >= FAR_PLANE) return;
 
     poly = (POLY_FT3*)nextpri;
@@ -291,7 +292,7 @@ void rdr_draw()
     PutDrawEnv(&cdb->draw);
     PutDispEnv(&cdb->disp);
 
-    DrawOTag(&cdb->ot[OTLEN - 1]);
+    DrawOTag(&cdb->ot[FAR_PLANE - 1]);
     FntFlush(-1);
 
     // TODO: extract to function swap_buffer ?

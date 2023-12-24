@@ -19,6 +19,8 @@ enum {
     X = 0, Y, Z, W
 };
 
+// TODO: define type to notify that a variable is actually fixed point?
+
 typedef int vec2[2];
 typedef int vec3[3];
 typedef int quat[4];

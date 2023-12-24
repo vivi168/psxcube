@@ -15,6 +15,7 @@ Camera camera;
 #define CUBE_MESH 0
 #define BOB_MESH 1
 #define CUBEGUY_MESH 2
+#define HOUSE_MESH 3
 // anims
 #define BOB_ANIM 0
 #define CUBEGUY_RUNNING 1
@@ -94,6 +95,23 @@ void init_assets()
         model_setTranslation(&models[CUBE_MESH], 500, 0, 500);
 
         rdr_appendToScene(&models[CUBE_MESH]);
+    }
+
+    // House
+    {
+        read_obj("\\HOUSE.M3D;1", &meshes[HOUSE_MESH]);
+        print_mesh3d(&meshes[HOUSE_MESH]);
+        // TODO: if multiple models share same texture
+        // no need to reload texture
+        rdr_init_textures(&meshes[HOUSE_MESH]);
+
+        model_initStaticModel(&models[HOUSE_MESH], &meshes[HOUSE_MESH]);
+
+        model_setScale(&models[HOUSE_MESH], ONE);
+        model_setRotation(&models[HOUSE_MESH], 0, 0, 0);
+        model_setTranslation(&models[HOUSE_MESH], 2000, 0, 2000);
+
+        rdr_appendToScene(&models[HOUSE_MESH]);
     }
 
     // CubeGuy
