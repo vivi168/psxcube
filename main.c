@@ -103,7 +103,6 @@ void init_assets()
 void mainloop()
 {
     unsigned int frame_start;
-    int quit = 0;
     // int curr_frame = 0;
 
     {
@@ -112,10 +111,10 @@ void mainloop()
         setVector(&camera.rotation, 0, 0, 0);
     }
 
-    while (!quit) {
+    while (1) {
         frame_start = VSync(-1);
 
-        iptm_poll_events();
+        pad_pollEvents();
         cam_processInput(&camera);
 
         // TODO: function to loop through scene linked list and update animated models.
@@ -156,7 +155,7 @@ int main(void)
 
     init_assets();
 
-    iptm_init();
+    pad_init();
 
     printf("[INFO]: init done !\n");
 

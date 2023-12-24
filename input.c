@@ -1,24 +1,28 @@
 #include "stdafx.h"
 
-typedef struct _PADTYPE
-{
+typedef struct pad_type_t {
     unsigned char   stat;
     unsigned char   len:4;
     unsigned char   type:4;
     unsigned short  btn;
     unsigned char   rs_x,rs_y;
     unsigned char   ls_x,ls_y;
-} PADTYPE;
+} PadType;
 
-PADTYPE *pad;
+PadType *pad;
 u_char padbuff[2][34];
 
-InputManager input_manager;
+typedef struct input_manager_t {
+    unsigned int new_keystate, old_keystate;
+    unsigned int keys_pressed, keys_held, keys_released;
+} InputManager;
 
-void iptm_update()
+static InputManager input_manager;
+
+void pad_update()
 {
     // Parse controller input
-    pad = (PADTYPE*)padbuff[0];
+    pad = (PadType*)padbuff[0];
 
     // Only parse inputs when a controller is connected
     if( pad->stat == 0 )
@@ -40,7 +44,7 @@ void iptm_update()
     }
 }
 
-void iptm_init()
+void pad_init()
 {
     printf("[INFO]: pad init\n");
     InitPAD( padbuff[0], 34, padbuff[1], 34 );
@@ -51,7 +55,6 @@ void iptm_init()
     StartPAD();
     ChangeClearPAD(1);
 
-    input_manager.quit = FALSE;
     input_manager.new_keystate = 0;
     input_manager.old_keystate = 0;
 
@@ -60,23 +63,19 @@ void iptm_init()
     input_manager.keys_released = 0;
 }
 
-void iptm_poll_events()
+void pad_pollEvents()
 {
-    iptm_update();
+    pad_update();
 }
 
-int iptm_quit_requested() {
-    return input_manager.quit;
-}
-
-int iptm_is_held(int k) {
+int pad_isHeld(int k) {
     return (1 << k) & input_manager.keys_held;
 }
 
-int iptm_is_pressed(int k) {
+int pad_isPressed(int k) {
     return (1 << k) & input_manager.keys_pressed;
 }
 
-int iptm_is_released(int k) {
+int pad_isReleased(int k) {
     return (1 << k) & input_manager.keys_released;
 }

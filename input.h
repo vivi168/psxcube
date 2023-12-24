@@ -4,28 +4,20 @@
 #define TRUE 1
 #define FALSE 0
 
-#define KEY_UP      4
-#define KEY_RIGHT   5
-#define KEY_DOWN    6
-#define KEY_LEFT    7
-#define KEY_TRIANGLE 12   // triangle 1 << 12
+#define KEY_UP        4
+#define KEY_RIGHT     5
+#define KEY_DOWN      6
+#define KEY_LEFT      7
+#define KEY_TRIANGLE 12
 #define KEY_CIRCLE   13
 #define KEY_CROSS    14
-#define KEY_SQUARE   15   // square   1 << 15
+#define KEY_SQUARE   15
 
-typedef struct input_manager_t {
-    int quit;
-    unsigned int new_keystate, old_keystate;
-    unsigned int keys_pressed, keys_held, keys_released;
-} InputManager;
-
-// TODO: rename this iptm shit
-void iptm_init();
-void iptm_update();
-void iptm_poll_events();
-int iptm_quit_requested();
-int iptm_is_held(int);
-int iptm_is_pressed(int);
-int iptm_is_released(int);
+void pad_init();
+void pad_update();
+void pad_pollEvents();
+int pad_isHeld(int);
+int pad_isPressed(int);
+int pad_isReleased(int); // TODO bug
 
 #endif

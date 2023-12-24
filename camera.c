@@ -1,7 +1,7 @@
 #include "stdafx.h"
 
 // TODO: tracking / fps mode ?
-void cam_update(Camera* cam)
+static void cam_update(Camera* cam)
 {
     VECTOR translate;
     RotMatrix_gte(&cam->rotation, &cam->matrix);
@@ -27,33 +27,33 @@ void cam_setTranslation(Camera* cam, int x, int y, int z)
 
 void cam_processInput(Camera* cam)
 {
-    if (iptm_is_held(KEY_UP)) {
+    if (pad_isHeld(KEY_UP)) {
         cam->rotation.vx -= CAM_ROT_SPEED;
     }
-    if (iptm_is_held(KEY_DOWN)) {
+    if (pad_isHeld(KEY_DOWN)) {
         cam->rotation.vx += CAM_ROT_SPEED;
     }
-    if (iptm_is_held(KEY_LEFT)) {
+    if (pad_isHeld(KEY_LEFT)) {
         cam->rotation.vy += CAM_ROT_SPEED;
     }
-    if (iptm_is_held(KEY_RIGHT)) {
+    if (pad_isHeld(KEY_RIGHT)) {
         cam->rotation.vy -= CAM_ROT_SPEED;
     }
-    if (iptm_is_held(KEY_TRIANGLE)) {
+    if (pad_isHeld(KEY_TRIANGLE)) {
         cam->translate.vx -= FixedMulFixed(iSin(cam->rotation.vy), iCos(cam->rotation.vx)) << CAM_MOV_SCALE;
         cam->translate.vy += iSin(cam->rotation.vx) << CAM_MOV_SCALE;
         cam->translate.vz += FixedMulFixed(iCos(cam->rotation.vy), iCos(cam->rotation.vx)) << CAM_MOV_SCALE;
     }
-    if (iptm_is_held(KEY_CROSS)) {
+    if (pad_isHeld(KEY_CROSS)) {
         cam->translate.vx += FixedMulFixed(iSin(cam->rotation.vy), iCos(cam->rotation.vx)) << CAM_MOV_SCALE;
         cam->translate.vy -= iSin(cam->rotation.vx) << CAM_MOV_SCALE;
         cam->translate.vz -= FixedMulFixed(iCos(cam->rotation.vy), iCos(cam->rotation.vx)) << CAM_MOV_SCALE;
     }
-    if (iptm_is_held(KEY_SQUARE)) {
+    if (pad_isHeld(KEY_SQUARE)) {
         cam->translate.vx -= iCos(cam->rotation.vy) << CAM_MOV_SCALE;
         cam->translate.vz -= iSin(cam->rotation.vy) << CAM_MOV_SCALE;
     }
-    if (iptm_is_held(KEY_CIRCLE)) {
+    if (pad_isHeld(KEY_CIRCLE)) {
         cam->translate.vx += iCos(cam->rotation.vy) << CAM_MOV_SCALE;
         cam->translate.vz += iSin(cam->rotation.vy) << CAM_MOV_SCALE;
     }
