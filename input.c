@@ -17,27 +17,6 @@ typedef struct input_manager_t {
 
 static InputManager input_manager;
 
-void pad_update()
-{
-    // Parse controller input
-    input_manager.pad = (struct pad_type_t*)input_manager.padbuff[0];
-
-    // Only parse inputs when a controller is connected
-    if (input_manager.pad->stat == 0) {
-        // Only parse when a digital pad,
-        // dual-analog and dual-shock is connected
-        if ((input_manager.pad->type == 0x4) || (input_manager.pad->type == 0x5) || (input_manager.pad->type == 0x7)) {
-            input_manager.old_keystate = input_manager.new_keystate;
-            input_manager.new_keystate = input_manager.pad->btn ^ 0xffff;
-
-            input_manager.keys_pressed = (input_manager.old_keystate ^ input_manager.new_keystate) & input_manager.new_keystate;
-            input_manager.keys_held = input_manager.old_keystate & input_manager.new_keystate;
-            // TODO: bug
-            input_manager.keys_released = input_manager.old_keystate ^ input_manager.new_keystate;
-        }
-    }
-}
-
 void pad_init()
 {
     printf("[INFO]: pad init\n");
@@ -59,7 +38,23 @@ void pad_init()
 
 void pad_pollEvents()
 {
-    pad_update();
+    // Parse controller input
+    input_manager.pad = (struct pad_type_t*)input_manager.padbuff[0];
+
+    // Only parse inputs when a controller is connected
+    if (input_manager.pad->stat == 0) {
+        // Only parse when a digital pad,
+        // dual-analog and dual-shock is connected
+        if ((input_manager.pad->type == 0x4) || (input_manager.pad->type == 0x5) || (input_manager.pad->type == 0x7)) {
+            input_manager.old_keystate = input_manager.new_keystate;
+            input_manager.new_keystate = input_manager.pad->btn ^ 0xffff;
+
+            input_manager.keys_pressed = (input_manager.old_keystate ^ input_manager.new_keystate) & input_manager.new_keystate;
+            input_manager.keys_held = input_manager.old_keystate & input_manager.new_keystate;
+            // TODO: bug
+            input_manager.keys_released = input_manager.old_keystate ^ input_manager.new_keystate;
+        }
+    }
 }
 
 int pad_isHeld(int k)

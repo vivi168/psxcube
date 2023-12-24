@@ -93,10 +93,9 @@ int iSin(int x)
 #define CLIP_TOP    4
 #define CLIP_BOTTOM 8
 
+// Tests which corners of the screen a point lies outside of
 int test_clip(RECT *clip, short x, short y)
 {
-    // Tests which corners of the screen a point lies outside of
-
     int result = 0;
 
     if (x < clip->x)
@@ -114,10 +113,9 @@ int test_clip(RECT *clip, short x, short y)
     return result;
 }
 
+// Returns non-zero if a triangle is outside the screen boundaries
 int tri_clip(RECT *clip, DVECTOR *v0, DVECTOR *v1, DVECTOR *v2)
 {
-    // Returns non-zero if a triangle is outside the screen boundaries
-
     short c[3];
 
     c[0] = test_clip(clip, v0->vx, v0->vy);
@@ -134,10 +132,9 @@ int tri_clip(RECT *clip, DVECTOR *v0, DVECTOR *v1, DVECTOR *v2)
     return 1;
 }
 
+// Returns non-zero if a quad is outside the screen boundaries
 int quad_clip(RECT *clip, DVECTOR *v0, DVECTOR *v1, DVECTOR *v2, DVECTOR *v3)
 {
-    // Returns non-zero if a quad is outside the screen boundaries
-
     short c[4];
 
     c[0] = test_clip(clip, v0->vx, v0->vy);

@@ -11,7 +11,6 @@
 #define KEY_SQUARE   15
 
 void pad_init();
-void pad_update();
 void pad_pollEvents();
 int pad_isHeld(int);
 int pad_isPressed(int);

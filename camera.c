@@ -15,7 +15,6 @@ static void cam_update(Camera* cam)
 
     // Apply rotation of matrix to translation value to achieve a
     // first person perspective
-    // m_in * v_in = v_out
     ApplyMatrixLV(&cam->matrix, &translate, &translate);
     TransMatrix(&cam->matrix, &translate);
 }
