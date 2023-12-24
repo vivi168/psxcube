@@ -1,9 +1,6 @@
 #ifndef INPUT_H
 #define INPUT_H
 
-#define TRUE 1
-#define FALSE 0
-
 #define KEY_UP        4
 #define KEY_RIGHT     5
 #define KEY_DOWN      6
