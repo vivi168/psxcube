@@ -16,6 +16,7 @@
 
 #include "types.h"
 #include "linalg.h"
+#include "noise.h"
 #include "camera.h"
 #include "mesh.h"
 

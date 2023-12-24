@@ -154,6 +154,7 @@ int main(void)
     rdr_init();
 
     init_assets();
+    noise_init();
 
     pad_init();
 

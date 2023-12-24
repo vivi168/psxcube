@@ -18,7 +18,7 @@ LIB := -L$(PSYQ_PATH)/lib -lgpu -lgte -lcd -letc -lsn -lsnd -lspu -lcard -lpad -
 CFLAGS := -g -O2 -G0 -ffreestanding -nostdlib -mno-unaligned-access -Wall -Wextra $(INC)
 LDFLAGS := -T linker.ld
 
-SRC := stdafx.c input.c io.c main.c mesh.c renderer.c linalg.c camera.c
+SRC := stdafx.c input.c io.c main.c mesh.c renderer.c linalg.c camera.c noise.c
 
 OBJ := $(SRC:.c=.o)
 
