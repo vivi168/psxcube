@@ -54,6 +54,8 @@
       <file name="MAIN.EXE" type="data"/>
       <file name="CUBE.TIM" type="data" source="assets/CUBE.TIM"/>
       <file name="CUBE.M3D" type="data" source="assets/CUBE.M3D"/>
+      <file name="HOUSE.M3D" type="data" source="assets/HOUSE.M3D"/>
+      <file name="HOUSE.TIM" type="data" source="assets/HOUSE.TIM"/>
       <file name="CUBEGUY.MD5M" type="data" source="assets/CUBEGUY.MD5M"/>
       <file name="RUNNING.MD5A" type="data" source="assets/RUNNING.MD5A"/>
 

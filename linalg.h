@@ -6,9 +6,6 @@
 #define ONE (1 << SCALE)
 #endif
 
-#define FloatToFixed(x) ((int16_t)((x) * (float)(1 << SCALE)))
-#define FixedToFloat(x) ((float)(x) / (float)(1 << SCALE))
-
 #define IntToFixed(x) ((x) << SCALE)
 #define FixedToInt(x) ((x) >> SCALE)
 
@@ -22,13 +19,23 @@ enum {
     X = 0, Y, Z, W
 };
 
-typedef int FLOAT;
-typedef int DOUBLE;
+// TODO: define type to notify that a variable is actually fixed point?
 
-typedef FLOAT vec2[2];
-typedef FLOAT vec3[3];
-typedef FLOAT quat[4];
+typedef int vec2[2];
+typedef int vec3[3];
+typedef int quat[4];
 
 void quat_rotate_point(const quat q, const vec3 in, vec3 out);
+
+
+// trigonometry
+int iSin(int x);
+#define iCos(x) (iSin(x + 1024))
+
+
+// clip
+
+int tri_clip(RECT *clip, DVECTOR *v0, DVECTOR *v1, DVECTOR *v2);
+int quad_clip(RECT *clip, DVECTOR *v0, DVECTOR *v1, DVECTOR *v2, DVECTOR *v3);
 
 #endif

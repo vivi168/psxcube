@@ -1,12 +1,18 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
-void rdr_init();
-void rdr_init_textures(const ObjMesh*);
-void rdr_render(ObjMesh*, SVECTOR*);
-void rdr_cleanup();
+#define SCREEN_W 320
+#define SCREEN_H 240
+#define SCREEN_Z (SCREEN_W >> 1)
 
-unsigned int rdr_getticks();
-void rdr_delay();
+void rdr_prependToScene(Model3D*);
+void rdr_appendToScene(Model3D*);
+void rdr_setSceneCamera(Camera*);
+
+void rdr_init();
+void rdr_init_textures(const Mesh3D*);
+void rdr_processScene();
+
+void rdr_draw();
 
 #endif

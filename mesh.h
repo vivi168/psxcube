@@ -3,6 +3,7 @@
 
 typedef char STRING20[20];
 
+// TODO: anonymous struct for headers?
 typedef struct obj_header_t {
     int numVerts;
     int numTris;
@@ -29,12 +30,10 @@ typedef struct obj_mesh_t {
     Vertex* vertices;
     unsigned int* indices;
     Subset* subsets;
-} ObjMesh;
+} Mesh3D;
 
-
-
-void read_objmesh(const char* filename, ObjMesh*);
-void mesh_print_mesh(ObjMesh*);
+void read_obj(const char* filename, Mesh3D*);
+void print_mesh3d(Mesh3D*);
 
 
 // ****************
@@ -51,7 +50,7 @@ typedef struct md5_vertex_t {
 
 typedef struct MD5_weight_t {
     int jointIndex;
-    FLOAT bias;
+    int bias;
     vec3 pos;
 } MD5Weight;
 
@@ -100,23 +99,41 @@ typedef struct md5_anim_t {
     MD5Joint** frameJoints; // frameJoints[numFrames][numJoints]
 } MD5Anim;
 
-typedef struct md5_anim_info_t {
-    int currFrame;
-    int nextFrame;
-
-    DOUBLE time;
-    DOUBLE frameDuration;
-} MD5AnimInfo;
-
 void read_md5model(const char* filename, MD5Model* model);
 void read_md5anim(const char* filename, MD5Anim* anim);
 
-void init_mesh(const MD5Model* model, ObjMesh* mesh);
-void update_mesh(const MD5Model* model, const MD5Joint* joints, ObjMesh* mesh);
+void init_mesh3d(const MD5Model* model, Mesh3D* mesh);
+void update_mesh3d(const MD5Model* model, const MD5Joint* joints, Mesh3D* mesh);
 
-void animate(const MD5Anim* anim, MD5AnimInfo* animInfo, int dt);
+void print_md5model(const MD5Model* model);
+void print_md5anim(const MD5Anim* anim);
 
+// MODEL
 
+typedef struct model_3d_t {
+    Mesh3D *mesh;
+    MD5Model* md5_model;
+    MD5Anim* md5_anim; // TODO: support multiple animations
 
+    bool animated;
+    struct anim_info_t {
+        int anim_count;
+        MD5Anim* curr_anim;
+        int curr_frame;
+    } anim_info;
+
+    SVECTOR rotate;
+    VECTOR translate;
+    VECTOR scale;
+} Model3D;
+
+void model_initStaticModel(Model3D* model, Mesh3D* mesh);
+void model_initAnimatedModel(Model3D* model, MD5Model* md5_model, MD5Anim* md5_anim);
+void model_updateAnim(Model3D*, int frame_counter);
+
+void model_setScale(Model3D*, int);
+void model_setRotation(Model3D*, int, int, int);
+void model_setTranslation(Model3D*, int, int, int);
+void model_mat(const Model3D* model, MATRIX* mat);
 
 #endif

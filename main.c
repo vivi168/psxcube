@@ -2,101 +2,150 @@
 #include "header.h"
 
 #define HEAP_SIZE (1024 * 1024)
-char heap[HEAP_SIZE];
+static char heap[HEAP_SIZE];
 
-int quit;
+// TODO: struct to hold this ?
+unsigned long long vsyncCounter;
 unsigned long long frameCounter;
 unsigned long long timeCounter;
 
-ObjMesh cube;
-ObjMesh cubeguy_mesh;
-MD5Model cubeguy;
-MD5Anim running;
+Camera camera;
 
-SVECTOR rotvec;
+// models/meshes/md5_models
+#define CUBE_MESH 0
+#define BOB_MESH 1
+#define CUBEGUY_MESH 2
+#define HOUSE_MESH 3
+// anims
+#define BOB_ANIM 0
+#define CUBEGUY_RUNNING 1
 
-void process_input()
+Mesh3D meshes[5];
+Model3D models[5];
+MD5Model md5_models[5];
+MD5Anim md5_anims[10];
+
+// TODO better way
+void init_assets()
 {
-    rotvec.vx = 0;
-    rotvec.vy = 0;
-    rotvec.vz = 0;
+    // Cube
+    {
+        read_obj("\\CUBE.M3D;1", &meshes[CUBE_MESH]);
+        print_mesh3d(&meshes[CUBE_MESH]);
+        // TODO: if multiple models share same texture
+        // no need to reload texture
+        rdr_init_textures(&meshes[CUBE_MESH]);
 
-    if (iptm_is_held(KEY_UP)) {
-        rotvec.vx = -16;
+        model_initStaticModel(&models[CUBE_MESH], &meshes[CUBE_MESH]);
+
+        model_setScale(&models[CUBE_MESH], ONE);
+        model_setRotation(&models[CUBE_MESH], 0, 0, 0);
+        model_setTranslation(&models[CUBE_MESH], 500, 0, 500);
+
+        rdr_appendToScene(&models[CUBE_MESH]);
     }
-    if (iptm_is_held(KEY_DOWN)) {
-        rotvec.vx = 16;
+
+    // House
+    {
+        read_obj("\\HOUSE.M3D;1", &meshes[HOUSE_MESH]);
+        print_mesh3d(&meshes[HOUSE_MESH]);
+        // TODO: if multiple models share same texture
+        // no need to reload texture
+        rdr_init_textures(&meshes[HOUSE_MESH]);
+
+        model_initStaticModel(&models[HOUSE_MESH], &meshes[HOUSE_MESH]);
+
+        model_setScale(&models[HOUSE_MESH], ONE);
+        model_setRotation(&models[HOUSE_MESH], 0, 0, 0);
+        model_setTranslation(&models[HOUSE_MESH], 2000, 0, 2000);
+
+        rdr_appendToScene(&models[HOUSE_MESH]);
     }
-    if (iptm_is_held(KEY_LEFT)) {
-        rotvec.vy = -16;
+
+    // CubeGuy
+    {
+        read_md5model("\\CUBEGUY.MD5M;1", &md5_models[CUBEGUY_MESH]);
+        read_md5anim("\\RUNNING.MD5A;1", &md5_anims[CUBEGUY_RUNNING]);
+
+        model_initAnimatedModel(&models[CUBEGUY_MESH], &md5_models[CUBEGUY_MESH], &md5_anims[CUBEGUY_RUNNING]);
+        // TODO: do not load same texture file twice
+        rdr_init_textures(models[CUBEGUY_MESH].mesh);
+        print_mesh3d(models[CUBEGUY_MESH].mesh);
+
+        model_setScale(&models[CUBEGUY_MESH], ONE);
+        model_setRotation(&models[CUBEGUY_MESH], 0, 0, 0);
+        model_setTranslation(&models[CUBEGUY_MESH], -500, 0, 500);
+
+        rdr_appendToScene(&models[CUBEGUY_MESH]);
     }
-    if (iptm_is_held(KEY_RIGHT)) {
-        rotvec.vy = 16;
+
+    // Bob
+    {
+        read_md5model("\\BOB.MD5M;1", &md5_models[BOB_MESH]);
+        read_md5anim("\\BOB.MD5A;1", &md5_anims[BOB_ANIM]);
+
+        // TODO: what if multiple animations
+        // animated model has mesh on heap ? can't share mesh because it's animated and thus modified.
+        model_initAnimatedModel(&models[BOB_MESH], &md5_models[BOB_MESH], &md5_anims[BOB_ANIM]);
+        rdr_init_textures(models[BOB_MESH].mesh); // TODO: be careful of doing this after initing the mesh.
+        // print_mesh3d(models[BOB_MESH].mesh);
+
+        model_setScale(&models[BOB_MESH], ONE);
+        model_setRotation(&models[BOB_MESH], 0, 0, 0);
+        model_setTranslation(&models[BOB_MESH], 0, 0, 500);
+
+        rdr_appendToScene(&models[BOB_MESH]);
     }
 
-}
-
-void init_cube()
-{
-    read_objmesh("\\CUBE.M3D;1", &cube);
-    // mesh_print_mesh(&cube);
-
-    // read_md5model("\\CUBEGUY.MD5M;1", &cubeguy);
-    // read_md5anim("\\RUNNING.MD5A;1", &running);
-    read_md5model("\\BOB.MD5M;1", &cubeguy);
-    read_md5anim("\\BOB.MD5A;1", &running);
-
-    init_mesh(&cubeguy, &cubeguy_mesh);
-    update_mesh(&cubeguy, running.frameJoints[0], &cubeguy_mesh);
-    // mesh_print_mesh(&cubeguy_mesh);
-
-    printf("[INFO]: cube init done !\n");
+    printf("[INFO]: assets init done !\n");
 }
 
 void mainloop()
 {
     unsigned int frame_start;
-    quit = 0;
+    // int curr_frame = 0;
 
-    int curr_frame = 0;
+    {
+        rdr_setSceneCamera(&camera);
+        cam_setTranslation(&camera, 0, -1000, 0);
+        setVector(&camera.rotation, 0, 0, 0);
+    }
 
-    while (!quit) {
-        frame_start = rdr_getticks();
+    while (1) {
+        frame_start = VSync(-1);
 
-        int frameDuration = 60 / running.header.frameRate;
-        if (frameCounter % frameDuration == 0) {
-            curr_frame ++;
-            if (curr_frame > running.header.numFrames - 1)
-                curr_frame = 0;
+        pad_pollEvents();
+        cam_processInput(&camera);
 
-            update_mesh(&cubeguy, running.frameJoints[curr_frame], &cubeguy_mesh);
-            // printf("Animate !! %d %d\n", curr_frame, running.header.frameRate);
-        }
+        // TODO: function to loop through scene linked list and update animated models.
+        // TODO 2: also loop through scene to update if model is visible or not ?
+        model_updateAnim(&models[CUBEGUY_MESH], frameCounter);
+        model_updateAnim(&models[BOB_MESH], frameCounter);
 
-        iptm_poll_events();
-        process_input();
-
-        rdr_render(&cubeguy_mesh, &rotvec);
-        rdr_delay(frame_start);
+        rdr_processScene();
+        frameCounter ++;
+        // now we can compute how many frame per seconds
+        rdr_draw();
     }
 }
 
 void vsync_callback()
 {
     // VSync(-1);
-    frameCounter ++;
+    vsyncCounter ++;
 
-    if (frameCounter % 60 == 59) {
+    if (vsyncCounter % 60 == 59) {
         timeCounter ++;
         // printf("Time: %d\n" , timeCounter);
     }
 }
 
-int main(int argc, char** argv)
+int main(void)
 {
     InitHeap3((void*)&heap, HEAP_SIZE);
     CdInit();
 
+    vsyncCounter = 0;
     frameCounter = 0;
     timeCounter = 0;
 
@@ -104,11 +153,9 @@ int main(int argc, char** argv)
 
     rdr_init();
 
-    init_cube();
-    rdr_init_textures(&cubeguy_mesh);
+    init_assets();
 
-    iptm_init();
-    setVector(&rotvec, 0, 0, 0);
+    pad_init();
 
     printf("[INFO]: init done !\n");
 

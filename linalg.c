@@ -13,11 +13,11 @@ void print_quat(quat q)
 void quat_normalize(quat q)
 {
     int x = ((q[X] * q[X]) + (q[Y] * q[Y]) + (q[Z] * q[Z]) + (q[W] * q[W])) >> SCALE;
-    FLOAT mag = SquareRoot12(x);
+    int mag = SquareRoot12(x);
 
     if (mag > 0)
     {
-        FLOAT one_over_mag = ONE / mag;
+        int one_over_mag = ONE / mag;
 
         q[X] *= one_over_mag;
         q[Y] *= one_over_mag;
@@ -58,4 +58,102 @@ void quat_rotate_point(const quat q, const vec3 in, vec3 out)
     out[X] = qout[X];
     out[Y] = qout[Y];
     out[Z] = qout[Z];
+}
+
+// trigonometry
+
+#define qN 10
+#define qA 12
+#define B  19900
+#define C  3516
+
+int iSin(int x)
+{
+    int c, x2, y;
+
+    c = x << (30 - qN); // Semi-circle info into carry.
+    x -= 1 << qN;       // sine -> cosine calc
+
+    x = x << (31 - qN); // Mask with PI
+    x = x >> (31 - qN); // Note: SIGNED shift! (to qN)
+
+    x = x * x >> (2 * qN - 14); // x=x^2 To Q14
+
+    y = B - (x * C >> 14);         // B - x^2*C
+    y = (1 << qA) - (x * y >> 16); // A - x^2*(B-x^2*C)
+
+    return c >= 0 ? y : -y;
+}
+
+
+// clip
+
+#define CLIP_LEFT   1
+#define CLIP_RIGHT  2
+#define CLIP_TOP    4
+#define CLIP_BOTTOM 8
+
+// Tests which corners of the screen a point lies outside of
+int test_clip(RECT *clip, short x, short y)
+{
+    int result = 0;
+
+    if (x < clip->x)
+        result |= CLIP_LEFT;
+
+    if (x >= (clip->x + (clip->w - 1)))
+        result |= CLIP_RIGHT;
+
+    if (y < clip->y)
+        result |= CLIP_TOP;
+
+    if (y >= (clip->y + (clip->h - 1)))
+        result |= CLIP_BOTTOM;
+
+    return result;
+}
+
+// Returns non-zero if a triangle is outside the screen boundaries
+int tri_clip(RECT *clip, DVECTOR *v0, DVECTOR *v1, DVECTOR *v2)
+{
+    short c[3];
+
+    c[0] = test_clip(clip, v0->vx, v0->vy);
+    c[1] = test_clip(clip, v1->vx, v1->vy);
+    c[2] = test_clip(clip, v2->vx, v2->vy);
+
+    if ((c[0] & c[1]) == 0)
+        return 0;
+    if ((c[1] & c[2]) == 0)
+        return 0;
+    if ((c[2] & c[0]) == 0)
+        return 0;
+
+    return 1;
+}
+
+// Returns non-zero if a quad is outside the screen boundaries
+int quad_clip(RECT *clip, DVECTOR *v0, DVECTOR *v1, DVECTOR *v2, DVECTOR *v3)
+{
+    short c[4];
+
+    c[0] = test_clip(clip, v0->vx, v0->vy);
+    c[1] = test_clip(clip, v1->vx, v1->vy);
+    c[2] = test_clip(clip, v2->vx, v2->vy);
+    c[3] = test_clip(clip, v3->vx, v3->vy);
+
+    if ((c[0] & c[1]) == 0)
+        return 0;
+    if ((c[1] & c[2]) == 0)
+        return 0;
+    if ((c[2] & c[3]) == 0)
+        return 0;
+    if ((c[3] & c[0]) == 0)
+        return 0;
+    if ((c[0] & c[2]) == 0)
+        return 0;
+    if ((c[1] & c[3]) == 0)
+        return 0;
+
+    return 1;
 }

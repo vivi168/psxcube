@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 #include <inline_c.h>
 #include <string.h>
 #include <ctype.h>
@@ -15,6 +16,7 @@
 
 #include "types.h"
 #include "linalg.h"
+#include "camera.h"
 #include "mesh.h"
 
 #include "io.h"

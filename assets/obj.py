@@ -30,7 +30,8 @@ class Vec3:
         self.z = z
 
     def pack(self):
-        return struct.pack('<hhhh', int(self.x), int(self.y), int(self.z), 0) # SVECTOR are padded
+        SCALE = 128
+        return struct.pack('<hhhh', int(self.x * SCALE), int(self.y * SCALE), int(self.z * SCALE), 0) # SVECTOR are padded
 
     def __str__(self):
         return '{:.6f} {:.6f} {:.6f}'.format(self.x, self.y, self.z)
@@ -96,19 +97,18 @@ class Subset:
         tex = os.path.splitext(os.path.basename(texture))[0]
         if len(tex) > Subset.MAX_TEX_CHAR - 1: exit('Tex name too long')
         self.texture_path = texture
-        self.texture_name = tex[:Subset.MAX_TEX_CHAR-1] # limit to 20 chars
+        self.texture_name = tex[:Subset.MAX_TEX_CHAR-1].upper() # limit to 20 chars
         self.texture_size = Image.open(texture).size
 
     def __str__(self):
-        return '{} {} [{}] ({})'.format(self.start, self.count, len(self.texture_name), self.texture_name)
+        return '{} {} [{}] ({})'.format(self.start * 3, self.count * 3, len(self.texture_name), self.texture_name)
 
     def pack(self):
-        data = struct.pack('<IIi', self.start, self.count, 0) # pad Texture pointer
+        data = struct.pack('<IIi', self.start * 3, self.count * 3, 0) # pad Texture pointer
 
         return data + bytes(self.texture_name.ljust(Subset.MAX_TEX_CHAR, '\0'), 'ascii')
 
 class Mesh:
-    ONE = 4096
     def __init__(self):
         self.vertices = []
         self.tris = []
@@ -132,9 +132,9 @@ class Mesh:
                 if line.startswith('v '):
                     data = parse.search('v {px:g} {py:g} {pz:g}', line)
 
-                    x = data['px'] * Mesh.ONE
-                    y = data['py'] * Mesh.ONE
-                    z = data['pz'] * Mesh.ONE
+                    x = data['px']
+                    y = data['py']
+                    z = data['pz']
                     positions.append(Vec3(x, y, z))
 
                 elif line.startswith('vt '):
@@ -144,9 +144,9 @@ class Mesh:
                 elif line.startswith('vn '):
                     data = parse.search('vn {nx:g} {ny:g} {nz:g}', line)
                     # TODO: transform
-                    x = data['nx'] * Mesh.ONE
-                    x = data['ny'] * Mesh.ONE
-                    x = data['nz'] * Mesh.ONE
+                    x = data['nx']
+                    x = data['ny']
+                    x = data['nz']
                     normals.append(Vec3(x, y, z))
 
                 elif line.startswith('usemtl'):
@@ -244,8 +244,6 @@ if __name__ == '__main__':
         outfile = os.path.splitext(os.path.basename(args.infile))[0] + ".bin"
     else:
         outfile = args.outfile
-
-    print(args)
 
     m = Mesh()
     m.from_file(args.infile)
