@@ -25,43 +25,6 @@ Model3D models[5];
 MD5Model md5_models[5];
 MD5Anim md5_anims[10];
 
-SVECTOR rotvec;
-
-// TODO: pass camera to be able to have different camera types ?
-void process_input()
-{
-    if (iptm_is_held(KEY_UP)) {
-        camera.rotation.vx -= CAM_ROT_SPEED;
-    }
-    if (iptm_is_held(KEY_DOWN)) {
-        camera.rotation.vx += CAM_ROT_SPEED;
-    }
-    if (iptm_is_held(KEY_LEFT)) {
-        camera.rotation.vy += CAM_ROT_SPEED;
-    }
-    if (iptm_is_held(KEY_RIGHT)) {
-        camera.rotation.vy -= CAM_ROT_SPEED;
-    }
-    if (iptm_is_held(KEY_TRIANGLE)) {
-        camera.translate.vx -= FixedMulFixed(iSin(camera.rotation.vy), iCos(camera.rotation.vx)) << CAM_MOV_SCALE;
-        camera.translate.vy += iSin(camera.rotation.vx) << CAM_MOV_SCALE;
-        camera.translate.vz += FixedMulFixed(iCos(camera.rotation.vy), iCos(camera.rotation.vx)) << CAM_MOV_SCALE;
-    }
-    if (iptm_is_held(KEY_CROSS)) {
-        camera.translate.vx += FixedMulFixed(iSin(camera.rotation.vy), iCos(camera.rotation.vx)) << CAM_MOV_SCALE;
-        camera.translate.vy -= iSin(camera.rotation.vx) << CAM_MOV_SCALE;
-        camera.translate.vz -= FixedMulFixed(iCos(camera.rotation.vy), iCos(camera.rotation.vx)) << CAM_MOV_SCALE;
-    }
-    if (iptm_is_held(KEY_SQUARE)) {
-        camera.translate.vx -= iCos(camera.rotation.vy) << CAM_MOV_SCALE;
-        camera.translate.vz -= iSin(camera.rotation.vy) << CAM_MOV_SCALE;
-    }
-    if (iptm_is_held(KEY_CIRCLE)) {
-        camera.translate.vx += iCos(camera.rotation.vy) << CAM_MOV_SCALE;
-        camera.translate.vz += iSin(camera.rotation.vy) << CAM_MOV_SCALE;
-    }
-}
-
 // TODO better way
 void init_assets()
 {
@@ -145,7 +108,7 @@ void mainloop()
 
     {
         rdr_setSceneCamera(&camera);
-        Cam_setTranslation(&camera, 0, -1000, 0);
+        cam_setTranslation(&camera, 0, -1000, 0);
         setVector(&camera.rotation, 0, 0, 0);
     }
 
@@ -153,8 +116,7 @@ void mainloop()
         frame_start = VSync(-1);
 
         iptm_poll_events();
-        process_input();
-        Cam_Update(&camera);
+        cam_processInput(&camera);
 
         // TODO: function to loop through scene linked list and update animated models.
         // TODO 2: also loop through scene to update if model is visible or not ?
@@ -195,7 +157,6 @@ int main(void)
     init_assets();
 
     iptm_init();
-    // setVector(&rotvec, 0, 0, 0);
 
     printf("[INFO]: init done !\n");
 

@@ -10,7 +10,7 @@ typedef struct camera_t {
     MATRIX matrix;
 } Camera;
 
-void Cam_Update(Camera* cam);
-void Cam_setTranslation(Camera* cam, int, int, int);
+void cam_processInput(Camera* cam);
+void cam_setTranslation(Camera* cam, int, int, int);
 
 #endif
