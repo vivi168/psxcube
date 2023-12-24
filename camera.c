@@ -38,6 +38,13 @@ void cam_processInput(Camera* cam)
     if (pad_isHeld(KEY_RIGHT)) {
         cam->rotation.vy -= CAM_ROT_SPEED;
     }
+
+    // Don't look too far up or down
+    if (cam->rotation.vx > 768)
+        cam->rotation.vx = 768;
+    else if (cam->rotation.vx < -768)
+        cam->rotation.vx = -768;
+
     if (pad_isHeld(KEY_TRIANGLE)) {
         cam->translate.vx -= FixedMulFixed(iSin(cam->rotation.vy), iCos(cam->rotation.vx)) << CAM_MOV_SCALE;
         cam->translate.vy += iSin(cam->rotation.vx) << CAM_MOV_SCALE;

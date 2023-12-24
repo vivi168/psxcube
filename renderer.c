@@ -207,6 +207,13 @@ void rdr_processScene()
     /* if (tc > 0) fps = fc/tc; */
     /* FntPrint("vsync %d fc %d tc %d fps %d\n", VSync(-1), fc, tc, fps); */
     FntPrint("nt %d ent %d\n", numTri, effectiveNumTri);
+    FntPrint("cam rot x %d y %d z %d\n", scene.camera->rotation.vx,
+        scene.camera->rotation.vy,
+        scene.camera->rotation.vz);
+    FntPrint("cam pos x %d y %d z %d\n",
+        FixedToInt(scene.camera->translate.vx),
+        FixedToInt(scene.camera->translate.vy),
+        FixedToInt(scene.camera->translate.vz));
 }
 
 void add_mesh(Mesh3D *mesh)
