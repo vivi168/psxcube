@@ -3,8 +3,6 @@
 #define NEAR_PLANE 16
 #define FAR_PLANE 4096
 
-#define CELL_SIZE 1024
-
 unsigned int numTri, effectiveNumTri, numQuad;
 
 typedef struct db_t {
@@ -54,7 +52,7 @@ void add_tri(Vertex*, Vertex*, Vertex*, Texture *tex);
 // TODO: scene can also contains meshes of composed of quads
 // move this out of here
 Chunk chunk;
-void add_chunk(Chunk chunk, int cx, int cy);
+void add_chunk(Chunk chunk);
 void add_quad(Vertex* v1, Vertex* v2, Vertex* v3, Vertex* v4, SVECTOR*);
 
 void rdr_init()
@@ -213,7 +211,7 @@ void rdr_processScene()
         curr = curr->next;
     }
 
-    add_chunk(chunk, 0, 0);
+    add_chunk(chunk);
 
     /* FntPrint("MODEL LOADER\n"); */
     FntPrint("vsync %d\n", VSync(-1));
@@ -367,9 +365,8 @@ void add_quad(Vertex* v1, Vertex* v2, Vertex* v3, Vertex* v4, SVECTOR* color)
     numQuad++;
 }
 
-void add_chunk(Chunk chunk, int cx, int cy)
+void add_chunk(Chunk chunk)
 {
-    // Vertex vertices[4];
     Model3D m;
     model_setScale(&m, ONE);
     model_setRotation(&m, 0, 0, 0);
@@ -385,25 +382,17 @@ void add_chunk(Chunk chunk, int cx, int cy)
 
     for (int j = 0; j < CHUNK_SIZE; j++) {
         for (int i = 0; i < CHUNK_SIZE; i++) {
-            Vertex vertices[4];
             SVECTOR color;
-            int x = cx * CHUNK_SIZE + i;
-            int z = cy * CHUNK_SIZE + j;
-
-            setVector(&vertices[0].position, x * CELL_SIZE, chunk[j][i], z * CELL_SIZE);
-            setVector(&vertices[1].position, x * CELL_SIZE + CELL_SIZE, chunk[j][i+1], z * CELL_SIZE);
-            setVector(&vertices[2].position, x * CELL_SIZE, chunk[j+1][i], z * CELL_SIZE + CELL_SIZE);
-            setVector(&vertices[3].position, x * CELL_SIZE + CELL_SIZE, chunk[j+1][i+1], z * CELL_SIZE + CELL_SIZE);
 
             if ((i+j) & 1)
                 setVector(&color, 128, 128, 128);
             else
-                setVector(&color, 255, 0, 255);
+                setVector(&color, 255, 255, 255);
 
-            add_quad(&vertices[0],
-                     &vertices[2],
-                     &vertices[1],
-                     &vertices[3],
+            add_quad(&chunk[j][i],
+                     &chunk[j+1][i],
+                     &chunk[j][i+1],
+                     &chunk[j+1][i+1],
                      &color);
         }
     }

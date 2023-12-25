@@ -17,9 +17,10 @@
 #include "types.h"
 #include "linalg.h"
 #include "noise.h"
-#include "terrain.h"
 #include "camera.h"
 #include "mesh.h"
+#include "terrain.h"
+
 
 #include "io.h"
 #include "input.h"

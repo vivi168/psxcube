@@ -2,8 +2,9 @@
 #define TERRAIN_H
 
 #define CHUNK_SIZE 16
+#define CELL_SIZE 1024
 
-typedef int Chunk[CHUNK_SIZE + 1][CHUNK_SIZE + 1];
+typedef Vertex Chunk[CHUNK_SIZE + 1][CHUNK_SIZE + 1];
 
 int terrain_flat(int x, int y);
 int terrain_slope(int x, int y);
