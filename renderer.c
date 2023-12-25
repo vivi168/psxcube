@@ -3,7 +3,9 @@
 #define NEAR_PLANE 16
 #define FAR_PLANE 4096
 
-unsigned int numTri, effectiveNumTri;
+#define CELL_SIZE 1024
+
+unsigned int numTri, effectiveNumTri, numQuad;
 
 typedef struct db_t {
     DISPENV disp;
@@ -26,6 +28,7 @@ typedef struct scene_node_t {
 } SceneNode;
 
 // TODO: tree instead ? group by TPAGE ?
+// TODO: separate list of tri & quad mesh
 typedef struct scene_list_t {
     SceneNode *head;
     SceneNode *tail;
@@ -47,6 +50,12 @@ static RECT screenClip;
 void create_texture(const char* filename, Texture *tex);
 void add_mesh(Mesh3D*);
 void add_tri(Vertex*, Vertex*, Vertex*, Texture *tex);
+
+// TODO: scene can also contains meshes of composed of quads
+// move this out of here
+Chunk chunk;
+void add_chunk(Chunk chunk, int cx, int cy);
+void add_quad(Vertex* v1, Vertex* v2, Vertex* v3, Vertex* v4, SVECTOR*);
 
 void rdr_init()
 {
@@ -84,6 +93,8 @@ void rdr_init()
     SetDispMask(1);
 
     setRECT(&screenClip, 0, 0, SCREEN_W, SCREEN_H);
+
+    terrain_heightmap(chunk, 0, 0, terrain_fbm3);
 }
 
 // TODO: do not reload already loaded textures shared between meshes
@@ -183,6 +194,7 @@ void rdr_processScene()
     assert(scene.camera != NULL);
 
     numTri = 0;
+    numQuad = 0;
     effectiveNumTri = 0;
 
     curr = scene.head;
@@ -201,13 +213,16 @@ void rdr_processScene()
         curr = curr->next;
     }
 
+    add_chunk(chunk, 0, 0);
+
     /* FntPrint("MODEL LOADER\n"); */
     FntPrint("vsync %d\n", VSync(-1));
     /* int fps = 0; */
     /* if (tc > 0) fps = fc/tc; */
     /* FntPrint("vsync %d fc %d tc %d fps %d\n", VSync(-1), fc, tc, fps); */
-    FntPrint("nt %d ent %d\n", numTri, effectiveNumTri);
-    FntPrint("cam rot x %d y %d z %d\n", scene.camera->rotation.vx,
+    FntPrint("nt %d ent %d quad %d\n", numTri, effectiveNumTri, numQuad);
+    FntPrint("cam rot x %d y %d z %d\n",
+        scene.camera->rotation.vx,
         scene.camera->rotation.vy,
         scene.camera->rotation.vz);
     FntPrint("cam pos x %d y %d z %d\n",
@@ -289,6 +304,109 @@ void add_tri(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
     addPrim(&cdb->ot[otz], poly);
     nextpri += sizeof(POLY_FT3);
     effectiveNumTri ++;
+}
+
+void add_quad(Vertex* v1, Vertex* v2, Vertex* v3, Vertex* v4, SVECTOR* color)
+{
+    int32_t otz, nclip;
+    POLY_F4 *poly;
+
+    // load first three vertices to GTE
+    gte_ldv3(&v1->position,
+             &v2->position,
+             &v3->position);
+
+    // rotation, translation, perspective transformation
+    gte_rtpt();
+    // normal clip for backface culling
+    gte_nclip();
+    gte_stopz(&nclip);
+
+    if (nclip <= 0) return;
+
+    // average Z for depth sorting
+    gte_avsz3();
+    gte_stotz(&otz); // screen_z >>= 2
+
+    if (otz < NEAR_PLANE || otz >= FAR_PLANE) return;
+
+    poly = (POLY_F4*)nextpri;
+    setPolyF4(poly);
+
+    // set projected vertices to the primitive
+    gte_stsxy0(&poly->x0);
+    gte_stsxy1(&poly->x1);
+    gte_stsxy2(&poly->x2);
+
+    // compute last projected vertice
+    gte_ldv0(&v4->position);
+    gte_rtps();
+    gte_stsxy(&poly->x3);
+
+    if (quad_clip(&screenClip,
+                 (DVECTOR*)&poly->x0,
+                 (DVECTOR*)&poly->x1,
+                 (DVECTOR*)&poly->x2,
+                 (DVECTOR*)&poly->x3
+                 )) return;
+
+    // setUV4(poly, texture->u + v1->uv.vx, texture->v + v1->uv.vy,
+    //              texture->u + v2->uv.vx, texture->v + v2->uv.vy,
+    //              texture->u + v3->uv.vx, texture->v + v3->uv.vy,
+    //              texture->u + v4->uv.vx, texture->v + v4->uv.vy);
+
+    // poly->tpage = texture->tpage;
+    // poly->clut = texture->clut;
+    setRGB0(poly, color->vx, color->vy, color->vz);
+
+    // todo: add terrain to another ot specific for terrain, positionned lower
+    // addPrim(&cdb->ot[FAR_PLANE-1], poly);
+    addPrim(&cdb->ot[otz], poly);
+    nextpri += sizeof(POLY_F4);
+
+    numQuad++;
+}
+
+void add_chunk(Chunk chunk, int cx, int cy)
+{
+    // Vertex vertices[4];
+    Model3D m;
+    model_setScale(&m, ONE);
+    model_setRotation(&m, 0, 0, 0);
+    model_setTranslation(&m, 0, 0, 0);
+
+    MATRIX modelMat;
+
+    model_mat(&m, &modelMat);
+    CompMatrixLV(&scene.camera->matrix, &modelMat, &modelMat);
+
+    gte_SetRotMatrix(&modelMat);
+    gte_SetTransMatrix(&modelMat);
+
+    for (int j = 0; j < CHUNK_SIZE; j++) {
+        for (int i = 0; i < CHUNK_SIZE; i++) {
+            Vertex vertices[4];
+            SVECTOR color;
+            int x = cx * CHUNK_SIZE + i;
+            int z = cy * CHUNK_SIZE + j;
+
+            setVector(&vertices[0].position, x * CELL_SIZE, chunk[j][i], z * CELL_SIZE);
+            setVector(&vertices[1].position, x * CELL_SIZE + CELL_SIZE, chunk[j][i+1], z * CELL_SIZE);
+            setVector(&vertices[2].position, x * CELL_SIZE, chunk[j+1][i], z * CELL_SIZE + CELL_SIZE);
+            setVector(&vertices[3].position, x * CELL_SIZE + CELL_SIZE, chunk[j+1][i+1], z * CELL_SIZE + CELL_SIZE);
+
+            if ((i+j) & 1)
+                setVector(&color, 128, 128, 128);
+            else
+                setVector(&color, 255, 0, 255);
+
+            add_quad(&vertices[0],
+                     &vertices[2],
+                     &vertices[1],
+                     &vertices[3],
+                     &color);
+        }
+    }
 }
 
 void rdr_draw()
