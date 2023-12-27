@@ -22,6 +22,7 @@ void cam_setTranslation(Camera* cam, int x, int y, int z)
 void cam_processInput(Camera* cam)
 {
     int dx = 0;
+    int dy = 0;
     int dz = 0;
 
     if (pad_isHeld(KEY_UP)) {
@@ -45,12 +46,10 @@ void cam_processInput(Camera* cam)
 
     if (pad_isHeld(KEY_TRIANGLE)) {
         dx -= FixedMulFixed(iSin(cam->rotation.vy), iCos(cam->rotation.vx)) << CAM_MOV_SCALE;
-        // cam->translate.vy += iSin(cam->rotation.vx) << CAM_MOV_SCALE;
         dz += FixedMulFixed(iCos(cam->rotation.vy), iCos(cam->rotation.vx)) << CAM_MOV_SCALE;
     }
     if (pad_isHeld(KEY_CROSS)) {
         dx += FixedMulFixed(iSin(cam->rotation.vy), iCos(cam->rotation.vx)) << CAM_MOV_SCALE;
-        // cam->translate.vy -= iSin(cam->rotation.vx) << CAM_MOV_SCALE;
         dz -= FixedMulFixed(iCos(cam->rotation.vy), iCos(cam->rotation.vx)) << CAM_MOV_SCALE;
     }
     if (pad_isHeld(KEY_SQUARE)) {
@@ -61,8 +60,15 @@ void cam_processInput(Camera* cam)
         dx += iCos(cam->rotation.vy) << CAM_MOV_SCALE;
         dz += iSin(cam->rotation.vy) << CAM_MOV_SCALE;
     }
+    if (pad_isHeld(KEY_R1)) {
+        dy -= iCos(cam->rotation.vx) << CAM_MOV_SCALE;
+    }
+    if (pad_isHeld(KEY_R2)) {
+        dy += iCos(cam->rotation.vx) << CAM_MOV_SCALE;
+    }
 
     cam->translate.vx += FixedToInt(dx);
+    cam->translate.vy += FixedToInt(dy);
     cam->translate.vz += FixedToInt(dz);
 
     cam_update(cam);

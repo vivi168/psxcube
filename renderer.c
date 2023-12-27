@@ -228,8 +228,8 @@ void rdr_processScene()
         scene.camera->translate.vy,
         scene.camera->translate.vz);
     FntPrint("chunk %d %d\n",
-        (int)FixedToInt(scene.camera->translate.vx) >> 14,
-        (int)FixedToInt(scene.camera->translate.vz) >> 14);
+        scene.camera->translate.vx >> 14,
+        scene.camera->translate.vz >> 14);
 }
 
 void add_mesh(Mesh3D *mesh)

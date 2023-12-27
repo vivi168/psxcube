@@ -107,7 +107,7 @@ void mainloop()
 
     {
         rdr_setSceneCamera(&camera);
-        cam_setTranslation(&camera, 0, -1000, 0);
+        cam_setTranslation(&camera, 0, -768, 0);
         setVector(&camera.rotation, 0, 0, 0);
     }
 
