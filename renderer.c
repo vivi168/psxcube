@@ -224,9 +224,12 @@ void rdr_processScene()
         scene.camera->rotation.vy,
         scene.camera->rotation.vz);
     FntPrint("cam pos x %d y %d z %d\n",
-        FixedToInt(scene.camera->translate.vx),
-        FixedToInt(scene.camera->translate.vy),
-        FixedToInt(scene.camera->translate.vz));
+        scene.camera->translate.vx,
+        scene.camera->translate.vy,
+        scene.camera->translate.vz);
+    FntPrint("chunk %d %d\n",
+        (int)FixedToInt(scene.camera->translate.vx) >> 14,
+        (int)FixedToInt(scene.camera->translate.vz) >> 14);
 }
 
 void add_mesh(Mesh3D *mesh)

@@ -6,26 +6,24 @@ static void cam_update(Camera* cam)
     VECTOR translate;
     RotMatrix_gte(&cam->rotation, &cam->matrix);
 
-    // Divide out the fractions of camera coordinates and invert
-    // the sign, so camera coordinates will line up to world
-    // (or geometry) coordinates
-    translate.vx = FixedToInt(-cam->translate.vx);
-    translate.vy = FixedToInt(-cam->translate.vy);
-    translate.vz = FixedToInt(-cam->translate.vz);
+    translate.vx = -cam->translate.vx;
+    translate.vy = -cam->translate.vy;
+    translate.vz = -cam->translate.vz;
 
-    // Apply rotation of matrix to translation value to achieve a
-    // first person perspective
     ApplyMatrixLV(&cam->matrix, &translate, &translate);
     TransMatrix(&cam->matrix, &translate);
 }
 
 void cam_setTranslation(Camera* cam, int x, int y, int z)
 {
-    setVector(&cam->translate, x * ONE, y * ONE, z * ONE);
+    setVector(&cam->translate, x, y, z);
 }
 
 void cam_processInput(Camera* cam)
 {
+    int dx = 0;
+    int dz = 0;
+
     if (pad_isHeld(KEY_UP)) {
         cam->rotation.vx -= CAM_ROT_SPEED;
     }
@@ -46,23 +44,26 @@ void cam_processInput(Camera* cam)
         cam->rotation.vx = -768;
 
     if (pad_isHeld(KEY_TRIANGLE)) {
-        cam->translate.vx -= FixedMulFixed(iSin(cam->rotation.vy), iCos(cam->rotation.vx)) << CAM_MOV_SCALE;
-        cam->translate.vy += iSin(cam->rotation.vx) << CAM_MOV_SCALE;
-        cam->translate.vz += FixedMulFixed(iCos(cam->rotation.vy), iCos(cam->rotation.vx)) << CAM_MOV_SCALE;
+        dx -= FixedMulFixed(iSin(cam->rotation.vy), iCos(cam->rotation.vx)) << CAM_MOV_SCALE;
+        // cam->translate.vy += iSin(cam->rotation.vx) << CAM_MOV_SCALE;
+        dz += FixedMulFixed(iCos(cam->rotation.vy), iCos(cam->rotation.vx)) << CAM_MOV_SCALE;
     }
     if (pad_isHeld(KEY_CROSS)) {
-        cam->translate.vx += FixedMulFixed(iSin(cam->rotation.vy), iCos(cam->rotation.vx)) << CAM_MOV_SCALE;
-        cam->translate.vy -= iSin(cam->rotation.vx) << CAM_MOV_SCALE;
-        cam->translate.vz -= FixedMulFixed(iCos(cam->rotation.vy), iCos(cam->rotation.vx)) << CAM_MOV_SCALE;
+        dx += FixedMulFixed(iSin(cam->rotation.vy), iCos(cam->rotation.vx)) << CAM_MOV_SCALE;
+        // cam->translate.vy -= iSin(cam->rotation.vx) << CAM_MOV_SCALE;
+        dz -= FixedMulFixed(iCos(cam->rotation.vy), iCos(cam->rotation.vx)) << CAM_MOV_SCALE;
     }
     if (pad_isHeld(KEY_SQUARE)) {
-        cam->translate.vx -= iCos(cam->rotation.vy) << CAM_MOV_SCALE;
-        cam->translate.vz -= iSin(cam->rotation.vy) << CAM_MOV_SCALE;
+        dx -= iCos(cam->rotation.vy) << CAM_MOV_SCALE;
+        dz -= iSin(cam->rotation.vy) << CAM_MOV_SCALE;
     }
     if (pad_isHeld(KEY_CIRCLE)) {
-        cam->translate.vx += iCos(cam->rotation.vy) << CAM_MOV_SCALE;
-        cam->translate.vz += iSin(cam->rotation.vy) << CAM_MOV_SCALE;
+        dx += iCos(cam->rotation.vy) << CAM_MOV_SCALE;
+        dz += iSin(cam->rotation.vy) << CAM_MOV_SCALE;
     }
+
+    cam->translate.vx += FixedToInt(dx);
+    cam->translate.vz += FixedToInt(dz);
 
     cam_update(cam);
 }
