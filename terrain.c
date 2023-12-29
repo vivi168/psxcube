@@ -13,19 +13,17 @@ int terrain_fbm3(int x, int y)
 
 void chunk_init(Chunk* chunk, int cx, int cy, int (*tf)(int, int))
 {
-    for (int j = 0; j < CHUNK_SIZE + 1; j++) {
-        for (int i = 0; i < CHUNK_SIZE + 1; i++) {
+    for (int j = 0; j <= CHUNK_SIZE; j++) {
+        for (int i = 0; i <= CHUNK_SIZE; i++) {
             int y = tf(i + cx * CHUNK_SIZE, j + cy * CHUNK_SIZE);
 
             int x = cx * CHUNK_SIZE + i * CELL_SIZE;
             int z = cy * CHUNK_SIZE + j * CELL_SIZE;
 
+            // try to fix seam
+            if (j == CHUNK_SIZE) z += 16;
+            if (i == CHUNK_SIZE) x += 16;
             setVector(&chunk->heightmap[j][i].position, x, y, z);
-
-            // int u, v;
-            // u = i << SCALE / 31
-            // chunk->heightmap[j][i].uv.vx = u;
-            // chunk->heightmap[j][i].uv.vy = v;
         }
     }
 
