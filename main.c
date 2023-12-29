@@ -25,6 +25,8 @@ Model3D models[5];
 MD5Model md5_models[5];
 MD5Anim md5_anims[10];
 
+Terrain terrain;
+
 // TODO better way
 void init_assets()
 {
@@ -105,12 +107,6 @@ void mainloop()
     unsigned int frame_start;
     // int curr_frame = 0;
 
-    {
-        rdr_setSceneCamera(&camera);
-        cam_setTranslation(&camera, 0, -768, 0);
-        setVector(&camera.rotation, 0, 0, 0);
-    }
-
     while (1) {
         frame_start = VSync(-1);
 
@@ -144,6 +140,7 @@ int main(void)
 {
     InitHeap3((void*)&heap, HEAP_SIZE);
     CdInit();
+    pad_init();
 
     vsyncCounter = 0;
     frameCounter = 0;
@@ -153,10 +150,20 @@ int main(void)
 
     rdr_init();
 
-    init_assets();
-    noise_init();
+    {
+        init_assets();
 
-    pad_init();
+        // camera init
+        {
+            rdr_setSceneCamera(&camera);
+            cam_setTranslation(&camera, 0, -768, 0);
+            setVector(&camera.rotation, 0, 0, 0);
+        }
+
+        noise_init();
+        chunk_init(&terrain.chunks[0], 0, 0, terrain_flat);
+        rdr_setSceneTerrain(&terrain);
+    }
 
     printf("[INFO]: init done !\n");
 

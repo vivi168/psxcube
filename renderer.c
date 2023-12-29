@@ -32,6 +32,7 @@ typedef struct scene_list_t {
     SceneNode *tail;
 
     Camera* camera;
+    Terrain* terrain;
 } Scene;
 
 // TODO: all of these static ?
@@ -48,10 +49,6 @@ static RECT screenClip;
 void create_texture(const char* filename, Texture *tex);
 void add_mesh(Mesh3D*);
 void add_tri(Vertex*, Vertex*, Vertex*, Texture *tex);
-
-// TODO: scene can also contains meshes of composed of quads
-// move this out of here
-Chunk chunk;
 void add_chunk(Chunk* chunk);
 void add_quad(Vertex* v1, Vertex* v2, Vertex* v3, Vertex* v4, SVECTOR*);
 
@@ -91,8 +88,6 @@ void rdr_init()
     SetDispMask(1);
 
     setRECT(&screenClip, 0, 0, SCREEN_W, SCREEN_H);
-
-    chunk_init(&chunk, 0, 0, terrain_fbm3);
 }
 
 // TODO: do not reload already loaded textures shared between meshes
@@ -183,6 +178,11 @@ void rdr_setSceneCamera(Camera* camera)
     scene.camera = camera;
 }
 
+void rdr_setSceneTerrain(Terrain* terrain)
+{
+    scene.terrain = terrain;
+}
+
 void rdr_processScene()
 {
     SceneNode* curr;
@@ -211,7 +211,7 @@ void rdr_processScene()
         curr = curr->next;
     }
 
-    add_chunk(&chunk);
+    add_chunk(&scene.terrain->chunks[0]);
 
     /* FntPrint("MODEL LOADER\n"); */
     FntPrint("vsync %d\n", VSync(-1));
@@ -228,8 +228,8 @@ void rdr_processScene()
         scene.camera->translate.vy,
         scene.camera->translate.vz);
     FntPrint("chunk %d %d\n",
-        scene.camera->translate.vx >> 14,
-        scene.camera->translate.vz >> 14);
+        scene.camera->translate.vx >> WORLD_TO_CHUNK,
+        scene.camera->translate.vz >> WORLD_TO_CHUNK);
 }
 
 void add_mesh(Mesh3D *mesh)
@@ -247,10 +247,8 @@ void add_mesh(Mesh3D *mesh)
             add_tri(&mesh->vertices[i1],
                     &mesh->vertices[i2],
                     &mesh->vertices[i3],
-                    mesh->subsets[s].texture
-                    );
+                    mesh->subsets[s].texture);
         }
-
     }
 }
 
@@ -298,9 +296,7 @@ void add_tri(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
 
     poly->tpage = texture->tpage;
     poly->clut = texture->clut;
-    setRGB0(poly, 255,
-                 255,
-                 255);
+    setRGB0(poly, 255, 255, 255);
 
     addPrim(&cdb->ot[otz], poly);
     nextpri += sizeof(POLY_FT3);
