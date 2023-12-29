@@ -64,20 +64,20 @@ void chunk_initTerrain(Terrain* terrain, int cx, int cy, int q, int (*tf)(int, i
     chunk_init(&terrain->chunks[0], cx, cy, tf);
 
     if (q == 0) {
-        chunk_init(&terrain->chunks[1], cx-1, cy,   tf);
-        chunk_init(&terrain->chunks[2], cx,   cy-1, tf);
-        chunk_init(&terrain->chunks[3], cx-1, cy-1, tf);
+        chunk_init(&terrain->chunks[1], cx - 1, cy, tf);
+        chunk_init(&terrain->chunks[2], cx, cy - 1, tf);
+        chunk_init(&terrain->chunks[3], cx - 1, cy - 1, tf);
     } else if (q == 1) {
-        chunk_init(&terrain->chunks[1], cx+1, cy,   tf);
-        chunk_init(&terrain->chunks[2], cx,   cy-1, tf);
-        chunk_init(&terrain->chunks[3], cx+1, cy-1, tf);
+        chunk_init(&terrain->chunks[1], cx + 1, cy, tf);
+        chunk_init(&terrain->chunks[2], cx, cy - 1, tf);
+        chunk_init(&terrain->chunks[3], cx + 1, cy - 1, tf);
     } else if (q == 2) {
-        chunk_init(&terrain->chunks[1], cx-1, cy,   tf);
-        chunk_init(&terrain->chunks[2], cx,   cy+1, tf);
-        chunk_init(&terrain->chunks[3], cx-1, cy+1, tf);
+        chunk_init(&terrain->chunks[1], cx - 1, cy, tf);
+        chunk_init(&terrain->chunks[2], cx, cy + 1, tf);
+        chunk_init(&terrain->chunks[3], cx - 1, cy + 1, tf);
     } else if (q == 3) {
-        chunk_init(&terrain->chunks[1], cx+1, cy,   tf);
-        chunk_init(&terrain->chunks[2], cx,   cy+1, tf);
-        chunk_init(&terrain->chunks[3], cx+1, cy+1, tf);
+        chunk_init(&terrain->chunks[1], cx + 1, cy, tf);
+        chunk_init(&terrain->chunks[2], cx, cy + 1, tf);
+        chunk_init(&terrain->chunks[3], cx + 1, cy + 1, tf);
     }
 }
