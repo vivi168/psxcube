@@ -21,6 +21,11 @@ void chunk_init(Chunk* chunk, int cx, int cy, int (*tf)(int, int))
             int z = cy * CHUNK_SIZE + j * CELL_SIZE;
 
             setVector(&chunk->heightmap[j][i].position, x, y, z);
+
+            // int u, v;
+            // u = i << SCALE / 31
+            // chunk->heightmap[j][i].uv.vx = u;
+            // chunk->heightmap[j][i].uv.vy = v;
         }
     }
 

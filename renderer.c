@@ -94,7 +94,7 @@ void rdr_init()
 // TODO: do not reload already loaded textures shared between meshes
 // keep a hash map of already loaded textures ?
 // TODO: when unloading a mesh, also need to unload its texture if no longer used
-void rdr_init_textures(const Mesh3D* mesh)
+void rdr_initMeshTextures(Mesh3D* mesh)
 {
     for (int i = 0; i < mesh->header.numSubsets; i++) {
         STRING20 tmp;
@@ -104,6 +104,16 @@ void rdr_init_textures(const Mesh3D* mesh)
         mesh->subsets[i].texture = malloc3(sizeof(Texture));
         // TODO: when loading/unloading mesh, don't forget to free everything
         create_texture(tmp, mesh->subsets[i].texture);
+    }
+}
+
+void rdr_initTerrainTextures(Terrain* terrain)
+{
+    terrain->grassland_tex = malloc3(sizeof(Texture));
+    create_texture("\\TERRAIN.TIM;1", terrain->grassland_tex);
+
+    for (int i = 0; i < MAX_CHUNK; i++) {
+        terrain->chunks[i].texture = terrain->grassland_tex;
     }
 }
 
@@ -440,16 +450,29 @@ void add_chunk(Chunk* chunk)
             //          &chunk->heightmap[j][i+1],
             //          &chunk->heightmap[j+1][i+1],
             //          &color);
-            add_flat_tri(
+
+            chunk->heightmap[j][i].uv.vx = 0;
+            chunk->heightmap[j][i].uv.vy = 0;
+
+            chunk->heightmap[j + 1][i].uv.vx = 0;
+            chunk->heightmap[j + 1][i].uv.vy = 31;
+
+            chunk->heightmap[j][i + 1].uv.vx = 31;
+            chunk->heightmap[j][i + 1].uv.vy = 0;
+
+            chunk->heightmap[j + 1][i + 1].uv.vx = 31;
+            chunk->heightmap[j + 1][i + 1].uv.vy = 31;
+
+            add_tri(
                 &chunk->heightmap[j][i],
                 &chunk->heightmap[j + 1][i],
                 &chunk->heightmap[j][i + 1],
-                &color);
-            add_flat_tri(
+                chunk->texture);
+            add_tri(
                 &chunk->heightmap[j + 1][i],
                 &chunk->heightmap[j + 1][i + 1],
                 &chunk->heightmap[j][i + 1],
-                &color);
+                chunk->texture);
         }
     }
 }

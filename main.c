@@ -36,7 +36,7 @@ void init_assets()
         print_mesh3d(&meshes[CUBE_MESH]);
         // TODO: if multiple models share same texture
         // no need to reload texture
-        rdr_init_textures(&meshes[CUBE_MESH]);
+        rdr_initMeshTextures(&meshes[CUBE_MESH]);
 
         model_initStaticModel(&models[CUBE_MESH], &meshes[CUBE_MESH]);
 
@@ -53,7 +53,7 @@ void init_assets()
         print_mesh3d(&meshes[HOUSE_MESH]);
         // TODO: if multiple models share same texture
         // no need to reload texture
-        rdr_init_textures(&meshes[HOUSE_MESH]);
+        rdr_initMeshTextures(&meshes[HOUSE_MESH]);
 
         model_initStaticModel(&models[HOUSE_MESH], &meshes[HOUSE_MESH]);
 
@@ -71,7 +71,7 @@ void init_assets()
 
         model_initAnimatedModel(&models[CUBEGUY_MESH], &md5_models[CUBEGUY_MESH], &md5_anims[CUBEGUY_RUNNING]);
         // TODO: do not load same texture file twice
-        rdr_init_textures(models[CUBEGUY_MESH].mesh);
+        rdr_initMeshTextures(models[CUBEGUY_MESH].mesh);
         print_mesh3d(models[CUBEGUY_MESH].mesh);
 
         model_setScale(&models[CUBEGUY_MESH], ONE);
@@ -90,7 +90,7 @@ void init_assets()
         // TODO: what if multiple animations
         // animated model has mesh on heap ? can't share mesh because it's animated and thus modified.
         model_initAnimatedModel(&models[BOB_MESH], &md5_models[BOB_MESH], &md5_anims[BOB_ANIM]);
-        rdr_init_textures(models[BOB_MESH].mesh); // TODO: be careful of doing this after initing the mesh.
+        rdr_initMeshTextures(models[BOB_MESH].mesh); // TODO: be careful of doing this after initing the mesh.
         // print_mesh3d(models[BOB_MESH].mesh);
 
         model_setScale(&models[BOB_MESH], ONE);
@@ -100,6 +100,8 @@ void init_assets()
         rdr_appendToScene(&models[BOB_MESH]);
     }
 #endif
+
+        rdr_initTerrainTextures(&terrain);
 
     printf("[INFO]: assets init done !\n");
 }

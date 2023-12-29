@@ -67,6 +67,8 @@
       <file name="LANTERN.TIM" type="data" source="assets/Bob/LANTERN.TIM" />
       <file name="LANTTOP.TIM" type="data" source="assets/Bob/LANTTOP.TIM" />
 
+      <file name="TERRAIN.TIM" type="data" source="assets/TERRAIN.TIM" />
+
       <!-- Lastly, some dummy sectors must always be placed at the -->
       <!-- end of the disc image. It must be a pretty large one to -->
       <!-- make sure the console does not go run-away when it -->

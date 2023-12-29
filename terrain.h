@@ -9,15 +9,19 @@
 
 #define MAX_CHUNK 4
 
+struct texture_t;
+
 typedef struct chunk_t {
     int x, y;
     Vertex heightmap[CHUNK_SIZE + 1][CHUNK_SIZE + 1];
+    struct texture_t* texture;
 
     MATRIX matrix;
 } Chunk;
 
 typedef struct terrain_t {
     Chunk chunks[MAX_CHUNK];
+    struct texture_t* grassland_tex;
 
     Chunk* current_chunk;
 } Terrain;
