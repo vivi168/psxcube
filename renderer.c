@@ -49,6 +49,7 @@ static RECT screenClip;
 void create_texture(const char* filename, Texture *tex);
 void add_mesh(Mesh3D*);
 void add_tri(Vertex*, Vertex*, Vertex*, Texture *tex);
+void add_flat_tri(Vertex*, Vertex*, Vertex*, SVECTOR* color);
 void add_chunk(Chunk* chunk);
 void add_quad(Vertex* v1, Vertex* v2, Vertex* v3, Vertex* v4, SVECTOR*);
 
@@ -211,7 +212,8 @@ void rdr_processScene()
         curr = curr->next;
     }
 
-    add_chunk(&scene.terrain->chunks[0]);
+    for (int i = 0; i < 4; i++ )
+    add_chunk(&scene.terrain->chunks[i]);
 
     /* FntPrint("MODEL LOADER\n"); */
     FntPrint("vsync %d\n", VSync(-1));
@@ -303,6 +305,51 @@ void add_tri(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
     effectiveNumTri ++;
 }
 
+void add_flat_tri(Vertex* v1, Vertex* v2, Vertex* v3, SVECTOR* color)
+{
+    int32_t otz, nclip;
+    POLY_F3 *poly;
+
+    // load first three vertices to GTE
+    gte_ldv3(&v1->position,
+             &v2->position,
+             &v3->position);
+
+    // rotation, translation, perspective transformation
+    gte_rtpt();
+    // normal clip for backface culling
+    gte_nclip();
+    gte_stopz(&nclip);
+
+    if (nclip <= 0) return;
+
+    // average Z for depth sorting
+    gte_avsz3();
+    gte_stotz(&otz); // screen_z >>= 2
+
+    if (otz < NEAR_PLANE || otz >= FAR_PLANE) return;
+
+    poly = (POLY_F3*)nextpri;
+    setPolyF3(poly);
+
+    // set projected vertices to the primitive
+    gte_stsxy0(&poly->x0);
+    gte_stsxy1(&poly->x1);
+    gte_stsxy2(&poly->x2);
+
+    if (tri_clip(&screenClip,
+                 (DVECTOR*)&poly->x0,
+                 (DVECTOR*)&poly->x1,
+                 (DVECTOR*)&poly->x2
+                 )) return;
+
+    setRGB0(poly, color->vx, color->vy, color->vz);
+
+    addPrim(&cdb->ot[otz], poly);
+    nextpri += sizeof(POLY_F3);
+    effectiveNumTri ++;
+}
+
 void add_quad(Vertex* v1, Vertex* v2, Vertex* v3, Vertex* v4, SVECTOR* color)
 {
     int32_t otz, nclip;
@@ -322,7 +369,7 @@ void add_quad(Vertex* v1, Vertex* v2, Vertex* v3, Vertex* v4, SVECTOR* color)
     if (nclip <= 0) return;
 
     // average Z for depth sorting
-    gte_avsz3();
+    gte_avsz4();
     gte_stotz(&otz); // screen_z >>= 2
 
     if (otz < NEAR_PLANE || otz >= FAR_PLANE) return;
@@ -381,10 +428,20 @@ void add_chunk(Chunk* chunk)
             else
                 setVector(&color, 255, 255, 255);
 
-            add_quad(&chunk->heightmap[j][i],
+            // add_quad(&chunk->heightmap[j][i],
+            //          &chunk->heightmap[j+1][i],
+            //          &chunk->heightmap[j][i+1],
+            //          &chunk->heightmap[j+1][i+1],
+            //          &color);
+            add_flat_tri(
+                     &chunk->heightmap[j][i],
                      &chunk->heightmap[j+1][i],
                      &chunk->heightmap[j][i+1],
+                     &color);
+            add_flat_tri(
+                     &chunk->heightmap[j+1][i],
                      &chunk->heightmap[j+1][i+1],
+                     &chunk->heightmap[j][i+1],
                      &color);
         }
     }

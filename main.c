@@ -161,7 +161,10 @@ int main(void)
         }
 
         noise_init();
-        chunk_init(&terrain.chunks[0], 0, 0, terrain_flat);
+        chunk_init(&terrain.chunks[0], 0, 0, terrain_fbm3);
+        chunk_init(&terrain.chunks[1], -1, 0, terrain_fbm3);
+        chunk_init(&terrain.chunks[2], 0, 1, terrain_fbm3);
+        chunk_init(&terrain.chunks[3], -1, 1, terrain_fbm3);
         rdr_setSceneTerrain(&terrain);
     }
 
