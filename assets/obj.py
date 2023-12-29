@@ -211,8 +211,8 @@ class Mesh:
         data = bytearray()
 
         print('*** Header ***')
-        print(len(self.vertices), len(self.tris), len(self.subsets))
-        data += struct.pack('<III', len(self.vertices), len(self.tris), len(self.subsets))
+        print(len(self.vertices), len(self.tris) * 3, len(self.subsets))
+        data += struct.pack('<III', len(self.vertices), len(self.tris) * 3, len(self.subsets))
 
         print('*** Vertices ***')
         for v in self.vertices:

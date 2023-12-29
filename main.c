@@ -25,12 +25,14 @@ Model3D models[5];
 MD5Model md5_models[5];
 MD5Anim md5_anims[10];
 
+Terrain terrain;
+
 // TODO better way
 void init_assets()
 {
     // Cube
     {
-        read_obj("\\CUBE.M3D;1", &meshes[CUBE_MESH]);
+        obj_readMesh("\\CUBE.M3D;1", &meshes[CUBE_MESH]);
         print_mesh3d(&meshes[CUBE_MESH]);
         // TODO: if multiple models share same texture
         // no need to reload texture
@@ -47,7 +49,7 @@ void init_assets()
 
     // House
     {
-        read_obj("\\HOUSE.M3D;1", &meshes[HOUSE_MESH]);
+        obj_readMesh("\\HOUSE.M3D;1", &meshes[HOUSE_MESH]);
         print_mesh3d(&meshes[HOUSE_MESH]);
         // TODO: if multiple models share same texture
         // no need to reload texture
@@ -64,8 +66,8 @@ void init_assets()
 
     // CubeGuy
     {
-        read_md5model("\\CUBEGUY.MD5M;1", &md5_models[CUBEGUY_MESH]);
-        read_md5anim("\\RUNNING.MD5A;1", &md5_anims[CUBEGUY_RUNNING]);
+        md5_readModel("\\CUBEGUY.MD5M;1", &md5_models[CUBEGUY_MESH]);
+        md5_readAnim("\\RUNNING.MD5A;1", &md5_anims[CUBEGUY_RUNNING]);
 
         model_initAnimatedModel(&models[CUBEGUY_MESH], &md5_models[CUBEGUY_MESH], &md5_anims[CUBEGUY_RUNNING]);
         // TODO: do not load same texture file twice
@@ -81,8 +83,8 @@ void init_assets()
 
     // Bob
     {
-        read_md5model("\\BOB.MD5M;1", &md5_models[BOB_MESH]);
-        read_md5anim("\\BOB.MD5A;1", &md5_anims[BOB_ANIM]);
+        md5_readModel("\\BOB.MD5M;1", &md5_models[BOB_MESH]);
+        md5_readAnim("\\BOB.MD5A;1", &md5_anims[BOB_ANIM]);
 
         // TODO: what if multiple animations
         // animated model has mesh on heap ? can't share mesh because it's animated and thus modified.
@@ -104,18 +106,24 @@ void mainloop()
 {
     unsigned int frame_start;
     // int curr_frame = 0;
-
-    {
-        rdr_setSceneCamera(&camera);
-        cam_setTranslation(&camera, 0, -1000, 0);
-        setVector(&camera.rotation, 0, 0, 0);
-    }
+    int q, pq;
+    int cx, cy;
+    q = chunk_getQuadrant(camera.translate.vx, camera.translate.vz, &cx, &cy);
+    chunk_initTerrain(&terrain, cx, cy, q, terrain_fbm3);
 
     while (1) {
         frame_start = VSync(-1);
+        pq = q;
 
         pad_pollEvents();
         cam_processInput(&camera);
+
+        q = chunk_getQuadrant(camera.translate.vx, camera.translate.vz, &cx, &cy);
+        if (q != pq) {
+            printf("UPDATE TERRAIN!\n");
+            chunk_initTerrain(&terrain, cx, cy, q, terrain_fbm3);
+            rdr_setSceneTerrain(&terrain);
+        }
 
         // TODO: function to loop through scene linked list and update animated models.
         // TODO 2: also loop through scene to update if model is visible or not ?
@@ -144,6 +152,7 @@ int main(void)
 {
     InitHeap3((void*)&heap, HEAP_SIZE);
     CdInit();
+    pad_init();
 
     vsyncCounter = 0;
     frameCounter = 0;
@@ -153,9 +162,19 @@ int main(void)
 
     rdr_init();
 
-    init_assets();
+    {
+        init_assets();
 
-    pad_init();
+        // camera init
+        {
+            rdr_setSceneCamera(&camera);
+            cam_setTranslation(&camera, 0, -768, 0);
+            setVector(&camera.rotation, 0, 0, 0);
+        }
+
+        noise_init();
+        rdr_setSceneTerrain(&terrain);
+    }
 
     printf("[INFO]: init done !\n");
 

@@ -6,7 +6,7 @@ typedef char STRING20[20];
 // TODO: anonymous struct for headers?
 typedef struct obj_header_t {
     int numVerts;
-    int numTris;
+    int numIndices;
     int numSubsets;
 } ObjHeader;
 
@@ -32,7 +32,7 @@ typedef struct obj_mesh_t {
     Subset* subsets;
 } Mesh3D;
 
-void read_obj(const char* filename, Mesh3D*);
+void obj_readMesh(const char* filename, Mesh3D*);
 void print_mesh3d(Mesh3D*);
 
 
@@ -99,11 +99,11 @@ typedef struct md5_anim_t {
     MD5Joint** frameJoints; // frameJoints[numFrames][numJoints]
 } MD5Anim;
 
-void read_md5model(const char* filename, MD5Model* model);
-void read_md5anim(const char* filename, MD5Anim* anim);
+void md5_readModel(const char* filename, MD5Model* model);
+void md5_readAnim(const char* filename, MD5Anim* anim);
 
-void init_mesh3d(const MD5Model* model, Mesh3D* mesh);
-void update_mesh3d(const MD5Model* model, const MD5Joint* joints, Mesh3D* mesh);
+void md5_initMesh(const MD5Model* model, Mesh3D* mesh);
+void md5_updateMesh(const MD5Model* model, const MD5Joint* joints, Mesh3D* mesh);
 
 void print_md5model(const MD5Model* model);
 void print_md5anim(const MD5Anim* anim);

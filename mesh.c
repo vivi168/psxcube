@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-void read_obj(const char* filename, Mesh3D* mesh)
+void obj_readMesh(const char* filename, Mesh3D* mesh)
 {
     unsigned long file_size;
     unsigned char *buff;
@@ -22,8 +22,7 @@ void read_obj(const char* filename, Mesh3D* mesh)
     IO_memcpy(mesh->vertices, buff + offset, s);
     offset += s;
 
-    // triangles (indices * 3)
-    s = sizeof(unsigned int) * mesh->header.numTris * 3;
+    s = sizeof(unsigned int) * mesh->header.numIndices;
     mesh->indices = malloc3(s);
     IO_memcpy(mesh->indices, buff + offset, s);
     offset += s;
@@ -40,7 +39,7 @@ void read_obj(const char* filename, Mesh3D* mesh)
 void print_mesh3d(Mesh3D* mesh)
 {
 	printf("*** Obj Mesh ***\n*** Header ***\n");
-    printf("%d %d %d\n", mesh->header.numVerts, mesh->header.numTris, mesh->header.numSubsets);
+    printf("%d %d %d\n", mesh->header.numVerts, mesh->header.numIndices, mesh->header.numSubsets);
 
     printf("*** Vertices ***\n");
     for (int i = 0; i < mesh->header.numVerts; i++) {
@@ -59,7 +58,7 @@ void print_mesh3d(Mesh3D* mesh)
     }
 
     printf("*** Triangles ***\n");
-    for (int i = 0; i < mesh->header.numTris * 3; i += 3) {
+    for (int i = 0; i < mesh->header.numIndices; i += 3) {
         printf("%d %d %d\n",
                mesh->indices[i],
                mesh->indices[i+1],
@@ -81,7 +80,7 @@ void print_mesh3d(Mesh3D* mesh)
     // MD5
 // ****************
 
-void read_md5model(const char* filename, MD5Model* model)
+void md5_readModel(const char* filename, MD5Model* model)
 {
     unsigned long file_size;
     unsigned char *buff;
@@ -142,7 +141,7 @@ void read_md5model(const char* filename, MD5Model* model)
     free3(buff);
 }
 
-void read_md5anim(const char* filename, MD5Anim* anim)
+void md5_readAnim(const char* filename, MD5Anim* anim)
 {
     unsigned long file_size;
     unsigned char *buff;
@@ -173,7 +172,7 @@ void read_md5anim(const char* filename, MD5Anim* anim)
     free3(buff);
 }
 
-void prepare_vertices(const MD5Mesh* mesh, const MD5Joint* joints, Vertex** vertices, const int offset)
+void md5_updateVertices(const MD5Mesh* mesh, const MD5Joint* joints, Vertex** vertices, const int offset)
 {
     for (int k = 0; k < mesh->header.numVerts; k++) {
         MD5Vertex* v = &mesh->vertices[k];
@@ -205,7 +204,7 @@ void prepare_vertices(const MD5Mesh* mesh, const MD5Joint* joints, Vertex** vert
     }
 }
 
-void init_mesh3d(const MD5Model* model, Mesh3D* mesh)
+void md5_initMesh(const MD5Model* model, Mesh3D* mesh)
 {
     int numVerts = 0;
     int numTris = 0;
@@ -229,18 +228,18 @@ void init_mesh3d(const MD5Model* model, Mesh3D* mesh)
 
     mesh->header.numVerts = numVerts;
     // TODO: assert % 3 == 0
-    mesh->header.numTris = numTris;
+    mesh->header.numIndices = numTris * 3;
 
     mesh->vertices = malloc3(sizeof(Vertex) * numVerts);
     mesh->indices = malloc3(sizeof(unsigned int) * numTris * 3);
 }
 
-void update_mesh3d(const MD5Model* model, const MD5Joint* joints, Mesh3D* mesh)
+void md5_updateMesh(const MD5Model* model, const MD5Joint* joints, Mesh3D* mesh)
 {
     int vertOffset = 0;
     int triOffset = 0;
     for (int i = 0; i < model->header.numMeshes; i++) {
-        prepare_vertices(&model->meshes[i], joints, &mesh->vertices, vertOffset);
+        md5_updateVertices(&model->meshes[i], joints, &mesh->vertices, vertOffset);
 
         for (int t = 0; t < model->meshes[i].header.numTris * 3; t++) {
             mesh->indices[triOffset + t] = model->meshes[i].indices[t] + vertOffset;
@@ -341,9 +340,9 @@ void model_initAnimatedModel(Model3D* model, MD5Model* md5_model, MD5Anim* md5_a
     model->md5_anim = md5_anim;
 
 
-    init_mesh3d(model->md5_model, model->mesh);
+    md5_initMesh(model->md5_model, model->mesh);
     // TODO: here replace by initial anmation.
-    update_mesh3d(model->md5_model,
+    md5_updateMesh(model->md5_model,
                   model->md5_anim->frameJoints[0],
                   model->mesh);
 }
@@ -356,7 +355,7 @@ void model_updateAnim(Model3D* model, int frame_counter)
         if (model->anim_info.curr_frame > model->md5_anim->header.numFrames - 1)
             model->anim_info.curr_frame = 0;
 
-        update_mesh3d(model->md5_model,
+        md5_updateMesh(model->md5_model,
                       model->md5_anim->frameJoints[model->anim_info.curr_frame],
                       model->mesh);
     }

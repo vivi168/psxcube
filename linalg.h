@@ -5,6 +5,7 @@
 #ifndef ONE
 #define ONE (1 << SCALE)
 #endif
+#define HALF (ONE >> 1)
 
 #define IntToFixed(x) ((x) << SCALE)
 #define FixedToInt(x) ((x) >> SCALE)
