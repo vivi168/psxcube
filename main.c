@@ -30,7 +30,7 @@ void init_assets()
 {
     // Cube
     {
-        read_obj("\\CUBE.M3D;1", &meshes[CUBE_MESH]);
+        obj_readMesh("\\CUBE.M3D;1", &meshes[CUBE_MESH]);
         print_mesh3d(&meshes[CUBE_MESH]);
         // TODO: if multiple models share same texture
         // no need to reload texture
@@ -47,7 +47,7 @@ void init_assets()
 
     // House
     {
-        read_obj("\\HOUSE.M3D;1", &meshes[HOUSE_MESH]);
+        obj_readMesh("\\HOUSE.M3D;1", &meshes[HOUSE_MESH]);
         print_mesh3d(&meshes[HOUSE_MESH]);
         // TODO: if multiple models share same texture
         // no need to reload texture
@@ -64,8 +64,8 @@ void init_assets()
 
     // CubeGuy
     {
-        read_md5model("\\CUBEGUY.MD5M;1", &md5_models[CUBEGUY_MESH]);
-        read_md5anim("\\RUNNING.MD5A;1", &md5_anims[CUBEGUY_RUNNING]);
+        md5_readModel("\\CUBEGUY.MD5M;1", &md5_models[CUBEGUY_MESH]);
+        md5_readAnim("\\RUNNING.MD5A;1", &md5_anims[CUBEGUY_RUNNING]);
 
         model_initAnimatedModel(&models[CUBEGUY_MESH], &md5_models[CUBEGUY_MESH], &md5_anims[CUBEGUY_RUNNING]);
         // TODO: do not load same texture file twice
@@ -81,8 +81,8 @@ void init_assets()
 
     // Bob
     {
-        read_md5model("\\BOB.MD5M;1", &md5_models[BOB_MESH]);
-        read_md5anim("\\BOB.MD5A;1", &md5_anims[BOB_ANIM]);
+        md5_readModel("\\BOB.MD5M;1", &md5_models[BOB_MESH]);
+        md5_readAnim("\\BOB.MD5A;1", &md5_anims[BOB_ANIM]);
 
         // TODO: what if multiple animations
         // animated model has mesh on heap ? can't share mesh because it's animated and thus modified.
