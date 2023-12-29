@@ -82,6 +82,7 @@ void init_assets()
     }
 
     // Bob
+#ifdef LOADBOB
     {
         md5_readModel("\\BOB.MD5M;1", &md5_models[BOB_MESH]);
         md5_readAnim("\\BOB.MD5A;1", &md5_anims[BOB_ANIM]);
@@ -98,6 +99,7 @@ void init_assets()
 
         rdr_appendToScene(&models[BOB_MESH]);
     }
+#endif
 
     printf("[INFO]: assets init done !\n");
 }
@@ -128,8 +130,9 @@ void mainloop()
         // TODO: function to loop through scene linked list and update animated models.
         // TODO 2: also loop through scene to update if model is visible or not ?
         model_updateAnim(&models[CUBEGUY_MESH], frameCounter);
+#ifdef LOADBOB
         model_updateAnim(&models[BOB_MESH], frameCounter);
-
+#endif
         rdr_processScene();
         frameCounter ++;
         // now we can compute how many frame per seconds
