@@ -6,7 +6,7 @@ typedef char STRING20[20];
 // TODO: anonymous struct for headers?
 typedef struct obj_header_t {
     int numVerts;
-    int numTris;
+    int numIndices;
     int numSubsets;
 } ObjHeader;
 

@@ -22,8 +22,7 @@ void obj_readMesh(const char* filename, Mesh3D* mesh)
     IO_memcpy(mesh->vertices, buff + offset, s);
     offset += s;
 
-    // triangles (indices * 3)
-    s = sizeof(unsigned int) * mesh->header.numTris * 3;
+    s = sizeof(unsigned int) * mesh->header.numIndices;
     mesh->indices = malloc3(s);
     IO_memcpy(mesh->indices, buff + offset, s);
     offset += s;
@@ -40,7 +39,7 @@ void obj_readMesh(const char* filename, Mesh3D* mesh)
 void print_mesh3d(Mesh3D* mesh)
 {
 	printf("*** Obj Mesh ***\n*** Header ***\n");
-    printf("%d %d %d\n", mesh->header.numVerts, mesh->header.numTris, mesh->header.numSubsets);
+    printf("%d %d %d\n", mesh->header.numVerts, mesh->header.numIndices, mesh->header.numSubsets);
 
     printf("*** Vertices ***\n");
     for (int i = 0; i < mesh->header.numVerts; i++) {
@@ -59,7 +58,7 @@ void print_mesh3d(Mesh3D* mesh)
     }
 
     printf("*** Triangles ***\n");
-    for (int i = 0; i < mesh->header.numTris * 3; i += 3) {
+    for (int i = 0; i < mesh->header.numIndices; i += 3) {
         printf("%d %d %d\n",
                mesh->indices[i],
                mesh->indices[i+1],
@@ -229,7 +228,7 @@ void md5_initMesh(const MD5Model* model, Mesh3D* mesh)
 
     mesh->header.numVerts = numVerts;
     // TODO: assert % 3 == 0
-    mesh->header.numTris = numTris;
+    mesh->header.numIndices = numTris * 3;
 
     mesh->vertices = malloc3(sizeof(Vertex) * numVerts);
     mesh->indices = malloc3(sizeof(unsigned int) * numTris * 3);
