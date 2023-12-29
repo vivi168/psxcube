@@ -26,7 +26,7 @@ typedef struct scene_node_t {
 } SceneNode;
 
 // TODO: tree instead ? group by TPAGE ?
-// TODO: separate list of tri & quad mesh
+// TODO: separate list of models, chunk, billboard etc
 typedef struct scene_list_t {
     SceneNode *head;
     SceneNode *tail;
@@ -52,7 +52,7 @@ void add_tri(Vertex*, Vertex*, Vertex*, Texture *tex);
 // TODO: scene can also contains meshes of composed of quads
 // move this out of here
 Chunk chunk;
-void add_chunk(Chunk chunk);
+void add_chunk(Chunk* chunk);
 void add_quad(Vertex* v1, Vertex* v2, Vertex* v3, Vertex* v4, SVECTOR*);
 
 void rdr_init()
@@ -92,7 +92,7 @@ void rdr_init()
 
     setRECT(&screenClip, 0, 0, SCREEN_W, SCREEN_H);
 
-    terrain_heightmap(chunk, 0, 0, terrain_fbm3);
+    chunk_init(&chunk, 0, 0, terrain_fbm3);
 }
 
 // TODO: do not reload already loaded textures shared between meshes
@@ -198,20 +198,20 @@ void rdr_processScene()
     curr = scene.head;
 
     while(curr != NULL) {
-        MATRIX modelMat;
+        MATRIX mv;
 
-        model_mat(curr->model, &modelMat);
-        CompMatrixLV(&scene.camera->matrix, &modelMat, &modelMat);
+        model_mat(curr->model, &mv);
+        CompMatrixLV(&scene.camera->matrix, &mv, &mv);
 
-        gte_SetRotMatrix(&modelMat);
-        gte_SetTransMatrix(&modelMat);
+        gte_SetRotMatrix(&mv);
+        gte_SetTransMatrix(&mv);
 
         add_mesh(curr->model->mesh);
 
         curr = curr->next;
     }
 
-    add_chunk(chunk);
+    add_chunk(&chunk);
 
     /* FntPrint("MODEL LOADER\n"); */
     FntPrint("vsync %d\n", VSync(-1));
@@ -368,20 +368,13 @@ void add_quad(Vertex* v1, Vertex* v2, Vertex* v3, Vertex* v4, SVECTOR* color)
     numQuad++;
 }
 
-void add_chunk(Chunk chunk)
+void add_chunk(Chunk* chunk)
 {
-    Model3D m;
-    model_setScale(&m, ONE);
-    model_setRotation(&m, 0, 0, 0);
-    model_setTranslation(&m, 0, 0, 0);
+    MATRIX mv;
+    CompMatrixLV(&scene.camera->matrix, &chunk->matrix, &mv);
 
-    MATRIX modelMat;
-
-    model_mat(&m, &modelMat);
-    CompMatrixLV(&scene.camera->matrix, &modelMat, &modelMat);
-
-    gte_SetRotMatrix(&modelMat);
-    gte_SetTransMatrix(&modelMat);
+    gte_SetRotMatrix(&mv);
+    gte_SetTransMatrix(&mv);
 
     for (int j = 0; j < CHUNK_SIZE; j++) {
         for (int i = 0; i < CHUNK_SIZE; i++) {
@@ -392,10 +385,10 @@ void add_chunk(Chunk chunk)
             else
                 setVector(&color, 255, 255, 255);
 
-            add_quad(&chunk[j][i],
-                     &chunk[j+1][i],
-                     &chunk[j][i+1],
-                     &chunk[j+1][i+1],
+            add_quad(&chunk->heightmap[j][i],
+                     &chunk->heightmap[j+1][i],
+                     &chunk->heightmap[j][i+1],
+                     &chunk->heightmap[j+1][i+1],
                      &color);
         }
     }
