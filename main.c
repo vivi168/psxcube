@@ -106,12 +106,24 @@ void mainloop()
 {
     unsigned int frame_start;
     // int curr_frame = 0;
+    int q, pq;
+    int cx, cy;
+    q = chunk_getQuadrant(camera.translate.vx, camera.translate.vz, &cx, &cy);
+    chunk_initTerrain(&terrain, cx, cy, q, terrain_fbm3);
 
     while (1) {
         frame_start = VSync(-1);
+        pq = q;
 
         pad_pollEvents();
         cam_processInput(&camera);
+
+        q = chunk_getQuadrant(camera.translate.vx, camera.translate.vz, &cx, &cy);
+        if (q != pq) {
+            printf("UPDATE TERRAIN!\n");
+            chunk_initTerrain(&terrain, cx, cy, q, terrain_fbm3);
+            rdr_setSceneTerrain(&terrain);
+        }
 
         // TODO: function to loop through scene linked list and update animated models.
         // TODO 2: also loop through scene to update if model is visible or not ?
@@ -161,10 +173,6 @@ int main(void)
         }
 
         noise_init();
-        chunk_init(&terrain.chunks[0], 0, 0, terrain_fbm3);
-        chunk_init(&terrain.chunks[1], -1, 0, terrain_fbm3);
-        chunk_init(&terrain.chunks[2], 0, 1, terrain_fbm3);
-        chunk_init(&terrain.chunks[3], -1, 1, terrain_fbm3);
         rdr_setSceneTerrain(&terrain);
     }
 

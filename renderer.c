@@ -229,9 +229,11 @@ void rdr_processScene()
         scene.camera->translate.vx,
         scene.camera->translate.vy,
         scene.camera->translate.vz);
-    FntPrint("chunk %d %d\n",
-        scene.camera->translate.vx >> WORLD_TO_CHUNK,
-        scene.camera->translate.vz >> WORLD_TO_CHUNK);
+
+    int cx, cy, q;
+    q = chunk_getQuadrant(scene.camera->translate.vx, scene.camera->translate.vz, &cx, &cy);
+    FntPrint("chunk %d %d %d\n", cx, cy, q);
+
 }
 
 void add_mesh(Mesh3D *mesh)
