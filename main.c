@@ -136,7 +136,6 @@ void mainloop()
         if (q != pq) {
             printf("UPDATE TERRAIN!\n");
             chunk_initTerrain(&terrain, cx, cy, q, terrain_fbm3);
-            rdr_setSceneTerrain(&terrain);
         }
 
         // TODO: function to loop through scene linked list and update animated
