@@ -150,3 +150,31 @@ int quad_clip(RECT* clip, DVECTOR* v0, DVECTOR* v1, DVECTOR* v2, DVECTOR* v3)
 
     return 1;
 }
+
+void crossProduct(SVECTOR* v0, SVECTOR* v1, VECTOR* out)
+{
+    out->vx = ((v0->vy * v1->vz) - (v0->vz * v1->vy)) >> SCALE;
+    out->vy = ((v0->vz * v1->vx) - (v0->vx * v1->vz)) >> SCALE;
+    out->vz = ((v0->vx * v1->vy) - (v0->vy * v1->vx)) >> SCALE;
+}
+
+void surfaceNormal(SVECTOR* v1, SVECTOR* v2, SVECTOR* v3, SVECTOR* out)
+{
+    SVECTOR v, w;
+    VECTOR  cp;
+
+    setVector(&v, v2->vx - v1->vx, v2->vy - v1->vy, v2->vz - v1->vz);
+    setVector(&w, v3->vx - v1->vx, v3->vy - v1->vy, v3->vz - v1->vz);
+
+    crossProduct(&w, &v, &cp);
+
+    VectorNormalS(&cp, out);
+}
+
+void centroid(SVECTOR* v1, SVECTOR* v2, SVECTOR* v3, SVECTOR* out)
+{
+    setVector(out,
+              (v1->vx + v2->vx + v3->vx) / 3,
+              (v1->vy + v2->vy + v3->vy) / 3,
+              (v1->vz + v2->vz + v3->vz) / 3);
+}

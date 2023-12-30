@@ -3,6 +3,8 @@
 #define NEAR_PLANE 16
 #define FAR_PLANE  4096
 
+#define setCVector(v, _x, _y, _z) (v)->r = _x, (v)->g = _y, (v)->b = _z
+
 unsigned int numTri, effectiveNumTri, numQuad;
 
 typedef struct db_t
@@ -52,10 +54,12 @@ static RECT  screenClip;
 
 void create_texture(const char* filename, Texture* tex);
 void add_mesh(Mesh3D*);
-void add_tri(Vertex*, Vertex*, Vertex*, Texture* tex);
+int  add_tri(Vertex*, Vertex*, Vertex*, Texture* tex);
 void add_flat_tri(Vertex*, Vertex*, Vertex*, SVECTOR* color);
 void add_chunk(Chunk* chunk);
 void add_quad(Vertex* v1, Vertex* v2, Vertex* v3, Vertex* v4, SVECTOR*);
+void add_origin_axis();
+void add_line();
 
 void rdr_init()
 {
@@ -227,6 +231,10 @@ void rdr_processScene()
 
     for (int i = 0; i < MAX_CHUNK; i++) add_chunk(&scene.terrain->chunks[i]);
 
+#ifdef DRAW_ORIG_AXIS
+    add_origin_axis(&scene.camera->matrix);
+#endif
+
     /* FntPrint("MODEL LOADER\n"); */
     FntPrint("vsync %d\n", VSync(-1));
     /* int fps = 0; */
@@ -250,6 +258,23 @@ void rdr_processScene()
     FntPrint("chunk %d %d %d\n", cx, cy, q);
 }
 
+// TODO: don't compute normal here, precompute somehwere else.
+void drawFaceNormal(SVECTOR* v1, SVECTOR* v2, SVECTOR* v3)
+{
+    SVECTOR ctr, dst, n;
+    CVECTOR clr;
+
+    setCVector(&clr, 255, 0, 255);
+
+    centroid(v1, v2, v3, &ctr);
+    surfaceNormal(v1, v2, v3, &n);
+    setVector(&dst,
+              ctr.vx + (n.vx >> 5),
+              ctr.vy + (n.vy >> 5),
+              ctr.vz + (n.vz >> 5));
+    add_line(&ctr, &dst, &clr);
+}
+
 void add_mesh(Mesh3D* mesh)
 {
     // TODO: here use subset to render.
@@ -261,18 +286,28 @@ void add_mesh(Mesh3D* mesh)
             int i2 = mesh->indices[i + 1 + offset];
             int i3 = mesh->indices[i + 2 + offset];
 
+            int t = add_tri(&mesh->vertices[i1],
+                            &mesh->vertices[i2],
+                            &mesh->vertices[i3],
+                            mesh->subsets[s].texture);
+
             numTri++;
-            add_tri(&mesh->vertices[i1],
-                    &mesh->vertices[i2],
-                    &mesh->vertices[i3],
-                    mesh->subsets[s].texture);
+            effectiveNumTri += t;
+
+#ifdef DRAW_FACE_NORM
+            if (t) {
+                drawFaceNormal(&mesh->vertices[i1].position,
+                               &mesh->vertices[i2].position,
+                               &mesh->vertices[i3].position);
+            }
+#endif
         }
     }
 }
 
-void add_tri(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
+int add_tri(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
 {
-    int32_t   otz, nclip;
+    int32_t   otz, nclip, flg;
     POLY_FT3* poly;
 
     // load first three vertices to GTE
@@ -280,17 +315,21 @@ void add_tri(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
 
     // rotation, translation, perspective transformation
     gte_rtpt();
+
+    gte_stflg(&flg);
+    if (flg & 0x80000000) return 0;
+
     // normal clip for backface culling
     gte_nclip();
     gte_stopz(&nclip);
 
-    if (nclip <= 0) return;
+    if (nclip <= 0) return 0;
 
     // average Z for depth sorting
     gte_avsz3();
     gte_stotz(&otz); // screen_z >>= 2
 
-    if (otz < NEAR_PLANE || otz >= FAR_PLANE) return;
+    if (otz <= 0 || otz >= FAR_PLANE) return 0;
 
     poly = (POLY_FT3*)nextpri;
     setPolyFT3(poly);
@@ -304,7 +343,7 @@ void add_tri(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
                  (DVECTOR*)&poly->x0,
                  (DVECTOR*)&poly->x1,
                  (DVECTOR*)&poly->x2))
-        return;
+        return 0;
 
     setUV3(poly,
            texture->u + v1->uv.vx,
@@ -320,12 +359,84 @@ void add_tri(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
 
     addPrim(&cdb->ot[otz], poly);
     nextpri += sizeof(POLY_FT3);
-    effectiveNumTri++;
+
+    return 1;
+}
+
+void add_origin_axis(MATRIX* cam_mat)
+{
+    SVECTOR org;
+    SVECTOR axis[3];
+
+    SVECTOR rotate;
+    VECTOR  translate;
+    MATRIX  axis_mat;
+
+    // ***
+
+    setVector(&org, 0, 0, 0);
+    setVector(&axis[0], 256, 0, 0);
+    setVector(&axis[1], 0, 256, 0);
+    setVector(&axis[2], 0, 0, 256);
+
+    setVector(&rotate, 0, 0, 0);
+    setVector(&translate, 0, 0, 0);
+
+    RotMatrix_gte(&rotate, &axis_mat);
+    TransMatrix(&axis_mat, &translate);
+
+    CompMatrixLV(cam_mat, &axis_mat, &axis_mat);
+
+    gte_SetRotMatrix(&axis_mat);
+    gte_SetTransMatrix(&axis_mat);
+
+    // ***
+    for (int i = 0; i < 3; i++) {
+        CVECTOR color;
+        if (i == 0)
+            setCVector(&color, 255, 0, 0);
+        else if (i == 1)
+            setCVector(&color, 0, 255, 0);
+        else
+            setCVector(&color, 0, 0, 255);
+        add_line(&org, &axis[i], &color);
+    }
+}
+
+void add_line(SVECTOR* org, SVECTOR* dest, CVECTOR* color)
+{
+    int      p;
+    LINE_F2* line;
+
+    line = (LINE_F2*)nextpri;
+    setLineF2(line);
+
+    gte_ldv0(org);
+    gte_rtps();
+
+    gte_stflg(&p);
+    if (p & 0x80000000) return;
+
+    gte_stsxy(&line->x0);
+
+    gte_ldv0(dest);
+    gte_rtps();
+
+    gte_stflg(&p);
+    if (p & 0x80000000) return;
+
+    gte_stsxy(&line->x1);
+
+    setRGB0(line, color->r, color->g, color->b);
+    // setRGB0(line, 255, 0, 255);
+
+    addPrim(&cdb->ot[0], line);
+    nextpri += sizeof(LINE_F2);
 }
 
 void add_flat_tri(Vertex* v1, Vertex* v2, Vertex* v3, SVECTOR* color)
 {
-    int32_t  otz, nclip;
+    int32_t  otz, nclip, flg;
     POLY_F3* poly;
 
     // load first three vertices to GTE
@@ -333,6 +444,10 @@ void add_flat_tri(Vertex* v1, Vertex* v2, Vertex* v3, SVECTOR* color)
 
     // rotation, translation, perspective transformation
     gte_rtpt();
+
+    gte_stflg(&flg);
+    if (flg & 0x80000000) return;
+
     // normal clip for backface culling
     gte_nclip();
     gte_stopz(&nclip);
@@ -343,7 +458,7 @@ void add_flat_tri(Vertex* v1, Vertex* v2, Vertex* v3, SVECTOR* color)
     gte_avsz3();
     gte_stotz(&otz); // screen_z >>= 2
 
-    if (otz < NEAR_PLANE || otz >= FAR_PLANE) return;
+    if (otz <= 0 || otz >= FAR_PLANE) return;
 
     poly = (POLY_F3*)nextpri;
     setPolyF3(poly);
@@ -363,7 +478,6 @@ void add_flat_tri(Vertex* v1, Vertex* v2, Vertex* v3, SVECTOR* color)
 
     addPrim(&cdb->ot[otz], poly);
     nextpri += sizeof(POLY_F3);
-    effectiveNumTri++;
 }
 
 void add_quad(Vertex* v1, Vertex* v2, Vertex* v3, Vertex* v4, SVECTOR* color)
@@ -436,17 +550,12 @@ void add_chunk(Chunk* chunk)
     for (int j = 0; j < CHUNK_SIZE; j++) {
         for (int i = 0; i < CHUNK_SIZE; i++) {
             SVECTOR color;
+            int     t;
 
             if ((i + j) & 1)
                 setVector(&color, 128, 128, 128);
             else
                 setVector(&color, 255, 255, 255);
-
-            // add_quad(&chunk->heightmap[j][i],
-            //          &chunk->heightmap[j+1][i],
-            //          &chunk->heightmap[j][i+1],
-            //          &chunk->heightmap[j+1][i+1],
-            //          &color);
 
             chunk->heightmap[j][i].uv.vx = 0;
             chunk->heightmap[j][i].uv.vy = 0;
@@ -460,14 +569,37 @@ void add_chunk(Chunk* chunk)
             chunk->heightmap[j + 1][i + 1].uv.vx = 31;
             chunk->heightmap[j + 1][i + 1].uv.vy = 31;
 
-            add_tri(&chunk->heightmap[j][i],
-                    &chunk->heightmap[j + 1][i],
-                    &chunk->heightmap[j][i + 1],
-                    chunk->texture);
-            add_tri(&chunk->heightmap[j + 1][i],
-                    &chunk->heightmap[j + 1][i + 1],
-                    &chunk->heightmap[j][i + 1],
-                    chunk->texture);
+            t = add_tri(&chunk->heightmap[j][i],
+                        &chunk->heightmap[j + 1][i],
+                        &chunk->heightmap[j][i + 1],
+                        chunk->texture);
+
+            effectiveNumTri += t;
+            numTri++;
+
+#ifdef DRAW_FACE_NORM
+            if (t) {
+                drawFaceNormal(&chunk->heightmap[j][i],
+                               &chunk->heightmap[j + 1][i],
+                               &chunk->heightmap[j][i + 1]);
+            }
+#endif
+
+            t = add_tri(&chunk->heightmap[j + 1][i],
+                        &chunk->heightmap[j + 1][i + 1],
+                        &chunk->heightmap[j][i + 1],
+                        chunk->texture);
+
+            effectiveNumTri += t;
+            numTri++;
+
+#ifdef DRAW_FACE_NORM
+            if (t) {
+                drawFaceNormal(&chunk->heightmap[j + 1][i],
+                               &chunk->heightmap[j + 1][i + 1],
+                               &chunk->heightmap[j][i + 1]);
+            }
+#endif
         }
     }
 }

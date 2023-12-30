@@ -35,4 +35,9 @@ int iSin(int x);
 int tri_clip(RECT* clip, DVECTOR* v0, DVECTOR* v1, DVECTOR* v2);
 int quad_clip(RECT* clip, DVECTOR* v0, DVECTOR* v1, DVECTOR* v2, DVECTOR* v3);
 
+// normals
+
+void surfaceNormal(SVECTOR* v1, SVECTOR* v2, SVECTOR* v3, SVECTOR* out);
+void centroid(SVECTOR* v1, SVECTOR* v2, SVECTOR* v3, SVECTOR* out);
+
 #endif
