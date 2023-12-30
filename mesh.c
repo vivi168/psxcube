@@ -198,6 +198,7 @@ void md5_updateVertices(const MD5Mesh* mesh, const MD5Joint* joints,
         (*vertices)[k + offset].position.vz = finalPos[Y] >> 5;
         (*vertices)[k + offset].position.pad = 0;
 
+        // TODO: compute normal
         setVector(&(*vertices)[k + offset].normal, 0, 0, 0);
 
         (*vertices)[k + offset].uv.vx = v->st[X];

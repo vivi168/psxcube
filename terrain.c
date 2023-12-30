@@ -4,6 +4,7 @@ int terrain_flat(int x, int y) { return 0; }
 int terrain_slope(int x, int y) { return -(y * 200); }
 int terrain_fbm3(int x, int y) { return noise_fbm(3, x, y, 0, 4000) >> 1; }
 
+// TODO: generate mesh instead?
 void chunk_init(Chunk* chunk, int cx, int cy, int (*tf)(int, int))
 {
     for (int j = 0; j <= CHUNK_SIZE; j++) {
@@ -17,6 +18,20 @@ void chunk_init(Chunk* chunk, int cx, int cy, int (*tf)(int, int))
             if (j == CHUNK_SIZE) z += 16;
             if (i == CHUNK_SIZE) x += 16;
             setVector(&chunk->heightmap[j][i].position, x, y, z);
+        }
+    }
+
+    for (int j = 0; j < CHUNK_SIZE; j++) {
+        for (int i = 0; i < CHUNK_SIZE; i++) {
+            SVECTOR n;
+            surfaceNormal(&chunk->heightmap[j][i].position,
+                          &chunk->heightmap[j + 1][i].position,
+                          &chunk->heightmap[j][i + 1].position, &n);
+
+            copyVector(&chunk->heightmap[j][i].normal, &n);
+            copyVector(&chunk->heightmap[j + 1][i].normal, &n);
+            copyVector(&chunk->heightmap[j][i + 1].normal, &n);
+            copyVector(&chunk->heightmap[j + 1][i + 1].normal, &n);
         }
     }
 

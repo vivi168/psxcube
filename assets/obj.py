@@ -24,14 +24,14 @@ class Vec2:
 
 
 class Vec3:
-    def __init__(self, x=0, y=0, z=0):
+    def __init__(self, x=0, y=0, z=0, scale=128):
         self.x = x
         self.y = y
         self.z = z
+        self.scale = scale
 
     def pack(self):
-        SCALE = 128
-        return struct.pack('<hhhh', int(self.x * SCALE), int(self.y * SCALE), int(self.z * SCALE), 0) # SVECTOR are padded
+        return struct.pack('<hhhh', int(self.x * self.scale), int(self.y * self.scale), int(self.z * self.scale), 0) # SVECTOR are padded
 
     def __str__(self):
         return '{:.6f} {:.6f} {:.6f}'.format(self.x, self.y, self.z)
@@ -132,10 +132,10 @@ class Mesh:
                 if line.startswith('v '):
                     data = parse.search('v {px:g} {py:g} {pz:g}', line)
 
-                    x = data['px']
-                    y = data['py']
-                    z = data['pz']
-                    positions.append(Vec3(x, y, z))
+                    px = data['px']
+                    py = data['py']
+                    pz = data['pz']
+                    positions.append(Vec3(px, py, pz))
 
                 elif line.startswith('vt '):
                     data = parse.search('vt {tu:g} {tv:g}', line)
@@ -143,11 +143,10 @@ class Mesh:
 
                 elif line.startswith('vn '):
                     data = parse.search('vn {nx:g} {ny:g} {nz:g}', line)
-                    # TODO: transform
-                    x = data['nx']
-                    x = data['ny']
-                    x = data['nz']
-                    normals.append(Vec3(x, y, z))
+                    nx = data['nx']
+                    ny = data['ny']
+                    nz = data['nz']
+                    normals.append(Vec3(nx, ny, nz, 4096))
 
                 elif line.startswith('usemtl'):
                     data = parse.search('usemtl {:S}', line)

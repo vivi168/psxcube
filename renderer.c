@@ -204,11 +204,11 @@ void rdr_processScene()
     /* if (tc > 0) fps = fc/tc; */
     /* FntPrint("vsync %d fc %d tc %d fps %d\n", VSync(-1), fc, tc, fps); */
     FntPrint("nt %d ent %d quad %d\n", numTri, effectiveNumTri, numQuad);
-    FntPrint("cam rot x %d y %d z %d\n",
+    FntPrint("cam rot x %06d y %06d z %06d\n",
              scene.camera->rotation.vx,
              scene.camera->rotation.vy,
              scene.camera->rotation.vz);
-    FntPrint("cam pos x %d y %d z %d\n",
+    FntPrint("cam pos x %06d y %06d z %06d\n",
              scene.camera->translate.vx,
              scene.camera->translate.vy,
              scene.camera->translate.vz);
@@ -218,7 +218,7 @@ void rdr_processScene()
                           scene.camera->translate.vz,
                           &cx,
                           &cy);
-    FntPrint("chunk %d %d %d\n", cx, cy, q);
+    FntPrint("chunk %03d %03d %03d\n", cx, cy, q);
 }
 
 void rdr_prependToScene(Model3D* model)
@@ -508,18 +508,12 @@ static int addTriangle(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
     poly->tpage = texture->tpage;
     poly->clut = texture->clut;
 
-    // TODO: extremely inneficient, precompute normals somewhere else
     {
-        SVECTOR n;
-        surfaceNormal(&v1->position, &v2->position, &v3->position, &n);
-
         gte_ldrgb(&poly->r0);
-        gte_ldv0(&n);
-        gte_ncs();
+        gte_ldv3(&v1->normal, &v2->normal, &v3->normal);
+        gte_nct();
         gte_strgb(&poly->r0);
     }
-
-    // setRGB0(poly, 255, 255, 255);
 
     addPrim(&cdb->ot[otz], poly);
     nextpri += sizeof(POLY_FT3);
