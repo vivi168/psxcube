@@ -52,6 +52,22 @@ static int8_t* nextpri;
 static Scene scene;
 static RECT  screenClip;
 
+// one column = one light source
+static MATRIX color_matrix = {
+    // 1 2 3
+    3072, 0, 0, // Red
+    3072, 0, 0, // Green
+    3072, 0, 0  // Blue
+};
+// one row = one light source
+// represents direction and intensity
+static MATRIX light_matrix = {
+    // x y z
+    -2048, -2048, -2048, // 1
+    0,     0,     0,     // 2
+    0,     0,     0      // 3
+};
+
 static void createTexture(const char* filename, Texture* texture);
 static void drawFaceNormal(SVECTOR* v1, SVECTOR* v2, SVECTOR* v3);
 static void addMesh(Mesh3D* mesh);
@@ -99,6 +115,10 @@ void rdr_init()
     SetDispMask(1);
 
     setRECT(&screenClip, 0, 0, SCREEN_W, SCREEN_H);
+
+    // ambient color
+    gte_SetBackColor(131, 83, 34);
+    gte_SetColorMatrix(&color_matrix);
 }
 
 void rdr_initMeshTextures(Mesh3D* mesh)
@@ -157,13 +177,15 @@ void rdr_processScene()
     curr = scene.head;
 
     while (curr != NULL) {
-        MATRIX mv;
+        MATRIX mv, ll;
 
         model_mat(curr->model, &mv);
+        MulMatrix0(&light_matrix, &mv, &ll);
         CompMatrixLV(&scene.camera->matrix, &mv, &mv);
 
         gte_SetRotMatrix(&mv);
         gte_SetTransMatrix(&mv);
+        gte_SetLightMatrix(&ll);
 
         addMesh(curr->model->mesh);
 
@@ -329,11 +351,14 @@ static void addMesh(Mesh3D* mesh)
 
 static void addChunk(Chunk* chunk)
 {
-    MATRIX mv;
+    MATRIX mv, lm;
+
+    MulMatrix0(&light_matrix, &chunk->matrix, &lm);
     CompMatrixLV(&scene.camera->matrix, &chunk->matrix, &mv);
 
     gte_SetRotMatrix(&mv);
     gte_SetTransMatrix(&mv);
+    gte_SetLightMatrix(&lm);
 
     for (int j = 0; j < CHUNK_SIZE; j++) {
         for (int i = 0; i < CHUNK_SIZE; i++) {
@@ -482,7 +507,19 @@ static int addTriangle(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
 
     poly->tpage = texture->tpage;
     poly->clut = texture->clut;
-    setRGB0(poly, 255, 255, 255);
+
+    // TODO: extremely inneficient, precompute normals somewhere else
+    {
+        SVECTOR n;
+        surfaceNormal(&v1->position, &v2->position, &v3->position, &n);
+
+        gte_ldrgb(&poly->r0);
+        gte_ldv0(&n);
+        gte_ncs();
+        gte_strgb(&poly->r0);
+    }
+
+    // setRGB0(poly, 255, 255, 255);
 
     addPrim(&cdb->ot[otz], poly);
     nextpri += sizeof(POLY_FT3);
