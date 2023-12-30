@@ -1,14 +1,17 @@
 #include "stdafx.h"
 
-typedef struct input_manager_t {
-    struct pad_type_t {
-        unsigned char stat;
-        unsigned char len : 4;
-        unsigned char type : 4;
+typedef struct input_manager_t
+{
+    struct pad_type_t
+    {
+        unsigned char  stat;
+        unsigned char  len:4;
+        unsigned char  type:4;
         unsigned short btn;
-        unsigned char rs_x, rs_y;
-        unsigned char ls_x, ls_y;
+        unsigned char  rs_x, rs_y;
+        unsigned char  ls_x, ls_y;
     }* pad;
+
     char padbuff[2][34];
 
     unsigned int new_keystate, old_keystate;
@@ -45,29 +48,27 @@ void pad_pollEvents()
     if (input_manager.pad->stat == 0) {
         // Only parse when a digital pad,
         // dual-analog and dual-shock is connected
-        if ((input_manager.pad->type == 0x4) || (input_manager.pad->type == 0x5) || (input_manager.pad->type == 0x7)) {
+        if ((input_manager.pad->type == 0x4) ||
+            (input_manager.pad->type == 0x5) ||
+            (input_manager.pad->type == 0x7))
+        {
             input_manager.old_keystate = input_manager.new_keystate;
             input_manager.new_keystate = input_manager.pad->btn ^ 0xffff;
 
-            input_manager.keys_pressed = (input_manager.old_keystate ^ input_manager.new_keystate) & input_manager.new_keystate;
-            input_manager.keys_held = input_manager.old_keystate & input_manager.new_keystate;
+            input_manager.keys_pressed =
+                (input_manager.old_keystate ^ input_manager.new_keystate) &
+                input_manager.new_keystate;
+            input_manager.keys_held =
+                input_manager.old_keystate & input_manager.new_keystate;
             // TODO: bug
-            input_manager.keys_released = input_manager.old_keystate ^ input_manager.new_keystate;
+            input_manager.keys_released =
+                input_manager.old_keystate ^ input_manager.new_keystate;
         }
     }
 }
 
-int pad_isHeld(int k)
-{
-    return (1 << k) & input_manager.keys_held;
-}
+int pad_isHeld(int k) { return (1 << k) & input_manager.keys_held; }
 
-int pad_isPressed(int k)
-{
-    return (1 << k) & input_manager.keys_pressed;
-}
+int pad_isPressed(int k) { return (1 << k) & input_manager.keys_pressed; }
 
-int pad_isReleased(int k)
-{
-    return (1 << k) & input_manager.keys_released;
-}
+int pad_isReleased(int k) { return (1 << k) & input_manager.keys_released; }

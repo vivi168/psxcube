@@ -21,10 +21,8 @@
 #include "mesh.h"
 #include "terrain.h"
 
-
 #include "io.h"
 #include "input.h"
 #include "renderer.h"
-
 
 #endif

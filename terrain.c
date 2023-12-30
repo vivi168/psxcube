@@ -1,15 +1,8 @@
 #include "stdafx.h"
 
 int terrain_flat(int x, int y) { return 0; }
-int terrain_slope(int x, int y)
-{
-    return -(y * 200);
-}
-
-int terrain_fbm3(int x, int y)
-{
-    return noise_fbm(3, x, y, 0, 4000) >> 1;
-}
+int terrain_slope(int x, int y) { return -(y * 200); }
+int terrain_fbm3(int x, int y) { return noise_fbm(3, x, y, 0, 4000) >> 1; }
 
 void chunk_init(Chunk* chunk, int cx, int cy, int (*tf)(int, int))
 {
@@ -32,8 +25,8 @@ void chunk_init(Chunk* chunk, int cx, int cy, int (*tf)(int, int))
     chunk->y = cy;
 
     SVECTOR rotate;
-    VECTOR translate;
-    VECTOR scale;
+    VECTOR  translate;
+    VECTOR  scale;
 
     setVector(&rotate, 0, 0, 0);
     setVector(&translate, cx << WORLD_TO_CHUNK, 0, cy << WORLD_TO_CHUNK);
@@ -62,7 +55,8 @@ int chunk_getQuadrant(int x, int y, int* cx, int* cy)
     return q;
 }
 
-void chunk_initTerrain(Terrain* terrain, int cx, int cy, int q, int (*tf)(int, int))
+void chunk_initTerrain(Terrain* terrain, int cx, int cy, int q,
+                       int (*tf)(int, int))
 {
     chunk_init(&terrain->chunks[0], cx, cy, tf);
 

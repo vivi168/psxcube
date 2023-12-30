@@ -4,10 +4,11 @@
 #define CAM_ROT_SPEED 24
 #define CAM_MOV_SCALE 6
 
-typedef struct camera_t {
-    VECTOR translate;
+typedef struct camera_t
+{
+    VECTOR  translate;
     SVECTOR rotation;
-    MATRIX matrix;
+    MATRIX  matrix;
 } Camera;
 
 void cam_processInput(Camera* cam);

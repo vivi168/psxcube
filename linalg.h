@@ -10,15 +10,13 @@
 #define IntToFixed(x) ((x) << SCALE)
 #define FixedToInt(x) ((x) >> SCALE)
 
-#define FixedMulInt(x,y) ((x) * (y))
-#define FixedMulFixed(x,y) (((x) * (y)) >> SCALE)
+#define FixedMulInt(x, y)   ((x) * (y))
+#define FixedMulFixed(x, y) (((x) * (y)) >> SCALE)
 
-#define FixedDivInt(x,y) ((x) / (y))
-#define FixedDivFixed(x,y) (((x) << SCALE) / (y))
+#define FixedDivInt(x, y)   ((x) / (y))
+#define FixedDivFixed(x, y) (((x) << SCALE) / (y))
 
-enum {
-    X = 0, Y, Z, W
-};
+enum { X = 0, Y, Z, W };
 
 // TODO: define type to notify that a variable is actually fixed point?
 
@@ -28,15 +26,13 @@ typedef int quat[4];
 
 void quat_rotate_point(const quat q, const vec3 in, vec3 out);
 
-
 // trigonometry
 int iSin(int x);
 #define iCos(x) (iSin(x + 1024))
 
-
 // clip
 
-int tri_clip(RECT *clip, DVECTOR *v0, DVECTOR *v1, DVECTOR *v2);
-int quad_clip(RECT *clip, DVECTOR *v0, DVECTOR *v1, DVECTOR *v2, DVECTOR *v3);
+int tri_clip(RECT* clip, DVECTOR* v0, DVECTOR* v1, DVECTOR* v2);
+int quad_clip(RECT* clip, DVECTOR* v0, DVECTOR* v1, DVECTOR* v2, DVECTOR* v3);
 
 #endif

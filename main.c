@@ -1,5 +1,5 @@
-#include "stdafx.h"
 #include "header.h"
+#include "stdafx.h"
 
 #define HEAP_SIZE (1024 * 1024)
 static char heap[HEAP_SIZE];
@@ -12,18 +12,18 @@ unsigned long long timeCounter;
 Camera camera;
 
 // models/meshes/md5_models
-#define CUBE_MESH 0
-#define BOB_MESH 1
+#define CUBE_MESH    0
+#define BOB_MESH     1
 #define CUBEGUY_MESH 2
-#define HOUSE_MESH 3
+#define HOUSE_MESH   3
 // anims
-#define BOB_ANIM 0
+#define BOB_ANIM        0
 #define CUBEGUY_RUNNING 1
 
-Mesh3D meshes[5];
-Model3D models[5];
+Mesh3D   meshes[5];
+Model3D  models[5];
 MD5Model md5_models[5];
-MD5Anim md5_anims[10];
+MD5Anim  md5_anims[10];
 
 Terrain terrain;
 
@@ -69,7 +69,9 @@ void init_assets()
         md5_readModel("\\CUBEGUY.MD5M;1", &md5_models[CUBEGUY_MESH]);
         md5_readAnim("\\RUNNING.MD5A;1", &md5_anims[CUBEGUY_RUNNING]);
 
-        model_initAnimatedModel(&models[CUBEGUY_MESH], &md5_models[CUBEGUY_MESH], &md5_anims[CUBEGUY_RUNNING]);
+        model_initAnimatedModel(&models[CUBEGUY_MESH],
+                                &md5_models[CUBEGUY_MESH],
+                                &md5_anims[CUBEGUY_RUNNING]);
         // TODO: do not load same texture file twice
         rdr_initMeshTextures(models[CUBEGUY_MESH].mesh);
         print_mesh3d(models[CUBEGUY_MESH].mesh);
@@ -88,9 +90,14 @@ void init_assets()
         md5_readAnim("\\BOB.MD5A;1", &md5_anims[BOB_ANIM]);
 
         // TODO: what if multiple animations
-        // animated model has mesh on heap ? can't share mesh because it's animated and thus modified.
-        model_initAnimatedModel(&models[BOB_MESH], &md5_models[BOB_MESH], &md5_anims[BOB_ANIM]);
-        rdr_initMeshTextures(models[BOB_MESH].mesh); // TODO: be careful of doing this after initing the mesh.
+        // animated model has mesh on heap ? can't share mesh because it's
+        // animated and thus modified.
+        model_initAnimatedModel(&models[BOB_MESH],
+                                &md5_models[BOB_MESH],
+                                &md5_anims[BOB_ANIM]);
+        rdr_initMeshTextures(
+            models[BOB_MESH].mesh); // TODO: be careful of doing this after
+                                    // initing the mesh.
         // print_mesh3d(models[BOB_MESH].mesh);
 
         model_setScale(&models[BOB_MESH], ONE);
@@ -101,7 +108,7 @@ void init_assets()
     }
 #endif
 
-        rdr_initTerrainTextures(&terrain);
+    rdr_initTerrainTextures(&terrain);
 
     printf("[INFO]: assets init done !\n");
 }
@@ -122,21 +129,26 @@ void mainloop()
         pad_pollEvents();
         cam_processInput(&camera);
 
-        q = chunk_getQuadrant(camera.translate.vx, camera.translate.vz, &cx, &cy);
+        q = chunk_getQuadrant(camera.translate.vx,
+                              camera.translate.vz,
+                              &cx,
+                              &cy);
         if (q != pq) {
             printf("UPDATE TERRAIN!\n");
             chunk_initTerrain(&terrain, cx, cy, q, terrain_fbm3);
             rdr_setSceneTerrain(&terrain);
         }
 
-        // TODO: function to loop through scene linked list and update animated models.
-        // TODO 2: also loop through scene to update if model is visible or not ?
+        // TODO: function to loop through scene linked list and update animated
+        // models.
+        // TODO 2: also loop through scene to update if model is visible or not
+        // ?
         model_updateAnim(&models[CUBEGUY_MESH], frameCounter);
 #ifdef LOADBOB
         model_updateAnim(&models[BOB_MESH], frameCounter);
 #endif
         rdr_processScene();
-        frameCounter ++;
+        frameCounter++;
         // now we can compute how many frame per seconds
         rdr_draw();
     }
@@ -145,10 +157,10 @@ void mainloop()
 void vsync_callback()
 {
     // VSync(-1);
-    vsyncCounter ++;
+    vsyncCounter++;
 
     if (vsyncCounter % 60 == 59) {
-        timeCounter ++;
+        timeCounter++;
         // printf("Time: %d\n" , timeCounter);
     }
 }

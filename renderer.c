@@ -1,50 +1,54 @@
 #include "stdafx.h"
 
 #define NEAR_PLANE 16
-#define FAR_PLANE 4096
+#define FAR_PLANE  4096
 
 unsigned int numTri, effectiveNumTri, numQuad;
 
-typedef struct db_t {
-    DISPENV disp;
-    DRAWENV draw;
+typedef struct db_t
+{
+    DISPENV  disp;
+    DRAWENV  draw;
     uint32_t ot[FAR_PLANE];
-    int8_t pribuff[32768];
+    int8_t   pribuff[32768];
 } DB;
 
-typedef struct texture_t {
+typedef struct texture_t
+{
     uint32_t mode;
-    uint8_t u, v;
-    RECT prect, crect;
+    uint8_t  u, v;
+    RECT     prect, crect;
 
     uint16_t tpage, clut;
 } Texture;
 
-typedef struct scene_node_t {
-    Model3D* model;
+typedef struct scene_node_t
+{
+    Model3D*             model;
     struct scene_node_t* next;
 } SceneNode;
 
 // TODO: tree instead ? group by TPAGE ?
 // TODO: separate list of models, chunk, billboard etc
-typedef struct scene_list_t {
+typedef struct scene_list_t
+{
     SceneNode* head;
     SceneNode* tail;
 
-    Camera* camera;
+    Camera*  camera;
     Terrain* terrain;
 } Scene;
 
 // TODO: all of these static ?
 // make struct to hold these following three ?
-static DB db[2];
+static DB  db[2];
 static DB* cdb; // int instead. make macro to get current cdb ?
                 // #define CBD (db[cdb])
                 // swap buffer with cdb ^= 1
 static int8_t* nextpri;
 
 static Scene scene;
-static RECT screenClip;
+static RECT  screenClip;
 
 void create_texture(const char* filename, Texture* tex);
 void add_mesh(Mesh3D*);
@@ -93,7 +97,8 @@ void rdr_init()
 
 // TODO: do not reload already loaded textures shared between meshes
 // keep a hash map of already loaded textures ?
-// TODO: when unloading a mesh, also need to unload its texture if no longer used
+// TODO: when unloading a mesh, also need to unload its texture if no longer
+// used
 void rdr_initMeshTextures(Mesh3D* mesh)
 {
     for (int i = 0; i < mesh->header.numSubsets; i++) {
@@ -120,7 +125,7 @@ void rdr_initTerrainTextures(Terrain* terrain)
 void create_texture(const char* filename, Texture* texture)
 {
     uint32_t file_size;
-    int8_t* buff;
+    int8_t*  buff;
 
     TIM_IMAGE* image;
 
@@ -150,10 +155,14 @@ void create_texture(const char* filename, Texture* texture)
     texture->u = (texture->prect.x % 0x40) << (2 - (texture->mode & 0x3));
     texture->v = (texture->prect.y & 0xff);
 
-    texture->tpage = getTPage(texture->mode & 0x3, 0, texture->prect.x, texture->prect.y);
+    texture->tpage =
+        getTPage(texture->mode & 0x3, 0, texture->prect.x, texture->prect.y);
     texture->clut = getClut(texture->crect.x, texture->crect.y);
 
-    printf("[INFO]: %d %d %d\n", texture->mode, texture->prect.x, texture->prect.y);
+    printf("[INFO]: %d %d %d\n",
+           texture->mode,
+           texture->prect.x,
+           texture->prect.y);
 
     free3(buff);
 }
@@ -184,15 +193,9 @@ void rdr_appendToScene(Model3D* model)
     scene.tail = new_node;
 }
 
-void rdr_setSceneCamera(Camera* camera)
-{
-    scene.camera = camera;
-}
+void rdr_setSceneCamera(Camera* camera) { scene.camera = camera; }
 
-void rdr_setSceneTerrain(Terrain* terrain)
-{
-    scene.terrain = terrain;
-}
+void rdr_setSceneTerrain(Terrain* terrain) { scene.terrain = terrain; }
 
 void rdr_processScene()
 {
@@ -222,8 +225,7 @@ void rdr_processScene()
         curr = curr->next;
     }
 
-    for (int i = 0; i < MAX_CHUNK; i++)
-        add_chunk(&scene.terrain->chunks[i]);
+    for (int i = 0; i < MAX_CHUNK; i++) add_chunk(&scene.terrain->chunks[i]);
 
     /* FntPrint("MODEL LOADER\n"); */
     FntPrint("vsync %d\n", VSync(-1));
@@ -232,16 +234,19 @@ void rdr_processScene()
     /* FntPrint("vsync %d fc %d tc %d fps %d\n", VSync(-1), fc, tc, fps); */
     FntPrint("nt %d ent %d quad %d\n", numTri, effectiveNumTri, numQuad);
     FntPrint("cam rot x %d y %d z %d\n",
-        scene.camera->rotation.vx,
-        scene.camera->rotation.vy,
-        scene.camera->rotation.vz);
+             scene.camera->rotation.vx,
+             scene.camera->rotation.vy,
+             scene.camera->rotation.vz);
     FntPrint("cam pos x %d y %d z %d\n",
-        scene.camera->translate.vx,
-        scene.camera->translate.vy,
-        scene.camera->translate.vz);
+             scene.camera->translate.vx,
+             scene.camera->translate.vy,
+             scene.camera->translate.vz);
 
     int cx, cy, q;
-    q = chunk_getQuadrant(scene.camera->translate.vx, scene.camera->translate.vz, &cx, &cy);
+    q = chunk_getQuadrant(scene.camera->translate.vx,
+                          scene.camera->translate.vz,
+                          &cx,
+                          &cy);
     FntPrint("chunk %d %d %d\n", cx, cy, q);
 }
 
@@ -258,22 +263,20 @@ void add_mesh(Mesh3D* mesh)
 
             numTri++;
             add_tri(&mesh->vertices[i1],
-                &mesh->vertices[i2],
-                &mesh->vertices[i3],
-                mesh->subsets[s].texture);
+                    &mesh->vertices[i2],
+                    &mesh->vertices[i3],
+                    mesh->subsets[s].texture);
         }
     }
 }
 
 void add_tri(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
 {
-    int32_t otz, nclip;
+    int32_t   otz, nclip;
     POLY_FT3* poly;
 
     // load first three vertices to GTE
-    gte_ldv3(&v1->position,
-        &v2->position,
-        &v3->position);
+    gte_ldv3(&v1->position, &v2->position, &v3->position);
 
     // rotation, translation, perspective transformation
     gte_rtpt();
@@ -281,15 +284,13 @@ void add_tri(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
     gte_nclip();
     gte_stopz(&nclip);
 
-    if (nclip <= 0)
-        return;
+    if (nclip <= 0) return;
 
     // average Z for depth sorting
     gte_avsz3();
     gte_stotz(&otz); // screen_z >>= 2
 
-    if (otz < NEAR_PLANE || otz >= FAR_PLANE)
-        return;
+    if (otz < NEAR_PLANE || otz >= FAR_PLANE) return;
 
     poly = (POLY_FT3*)nextpri;
     setPolyFT3(poly);
@@ -300,14 +301,18 @@ void add_tri(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
     gte_stsxy2(&poly->x2);
 
     if (tri_clip(&screenClip,
-            (DVECTOR*)&poly->x0,
-            (DVECTOR*)&poly->x1,
-            (DVECTOR*)&poly->x2))
+                 (DVECTOR*)&poly->x0,
+                 (DVECTOR*)&poly->x1,
+                 (DVECTOR*)&poly->x2))
         return;
 
-    setUV3(poly, texture->u + v1->uv.vx, texture->v + v1->uv.vy,
-        texture->u + v2->uv.vx, texture->v + v2->uv.vy,
-        texture->u + v3->uv.vx, texture->v + v3->uv.vy);
+    setUV3(poly,
+           texture->u + v1->uv.vx,
+           texture->v + v1->uv.vy,
+           texture->u + v2->uv.vx,
+           texture->v + v2->uv.vy,
+           texture->u + v3->uv.vx,
+           texture->v + v3->uv.vy);
 
     poly->tpage = texture->tpage;
     poly->clut = texture->clut;
@@ -320,13 +325,11 @@ void add_tri(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
 
 void add_flat_tri(Vertex* v1, Vertex* v2, Vertex* v3, SVECTOR* color)
 {
-    int32_t otz, nclip;
+    int32_t  otz, nclip;
     POLY_F3* poly;
 
     // load first three vertices to GTE
-    gte_ldv3(&v1->position,
-        &v2->position,
-        &v3->position);
+    gte_ldv3(&v1->position, &v2->position, &v3->position);
 
     // rotation, translation, perspective transformation
     gte_rtpt();
@@ -334,15 +337,13 @@ void add_flat_tri(Vertex* v1, Vertex* v2, Vertex* v3, SVECTOR* color)
     gte_nclip();
     gte_stopz(&nclip);
 
-    if (nclip <= 0)
-        return;
+    if (nclip <= 0) return;
 
     // average Z for depth sorting
     gte_avsz3();
     gte_stotz(&otz); // screen_z >>= 2
 
-    if (otz < NEAR_PLANE || otz >= FAR_PLANE)
-        return;
+    if (otz < NEAR_PLANE || otz >= FAR_PLANE) return;
 
     poly = (POLY_F3*)nextpri;
     setPolyF3(poly);
@@ -353,9 +354,9 @@ void add_flat_tri(Vertex* v1, Vertex* v2, Vertex* v3, SVECTOR* color)
     gte_stsxy2(&poly->x2);
 
     if (tri_clip(&screenClip,
-            (DVECTOR*)&poly->x0,
-            (DVECTOR*)&poly->x1,
-            (DVECTOR*)&poly->x2))
+                 (DVECTOR*)&poly->x0,
+                 (DVECTOR*)&poly->x1,
+                 (DVECTOR*)&poly->x2))
         return;
 
     setRGB0(poly, color->vx, color->vy, color->vz);
@@ -367,13 +368,11 @@ void add_flat_tri(Vertex* v1, Vertex* v2, Vertex* v3, SVECTOR* color)
 
 void add_quad(Vertex* v1, Vertex* v2, Vertex* v3, Vertex* v4, SVECTOR* color)
 {
-    int32_t otz, nclip;
+    int32_t  otz, nclip;
     POLY_F4* poly;
 
     // load first three vertices to GTE
-    gte_ldv3(&v1->position,
-        &v2->position,
-        &v3->position);
+    gte_ldv3(&v1->position, &v2->position, &v3->position);
 
     // rotation, translation, perspective transformation
     gte_rtpt();
@@ -381,15 +380,13 @@ void add_quad(Vertex* v1, Vertex* v2, Vertex* v3, Vertex* v4, SVECTOR* color)
     gte_nclip();
     gte_stopz(&nclip);
 
-    if (nclip <= 0)
-        return;
+    if (nclip <= 0) return;
 
     // average Z for depth sorting
     gte_avsz4();
     gte_stotz(&otz); // screen_z >>= 2
 
-    if (otz < NEAR_PLANE || otz >= FAR_PLANE)
-        return;
+    if (otz < NEAR_PLANE || otz >= FAR_PLANE) return;
 
     poly = (POLY_F4*)nextpri;
     setPolyF4(poly);
@@ -405,10 +402,10 @@ void add_quad(Vertex* v1, Vertex* v2, Vertex* v3, Vertex* v4, SVECTOR* color)
     gte_stsxy(&poly->x3);
 
     if (quad_clip(&screenClip,
-            (DVECTOR*)&poly->x0,
-            (DVECTOR*)&poly->x1,
-            (DVECTOR*)&poly->x2,
-            (DVECTOR*)&poly->x3))
+                  (DVECTOR*)&poly->x0,
+                  (DVECTOR*)&poly->x1,
+                  (DVECTOR*)&poly->x2,
+                  (DVECTOR*)&poly->x3))
         return;
 
     // setUV4(poly, texture->u + v1->uv.vx, texture->v + v1->uv.vy,
@@ -463,16 +460,14 @@ void add_chunk(Chunk* chunk)
             chunk->heightmap[j + 1][i + 1].uv.vx = 31;
             chunk->heightmap[j + 1][i + 1].uv.vy = 31;
 
-            add_tri(
-                &chunk->heightmap[j][i],
-                &chunk->heightmap[j + 1][i],
-                &chunk->heightmap[j][i + 1],
-                chunk->texture);
-            add_tri(
-                &chunk->heightmap[j + 1][i],
-                &chunk->heightmap[j + 1][i + 1],
-                &chunk->heightmap[j][i + 1],
-                chunk->texture);
+            add_tri(&chunk->heightmap[j][i],
+                    &chunk->heightmap[j + 1][i],
+                    &chunk->heightmap[j][i + 1],
+                    chunk->texture);
+            add_tri(&chunk->heightmap[j + 1][i],
+                    &chunk->heightmap[j + 1][i + 1],
+                    &chunk->heightmap[j][i + 1],
+                    chunk->texture);
         }
     }
 }

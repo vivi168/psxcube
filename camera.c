@@ -45,12 +45,16 @@ void cam_processInput(Camera* cam)
         cam->rotation.vx = -768;
 
     if (pad_isHeld(KEY_TRIANGLE)) {
-        dx -= FixedMulFixed(iSin(cam->rotation.vy), iCos(cam->rotation.vx)) << CAM_MOV_SCALE;
-        dz += FixedMulFixed(iCos(cam->rotation.vy), iCos(cam->rotation.vx)) << CAM_MOV_SCALE;
+        dx -= FixedMulFixed(iSin(cam->rotation.vy), iCos(cam->rotation.vx))
+              << CAM_MOV_SCALE;
+        dz += FixedMulFixed(iCos(cam->rotation.vy), iCos(cam->rotation.vx))
+              << CAM_MOV_SCALE;
     }
     if (pad_isHeld(KEY_CROSS)) {
-        dx += FixedMulFixed(iSin(cam->rotation.vy), iCos(cam->rotation.vx)) << CAM_MOV_SCALE;
-        dz -= FixedMulFixed(iCos(cam->rotation.vy), iCos(cam->rotation.vx)) << CAM_MOV_SCALE;
+        dx += FixedMulFixed(iSin(cam->rotation.vy), iCos(cam->rotation.vx))
+              << CAM_MOV_SCALE;
+        dz -= FixedMulFixed(iCos(cam->rotation.vy), iCos(cam->rotation.vx))
+              << CAM_MOV_SCALE;
     }
     if (pad_isHeld(KEY_SQUARE)) {
         dx -= iCos(cam->rotation.vy) << CAM_MOV_SCALE;
