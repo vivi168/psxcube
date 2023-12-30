@@ -52,14 +52,16 @@ static int8_t* nextpri;
 static Scene scene;
 static RECT  screenClip;
 
-void create_texture(const char* filename, Texture* tex);
-void add_mesh(Mesh3D*);
-int  add_tri(Vertex*, Vertex*, Vertex*, Texture* tex);
-void add_flat_tri(Vertex*, Vertex*, Vertex*, SVECTOR* color);
-void add_chunk(Chunk* chunk);
-void add_quad(Vertex* v1, Vertex* v2, Vertex* v3, Vertex* v4, SVECTOR*);
-void add_origin_axis();
-void add_line();
+static void createTexture(const char* filename, Texture* texture);
+static void drawFaceNormal(SVECTOR* v1, SVECTOR* v2, SVECTOR* v3);
+static void addMesh(Mesh3D* mesh);
+static void addChunk(Chunk* chunk);
+static void addOriginAxis(MATRIX* cam_mat);
+static int  addTriangle(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture);
+static int  addFlatTriangle(Vertex* v1, Vertex* v2, Vertex* v3, SVECTOR* color);
+static void addLine(SVECTOR* org, SVECTOR* dest, CVECTOR* color);
+static void addQuad(Vertex* v1, Vertex* v2, Vertex* v3, Vertex* v4,
+                    SVECTOR* color);
 
 void rdr_init()
 {
@@ -99,10 +101,6 @@ void rdr_init()
     setRECT(&screenClip, 0, 0, SCREEN_W, SCREEN_H);
 }
 
-// TODO: do not reload already loaded textures shared between meshes
-// keep a hash map of already loaded textures ?
-// TODO: when unloading a mesh, also need to unload its texture if no longer
-// used
 void rdr_initMeshTextures(Mesh3D* mesh)
 {
     for (int i = 0; i < mesh->header.numSubsets; i++) {
@@ -112,21 +110,132 @@ void rdr_initMeshTextures(Mesh3D* mesh)
 
         mesh->subsets[i].texture = malloc3(sizeof(Texture));
         // TODO: when loading/unloading mesh, don't forget to free everything
-        create_texture(tmp, mesh->subsets[i].texture);
+        createTexture(tmp, mesh->subsets[i].texture);
     }
 }
 
 void rdr_initTerrainTextures(Terrain* terrain)
 {
     terrain->grassland_tex = malloc3(sizeof(Texture));
-    create_texture("\\TERRAIN.TIM;1", terrain->grassland_tex);
+    createTexture("\\TERRAIN.TIM;1", terrain->grassland_tex);
 
     for (int i = 0; i < MAX_CHUNK; i++) {
         terrain->chunks[i].texture = terrain->grassland_tex;
     }
 }
 
-void create_texture(const char* filename, Texture* texture)
+void rdr_draw()
+{
+    DrawSync(0);
+    VSync(0);
+
+    PutDrawEnv(&cdb->draw);
+    PutDispEnv(&cdb->disp);
+
+    DrawOTag(&cdb->ot[FAR_PLANE - 1]);
+    FntFlush(-1);
+
+    // TODO: extract to function swap_buffer ?
+    cdb = (cdb == &db[0]) ? &db[1] : &db[0];
+    nextpri = cdb->pribuff;
+}
+
+// Scene
+
+void rdr_processScene()
+{
+    SceneNode* curr;
+    // TODO: where to put this exactly, in relation to rdr_delay()?
+    ClearOTagR(cdb->ot, FAR_PLANE);
+
+    assert(scene.camera != NULL);
+
+    numTri = 0;
+    numQuad = 0;
+    effectiveNumTri = 0;
+
+    curr = scene.head;
+
+    while (curr != NULL) {
+        MATRIX mv;
+
+        model_mat(curr->model, &mv);
+        CompMatrixLV(&scene.camera->matrix, &mv, &mv);
+
+        gte_SetRotMatrix(&mv);
+        gte_SetTransMatrix(&mv);
+
+        addMesh(curr->model->mesh);
+
+        curr = curr->next;
+    }
+
+    for (int i = 0; i < MAX_CHUNK; i++) addChunk(&scene.terrain->chunks[i]);
+
+#ifdef DRAW_ORIG_AXIS
+    addOriginAxis(&scene.camera->matrix);
+#endif
+
+    /* FntPrint("MODEL LOADER\n"); */
+    FntPrint("vsync %d\n", VSync(-1));
+    /* int fps = 0; */
+    /* if (tc > 0) fps = fc/tc; */
+    /* FntPrint("vsync %d fc %d tc %d fps %d\n", VSync(-1), fc, tc, fps); */
+    FntPrint("nt %d ent %d quad %d\n", numTri, effectiveNumTri, numQuad);
+    FntPrint("cam rot x %d y %d z %d\n",
+             scene.camera->rotation.vx,
+             scene.camera->rotation.vy,
+             scene.camera->rotation.vz);
+    FntPrint("cam pos x %d y %d z %d\n",
+             scene.camera->translate.vx,
+             scene.camera->translate.vy,
+             scene.camera->translate.vz);
+
+    int cx, cy, q;
+    q = chunk_getQuadrant(scene.camera->translate.vx,
+                          scene.camera->translate.vz,
+                          &cx,
+                          &cy);
+    FntPrint("chunk %d %d %d\n", cx, cy, q);
+}
+
+void rdr_prependToScene(Model3D* model)
+{
+    SceneNode* new_node = malloc3(sizeof(SceneNode));
+    new_node->model = model;
+
+    new_node->next = scene.head;
+    scene.tail = scene.head;
+    scene.head = new_node;
+}
+
+void rdr_appendToScene(Model3D* model)
+{
+    SceneNode* new_node = malloc3(sizeof(SceneNode));
+    new_node->model = model;
+    new_node->next = NULL;
+
+    if (scene.head == NULL) {
+        scene.head = new_node;
+        scene.tail = new_node;
+        return;
+    }
+
+    scene.tail->next = new_node;
+    scene.tail = new_node;
+}
+
+void rdr_setSceneCamera(Camera* camera) { scene.camera = camera; }
+
+void rdr_setSceneTerrain(Terrain* terrain) { scene.terrain = terrain; }
+
+// Static
+
+// TODO: do not reload already loaded textures shared between meshes
+// keep a hash map of already loaded textures ?
+// TODO: when unloading a mesh, also need to unload its texture if no longer
+// used
+static void createTexture(const char* filename, Texture* texture)
 {
     uint32_t file_size;
     int8_t*  buff;
@@ -171,95 +280,8 @@ void create_texture(const char* filename, Texture* texture)
     free3(buff);
 }
 
-void rdr_prependToScene(Model3D* model)
-{
-    SceneNode* new_node = malloc3(sizeof(SceneNode));
-    new_node->model = model;
-
-    new_node->next = scene.head;
-    scene.tail = scene.head;
-    scene.head = new_node;
-}
-
-void rdr_appendToScene(Model3D* model)
-{
-    SceneNode* new_node = malloc3(sizeof(SceneNode));
-    new_node->model = model;
-    new_node->next = NULL;
-
-    if (scene.head == NULL) {
-        scene.head = new_node;
-        scene.tail = new_node;
-        return;
-    }
-
-    scene.tail->next = new_node;
-    scene.tail = new_node;
-}
-
-void rdr_setSceneCamera(Camera* camera) { scene.camera = camera; }
-
-void rdr_setSceneTerrain(Terrain* terrain) { scene.terrain = terrain; }
-
-void rdr_processScene()
-{
-    SceneNode* curr;
-    // TODO: where to put this exactly, in relation to rdr_delay()?
-    ClearOTagR(cdb->ot, FAR_PLANE);
-
-    assert(scene.camera != NULL);
-
-    numTri = 0;
-    numQuad = 0;
-    effectiveNumTri = 0;
-
-    curr = scene.head;
-
-    while (curr != NULL) {
-        MATRIX mv;
-
-        model_mat(curr->model, &mv);
-        CompMatrixLV(&scene.camera->matrix, &mv, &mv);
-
-        gte_SetRotMatrix(&mv);
-        gte_SetTransMatrix(&mv);
-
-        add_mesh(curr->model->mesh);
-
-        curr = curr->next;
-    }
-
-    for (int i = 0; i < MAX_CHUNK; i++) add_chunk(&scene.terrain->chunks[i]);
-
-#ifdef DRAW_ORIG_AXIS
-    add_origin_axis(&scene.camera->matrix);
-#endif
-
-    /* FntPrint("MODEL LOADER\n"); */
-    FntPrint("vsync %d\n", VSync(-1));
-    /* int fps = 0; */
-    /* if (tc > 0) fps = fc/tc; */
-    /* FntPrint("vsync %d fc %d tc %d fps %d\n", VSync(-1), fc, tc, fps); */
-    FntPrint("nt %d ent %d quad %d\n", numTri, effectiveNumTri, numQuad);
-    FntPrint("cam rot x %d y %d z %d\n",
-             scene.camera->rotation.vx,
-             scene.camera->rotation.vy,
-             scene.camera->rotation.vz);
-    FntPrint("cam pos x %d y %d z %d\n",
-             scene.camera->translate.vx,
-             scene.camera->translate.vy,
-             scene.camera->translate.vz);
-
-    int cx, cy, q;
-    q = chunk_getQuadrant(scene.camera->translate.vx,
-                          scene.camera->translate.vz,
-                          &cx,
-                          &cy);
-    FntPrint("chunk %d %d %d\n", cx, cy, q);
-}
-
 // TODO: don't compute normal here, precompute somehwere else.
-void drawFaceNormal(SVECTOR* v1, SVECTOR* v2, SVECTOR* v3)
+static void drawFaceNormal(SVECTOR* v1, SVECTOR* v2, SVECTOR* v3)
 {
     SVECTOR ctr, dst, n;
     CVECTOR clr;
@@ -272,10 +294,10 @@ void drawFaceNormal(SVECTOR* v1, SVECTOR* v2, SVECTOR* v3)
               ctr.vx + (n.vx >> 5),
               ctr.vy + (n.vy >> 5),
               ctr.vz + (n.vz >> 5));
-    add_line(&ctr, &dst, &clr);
+    addLine(&ctr, &dst, &clr);
 }
 
-void add_mesh(Mesh3D* mesh)
+static void addMesh(Mesh3D* mesh)
 {
     // TODO: here use subset to render.
     for (int s = 0; s < mesh->header.numSubsets; s++) {
@@ -286,10 +308,10 @@ void add_mesh(Mesh3D* mesh)
             int i2 = mesh->indices[i + 1 + offset];
             int i3 = mesh->indices[i + 2 + offset];
 
-            int t = add_tri(&mesh->vertices[i1],
-                            &mesh->vertices[i2],
-                            &mesh->vertices[i3],
-                            mesh->subsets[s].texture);
+            int t = addTriangle(&mesh->vertices[i1],
+                                &mesh->vertices[i2],
+                                &mesh->vertices[i3],
+                                mesh->subsets[s].texture);
 
             numTri++;
             effectiveNumTri += t;
@@ -305,7 +327,112 @@ void add_mesh(Mesh3D* mesh)
     }
 }
 
-int add_tri(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
+static void addChunk(Chunk* chunk)
+{
+    MATRIX mv;
+    CompMatrixLV(&scene.camera->matrix, &chunk->matrix, &mv);
+
+    gte_SetRotMatrix(&mv);
+    gte_SetTransMatrix(&mv);
+
+    for (int j = 0; j < CHUNK_SIZE; j++) {
+        for (int i = 0; i < CHUNK_SIZE; i++) {
+            SVECTOR color;
+            int     t;
+
+            if ((i + j) & 1)
+                setVector(&color, 128, 128, 128);
+            else
+                setVector(&color, 255, 255, 255);
+
+            chunk->heightmap[j][i].uv.vx = 0;
+            chunk->heightmap[j][i].uv.vy = 0;
+
+            chunk->heightmap[j + 1][i].uv.vx = 0;
+            chunk->heightmap[j + 1][i].uv.vy = 31;
+
+            chunk->heightmap[j][i + 1].uv.vx = 31;
+            chunk->heightmap[j][i + 1].uv.vy = 0;
+
+            chunk->heightmap[j + 1][i + 1].uv.vx = 31;
+            chunk->heightmap[j + 1][i + 1].uv.vy = 31;
+
+            t = addTriangle(&chunk->heightmap[j][i],
+                            &chunk->heightmap[j + 1][i],
+                            &chunk->heightmap[j][i + 1],
+                            chunk->texture);
+
+            effectiveNumTri += t;
+            numTri++;
+
+#ifdef DRAW_FACE_NORM
+            if (t) {
+                drawFaceNormal(&chunk->heightmap[j][i],
+                               &chunk->heightmap[j + 1][i],
+                               &chunk->heightmap[j][i + 1]);
+            }
+#endif
+
+            t = addTriangle(&chunk->heightmap[j + 1][i],
+                            &chunk->heightmap[j + 1][i + 1],
+                            &chunk->heightmap[j][i + 1],
+                            chunk->texture);
+
+            effectiveNumTri += t;
+            numTri++;
+
+#ifdef DRAW_FACE_NORM
+            if (t) {
+                drawFaceNormal(&chunk->heightmap[j + 1][i],
+                               &chunk->heightmap[j + 1][i + 1],
+                               &chunk->heightmap[j][i + 1]);
+            }
+#endif
+        }
+    }
+}
+
+static void addOriginAxis(MATRIX* cam_mat)
+{
+    SVECTOR org;
+    SVECTOR axis[3];
+
+    SVECTOR rotate;
+    VECTOR  translate;
+    MATRIX  axis_mat;
+
+    // ***
+
+    setVector(&org, 0, 0, 0);
+    setVector(&axis[0], 256, 0, 0);
+    setVector(&axis[1], 0, 256, 0);
+    setVector(&axis[2], 0, 0, 256);
+
+    setVector(&rotate, 0, 0, 0);
+    setVector(&translate, 0, 0, 0);
+
+    RotMatrix_gte(&rotate, &axis_mat);
+    TransMatrix(&axis_mat, &translate);
+
+    CompMatrixLV(cam_mat, &axis_mat, &axis_mat);
+
+    gte_SetRotMatrix(&axis_mat);
+    gte_SetTransMatrix(&axis_mat);
+
+    // ***
+    for (int i = 0; i < 3; i++) {
+        CVECTOR color;
+        if (i == 0)
+            setCVector(&color, 255, 0, 0);
+        else if (i == 1)
+            setCVector(&color, 0, 255, 0);
+        else
+            setCVector(&color, 0, 0, 255);
+        addLine(&org, &axis[i], &color);
+    }
+}
+
+static int addTriangle(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
 {
     int32_t   otz, nclip, flg;
     POLY_FT3* poly;
@@ -363,47 +490,55 @@ int add_tri(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
     return 1;
 }
 
-void add_origin_axis(MATRIX* cam_mat)
+static int addFlatTriangle(Vertex* v1, Vertex* v2, Vertex* v3, SVECTOR* color)
 {
-    SVECTOR org;
-    SVECTOR axis[3];
+    int32_t  otz, nclip, flg;
+    POLY_F3* poly;
 
-    SVECTOR rotate;
-    VECTOR  translate;
-    MATRIX  axis_mat;
+    // load first three vertices to GTE
+    gte_ldv3(&v1->position, &v2->position, &v3->position);
 
-    // ***
+    // rotation, translation, perspective transformation
+    gte_rtpt();
 
-    setVector(&org, 0, 0, 0);
-    setVector(&axis[0], 256, 0, 0);
-    setVector(&axis[1], 0, 256, 0);
-    setVector(&axis[2], 0, 0, 256);
+    gte_stflg(&flg);
+    if (flg & 0x80000000) return 0;
 
-    setVector(&rotate, 0, 0, 0);
-    setVector(&translate, 0, 0, 0);
+    // normal clip for backface culling
+    gte_nclip();
+    gte_stopz(&nclip);
 
-    RotMatrix_gte(&rotate, &axis_mat);
-    TransMatrix(&axis_mat, &translate);
+    if (nclip <= 0) return 0;
 
-    CompMatrixLV(cam_mat, &axis_mat, &axis_mat);
+    // average Z for depth sorting
+    gte_avsz3();
+    gte_stotz(&otz); // screen_z >>= 2
 
-    gte_SetRotMatrix(&axis_mat);
-    gte_SetTransMatrix(&axis_mat);
+    if (otz <= 0 || otz >= FAR_PLANE) return 0;
 
-    // ***
-    for (int i = 0; i < 3; i++) {
-        CVECTOR color;
-        if (i == 0)
-            setCVector(&color, 255, 0, 0);
-        else if (i == 1)
-            setCVector(&color, 0, 255, 0);
-        else
-            setCVector(&color, 0, 0, 255);
-        add_line(&org, &axis[i], &color);
-    }
+    poly = (POLY_F3*)nextpri;
+    setPolyF3(poly);
+
+    // set projected vertices to the primitive
+    gte_stsxy0(&poly->x0);
+    gte_stsxy1(&poly->x1);
+    gte_stsxy2(&poly->x2);
+
+    if (tri_clip(&screenClip,
+                 (DVECTOR*)&poly->x0,
+                 (DVECTOR*)&poly->x1,
+                 (DVECTOR*)&poly->x2))
+        return 0;
+
+    setRGB0(poly, color->vx, color->vy, color->vz);
+
+    addPrim(&cdb->ot[otz], poly);
+    nextpri += sizeof(POLY_F3);
+
+    return 1;
 }
 
-void add_line(SVECTOR* org, SVECTOR* dest, CVECTOR* color)
+static void addLine(SVECTOR* org, SVECTOR* dest, CVECTOR* color)
 {
     int      p;
     LINE_F2* line;
@@ -434,53 +569,8 @@ void add_line(SVECTOR* org, SVECTOR* dest, CVECTOR* color)
     nextpri += sizeof(LINE_F2);
 }
 
-void add_flat_tri(Vertex* v1, Vertex* v2, Vertex* v3, SVECTOR* color)
-{
-    int32_t  otz, nclip, flg;
-    POLY_F3* poly;
-
-    // load first three vertices to GTE
-    gte_ldv3(&v1->position, &v2->position, &v3->position);
-
-    // rotation, translation, perspective transformation
-    gte_rtpt();
-
-    gte_stflg(&flg);
-    if (flg & 0x80000000) return;
-
-    // normal clip for backface culling
-    gte_nclip();
-    gte_stopz(&nclip);
-
-    if (nclip <= 0) return;
-
-    // average Z for depth sorting
-    gte_avsz3();
-    gte_stotz(&otz); // screen_z >>= 2
-
-    if (otz <= 0 || otz >= FAR_PLANE) return;
-
-    poly = (POLY_F3*)nextpri;
-    setPolyF3(poly);
-
-    // set projected vertices to the primitive
-    gte_stsxy0(&poly->x0);
-    gte_stsxy1(&poly->x1);
-    gte_stsxy2(&poly->x2);
-
-    if (tri_clip(&screenClip,
-                 (DVECTOR*)&poly->x0,
-                 (DVECTOR*)&poly->x1,
-                 (DVECTOR*)&poly->x2))
-        return;
-
-    setRGB0(poly, color->vx, color->vy, color->vz);
-
-    addPrim(&cdb->ot[otz], poly);
-    nextpri += sizeof(POLY_F3);
-}
-
-void add_quad(Vertex* v1, Vertex* v2, Vertex* v3, Vertex* v4, SVECTOR* color)
+static void addQuad(Vertex* v1, Vertex* v2, Vertex* v3, Vertex* v4,
+                    SVECTOR* color)
 {
     int32_t  otz, nclip;
     POLY_F4* poly;
@@ -537,85 +627,4 @@ void add_quad(Vertex* v1, Vertex* v2, Vertex* v3, Vertex* v4, SVECTOR* color)
     nextpri += sizeof(POLY_F4);
 
     numQuad++;
-}
-
-void add_chunk(Chunk* chunk)
-{
-    MATRIX mv;
-    CompMatrixLV(&scene.camera->matrix, &chunk->matrix, &mv);
-
-    gte_SetRotMatrix(&mv);
-    gte_SetTransMatrix(&mv);
-
-    for (int j = 0; j < CHUNK_SIZE; j++) {
-        for (int i = 0; i < CHUNK_SIZE; i++) {
-            SVECTOR color;
-            int     t;
-
-            if ((i + j) & 1)
-                setVector(&color, 128, 128, 128);
-            else
-                setVector(&color, 255, 255, 255);
-
-            chunk->heightmap[j][i].uv.vx = 0;
-            chunk->heightmap[j][i].uv.vy = 0;
-
-            chunk->heightmap[j + 1][i].uv.vx = 0;
-            chunk->heightmap[j + 1][i].uv.vy = 31;
-
-            chunk->heightmap[j][i + 1].uv.vx = 31;
-            chunk->heightmap[j][i + 1].uv.vy = 0;
-
-            chunk->heightmap[j + 1][i + 1].uv.vx = 31;
-            chunk->heightmap[j + 1][i + 1].uv.vy = 31;
-
-            t = add_tri(&chunk->heightmap[j][i],
-                        &chunk->heightmap[j + 1][i],
-                        &chunk->heightmap[j][i + 1],
-                        chunk->texture);
-
-            effectiveNumTri += t;
-            numTri++;
-
-#ifdef DRAW_FACE_NORM
-            if (t) {
-                drawFaceNormal(&chunk->heightmap[j][i],
-                               &chunk->heightmap[j + 1][i],
-                               &chunk->heightmap[j][i + 1]);
-            }
-#endif
-
-            t = add_tri(&chunk->heightmap[j + 1][i],
-                        &chunk->heightmap[j + 1][i + 1],
-                        &chunk->heightmap[j][i + 1],
-                        chunk->texture);
-
-            effectiveNumTri += t;
-            numTri++;
-
-#ifdef DRAW_FACE_NORM
-            if (t) {
-                drawFaceNormal(&chunk->heightmap[j + 1][i],
-                               &chunk->heightmap[j + 1][i + 1],
-                               &chunk->heightmap[j][i + 1]);
-            }
-#endif
-        }
-    }
-}
-
-void rdr_draw()
-{
-    DrawSync(0);
-    VSync(0);
-
-    PutDrawEnv(&cdb->draw);
-    PutDispEnv(&cdb->disp);
-
-    DrawOTag(&cdb->ot[FAR_PLANE - 1]);
-    FntFlush(-1);
-
-    // TODO: extract to function swap_buffer ?
-    cdb = (cdb == &db[0]) ? &db[1] : &db[0];
-    nextpri = cdb->pribuff;
 }
