@@ -1,7 +1,9 @@
 #include "stdafx.h"
 
 int terrain_flat(int x, int y) { return 0; }
+
 int terrain_slope(int x, int y) { return -(y * 200); }
+
 int terrain_fbm3(int x, int y) { return noise_fbm(3, x, y, 0, 4000) >> 1; }
 
 // TODO: here need to generate additional vertices for uv
@@ -26,7 +28,8 @@ void chunk_init(Chunk* chunk, int cx, int cy, int (*tf)(int, int))
             SVECTOR n;
             surfaceNormal(&chunk->heightmap[j][i].position,
                           &chunk->heightmap[j + 1][i].position,
-                          &chunk->heightmap[j][i + 1].position, &n);
+                          &chunk->heightmap[j][i + 1].position,
+                          &n);
 
             copyVector(&chunk->heightmap[j][i].normal, &n);
             copyVector(&chunk->heightmap[j + 1][i].normal, &n);
@@ -71,27 +74,27 @@ int chunk_getQuadrant(int x, int y, int* cx, int* cy)
 }
 
 static const DVECTOR ck[MAX_CHUNK][MAX_CHUNK] = {
-        // q0
-        (DVECTOR){ 0, 0 },
-        (DVECTOR){ -1, 0 },
-        (DVECTOR){ 0, -1 },
-        (DVECTOR){ -1, -1 },
-        // q1
-        (DVECTOR){ 0, 0 },
-        (DVECTOR){ 1, 0 },
-        (DVECTOR){ 0, -1 },
-        (DVECTOR){ 1, -1 },
-        // q2
-        (DVECTOR){ 0, 0 },
-        (DVECTOR){ -1, 0 },
-        (DVECTOR){ 0, 1 },
-        (DVECTOR){ -1, 1 },
-        // q3
-        (DVECTOR){ 0, 0 },
-        (DVECTOR){ 1, 0 },
-        (DVECTOR){ 0, 1 },
-        (DVECTOR){ 1, 1 },
-    };
+  // q0
+    (DVECTOR){ 0,  0},
+    (DVECTOR){-1,  0},
+    (DVECTOR){ 0, -1},
+    (DVECTOR){-1, -1},
+ // q1
+    (DVECTOR){ 0,  0},
+    (DVECTOR){ 1,  0},
+    (DVECTOR){ 0, -1},
+    (DVECTOR){ 1, -1},
+ // q2
+    (DVECTOR){ 0,  0},
+    (DVECTOR){-1,  0},
+    (DVECTOR){ 0,  1},
+    (DVECTOR){-1,  1},
+ // q3
+    (DVECTOR){ 0,  0},
+    (DVECTOR){ 1,  0},
+    (DVECTOR){ 0,  1},
+    (DVECTOR){ 1,  1},
+};
 
 // TODO: also need to generate indices.
 void chunk_initTerrain(Terrain* terrain, int cx, int cy, int q,
@@ -108,7 +111,9 @@ void chunk_initTerrain(Terrain* terrain, int cx, int cy, int q,
 static bool alreadyThere(DVECTOR* v, Terrain* terrain)
 {
     for (int i = 0; i < MAX_CHUNK; i++) {
-        if (v->vx == terrain->chunks[i].pos.vx && v->vy == terrain->chunks[i].pos.vy) {
+        if (v->vx == terrain->chunks[i].pos.vx &&
+            v->vy == terrain->chunks[i].pos.vy)
+        {
             terrain->chunks[i].needed = true;
             return true;
         }
@@ -118,11 +123,11 @@ static bool alreadyThere(DVECTOR* v, Terrain* terrain)
 }
 
 void chunk_updateTerrain(Terrain* terrain, int cx, int cy, int q,
-                       int (*tf)(int, int))
+                         int (*tf)(int, int))
 {
     DVECTOR needed[MAX_CHUNK] = { 0 };
-    int ni = 0;
-    int ri = 0;
+    int     ni = 0;
+    int     ri = 0;
 
     printf("UPDATE TERRAIN!\n");
 
@@ -144,7 +149,9 @@ void chunk_updateTerrain(Terrain* terrain, int cx, int cy, int q,
     // replace chunk marked as uneeded
     for (int i = 0; i < MAX_CHUNK; i++) {
         if (!terrain->chunks[i].needed) {
-            printf("not needed: %d %d\n", terrain->chunks[i].pos.vx, terrain->chunks[i].pos.vy);
+            printf("not needed: %d %d\n",
+                   terrain->chunks[i].pos.vx,
+                   terrain->chunks[i].pos.vy);
             printf("replace with: %d %d\n", needed[ri].vx, needed[ri].vy);
 
             assert(ri < ni);

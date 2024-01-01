@@ -13,9 +13,9 @@ struct texture_t;
 
 typedef struct chunk_t
 {
-    DVECTOR               pos; // TODO: DVECTOR is short, need 32 bits
-    bool needed;
-    Vertex            heightmap[CHUNK_SIZE + 1][CHUNK_SIZE + 1];
+    DVECTOR pos; // TODO: DVECTOR is short, need 32 bits
+    bool    needed;
+    Vertex  heightmap[CHUNK_SIZE + 1][CHUNK_SIZE + 1];
     // Vertex terrain[1024]
     // int heightmap[CHUNK_SIZE + 1][CHUNK_SIZE + 1];
     struct texture_t* texture;
@@ -25,7 +25,7 @@ typedef struct chunk_t
 
 typedef struct terrain_t
 {
-    Chunk             chunks[MAX_CHUNK];
+    Chunk chunks[MAX_CHUNK];
     // int indices[1536];
 
     struct texture_t* grassland_tex;
@@ -42,5 +42,5 @@ int  chunk_getQuadrant(int x, int y, int* cx, int* cy);
 void chunk_initTerrain(Terrain* terrain, int cx, int cy, int q,
                        int (*f)(int, int));
 void chunk_updateTerrain(Terrain* terrain, int cx, int cy, int q,
-                       int (*f)(int, int));
+                         int (*f)(int, int));
 #endif
