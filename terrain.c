@@ -4,15 +4,15 @@ int terrain_flat(int x, int y) { return 0; }
 int terrain_slope(int x, int y) { return -(y * 200); }
 int terrain_fbm3(int x, int y) { return noise_fbm(3, x, y, 0, 4000) >> 1; }
 
-// TODO: generate mesh instead?
+// TODO: here need to generate additional vertices for uv
 void chunk_init(Chunk* chunk, int cx, int cy, int (*tf)(int, int))
 {
     for (int j = 0; j <= CHUNK_SIZE; j++) {
         for (int i = 0; i <= CHUNK_SIZE; i++) {
             int y = tf(i + cx * CHUNK_SIZE, j + cy * CHUNK_SIZE);
 
-            int x = cx * CHUNK_SIZE + i * CELL_SIZE;
-            int z = cy * CHUNK_SIZE + j * CELL_SIZE;
+            int x = i * CELL_SIZE;
+            int z = j * CELL_SIZE;
 
             // try to fix seam
             if (j == CHUNK_SIZE) z += 16;
@@ -36,8 +36,8 @@ void chunk_init(Chunk* chunk, int cx, int cy, int (*tf)(int, int))
     }
 
     // init Matrix
-    chunk->x = cx;
-    chunk->y = cy;
+    chunk->pos.vx = cx;
+    chunk->pos.vy = cy;
 
     SVECTOR rotate;
     VECTOR  translate;
@@ -70,26 +70,87 @@ int chunk_getQuadrant(int x, int y, int* cx, int* cy)
     return q;
 }
 
+static const DVECTOR ck[MAX_CHUNK][MAX_CHUNK] = {
+        // q0
+        (DVECTOR){ 0, 0 },
+        (DVECTOR){ -1, 0 },
+        (DVECTOR){ 0, -1 },
+        (DVECTOR){ -1, -1 },
+        // q1
+        (DVECTOR){ 0, 0 },
+        (DVECTOR){ 1, 0 },
+        (DVECTOR){ 0, -1 },
+        (DVECTOR){ 1, -1 },
+        // q2
+        (DVECTOR){ 0, 0 },
+        (DVECTOR){ -1, 0 },
+        (DVECTOR){ 0, 1 },
+        (DVECTOR){ -1, 1 },
+        // q3
+        (DVECTOR){ 0, 0 },
+        (DVECTOR){ 1, 0 },
+        (DVECTOR){ 0, 1 },
+        (DVECTOR){ 1, 1 },
+    };
+
+// TODO: also need to generate indices.
 void chunk_initTerrain(Terrain* terrain, int cx, int cy, int q,
                        int (*tf)(int, int))
 {
-    chunk_init(&terrain->chunks[0], cx, cy, tf);
+    printf("INIT TERRAIN!\n");
 
-    if (q == 0) {
-        chunk_init(&terrain->chunks[1], cx - 1, cy, tf);
-        chunk_init(&terrain->chunks[2], cx, cy - 1, tf);
-        chunk_init(&terrain->chunks[3], cx - 1, cy - 1, tf);
-    } else if (q == 1) {
-        chunk_init(&terrain->chunks[1], cx + 1, cy, tf);
-        chunk_init(&terrain->chunks[2], cx, cy - 1, tf);
-        chunk_init(&terrain->chunks[3], cx + 1, cy - 1, tf);
-    } else if (q == 2) {
-        chunk_init(&terrain->chunks[1], cx - 1, cy, tf);
-        chunk_init(&terrain->chunks[2], cx, cy + 1, tf);
-        chunk_init(&terrain->chunks[3], cx - 1, cy + 1, tf);
-    } else if (q == 3) {
-        chunk_init(&terrain->chunks[1], cx + 1, cy, tf);
-        chunk_init(&terrain->chunks[2], cx, cy + 1, tf);
-        chunk_init(&terrain->chunks[3], cx + 1, cy + 1, tf);
+    for (int i = 0; i < MAX_CHUNK; i++) {
+        chunk_init(&terrain->chunks[i], cx + ck[q][i].vx, cy + ck[q][i].vy, tf);
+    }
+}
+
+// also mark chunk as needed
+static bool alreadyThere(DVECTOR* v, Terrain* terrain)
+{
+    for (int i = 0; i < MAX_CHUNK; i++) {
+        if (v->vx == terrain->chunks[i].pos.vx && v->vy == terrain->chunks[i].pos.vy) {
+            terrain->chunks[i].needed = true;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void chunk_updateTerrain(Terrain* terrain, int cx, int cy, int q,
+                       int (*tf)(int, int))
+{
+    DVECTOR needed[MAX_CHUNK] = { 0 };
+    int ni = 0;
+    int ri = 0;
+
+    printf("UPDATE TERRAIN!\n");
+
+    // mark all chunks as not needed
+    for (int i = 0; i < MAX_CHUNK; i++) {
+        terrain->chunks[i].needed = false;
+    }
+
+    // construct needed list
+    // alreadyThere marks chunk as needed
+    for (int i = 0; i < MAX_CHUNK; i++) {
+        DVECTOR n = (DVECTOR){ ck[q][i].vx + cx, ck[q][i].vy + cy };
+        if (!alreadyThere(&n, terrain)) {
+            needed[ni] = n;
+            ni++;
+        }
+    }
+
+    // replace chunk marked as uneeded
+    for (int i = 0; i < MAX_CHUNK; i++) {
+        if (!terrain->chunks[i].needed) {
+            printf("not needed: %d %d\n", terrain->chunks[i].pos.vx, terrain->chunks[i].pos.vy);
+            printf("replace with: %d %d\n", needed[ri].vx, needed[ri].vy);
+
+            assert(ri < ni);
+            // TODO: chunk_update -> only update y component
+            chunk_init(&terrain->chunks[i], needed[ri].vx, needed[ri].vy, tf);
+            ri++;
+        }
     }
 }

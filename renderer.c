@@ -335,9 +335,6 @@ static void addMesh(Mesh3D* mesh)
                                 &mesh->vertices[i3],
                                 mesh->subsets[s].texture);
 
-            numTri++;
-            effectiveNumTri += t;
-
 #ifdef DRAW_FACE_NORM
             if (t) {
                 drawFaceNormal(&mesh->vertices[i1].position,
@@ -387,9 +384,6 @@ static void addChunk(Chunk* chunk)
                             &chunk->heightmap[j][i + 1],
                             chunk->texture);
 
-            effectiveNumTri += t;
-            numTri++;
-
 #ifdef DRAW_FACE_NORM
             if (t) {
                 drawFaceNormal(&chunk->heightmap[j][i],
@@ -402,9 +396,6 @@ static void addChunk(Chunk* chunk)
                             &chunk->heightmap[j + 1][i + 1],
                             &chunk->heightmap[j][i + 1],
                             chunk->texture);
-
-            effectiveNumTri += t;
-            numTri++;
 
 #ifdef DRAW_FACE_NORM
             if (t) {
@@ -462,6 +453,9 @@ static int addTriangle(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
     int32_t   otz, nclip, flg;
     POLY_FT3* poly;
 
+    numTri++;
+    // if (effectiveNumTri > 1600) return 0;
+
     // load first three vertices to GTE
     gte_ldv3(&v1->position, &v2->position, &v3->position);
 
@@ -518,6 +512,7 @@ static int addTriangle(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
     addPrim(&cdb->ot[otz], poly);
     nextpri += sizeof(POLY_FT3);
 
+    effectiveNumTri++;
     return 1;
 }
 
@@ -525,6 +520,9 @@ static int addFlatTriangle(Vertex* v1, Vertex* v2, Vertex* v3, SVECTOR* color)
 {
     int32_t  otz, nclip, flg;
     POLY_F3* poly;
+
+    numTri++;
+    // if (effectiveNumTri > 1600) return 0;
 
     // load first three vertices to GTE
     gte_ldv3(&v1->position, &v2->position, &v3->position);
@@ -566,6 +564,7 @@ static int addFlatTriangle(Vertex* v1, Vertex* v2, Vertex* v3, SVECTOR* color)
     addPrim(&cdb->ot[otz], poly);
     nextpri += sizeof(POLY_F3);
 
+    effectiveNumTri++;
     return 1;
 }
 

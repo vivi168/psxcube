@@ -134,8 +134,7 @@ void mainloop()
                               &cx,
                               &cy);
         if (q != pq) {
-            printf("UPDATE TERRAIN!\n");
-            chunk_initTerrain(&terrain, cx, cy, q, terrain_fbm3);
+            chunk_updateTerrain(&terrain, cx, cy, q, terrain_fbm3);
         }
 
         // TODO: function to loop through scene linked list and update animated
@@ -184,8 +183,8 @@ int main(void)
         // camera init
         {
             rdr_setSceneCamera(&camera);
-            cam_setTranslation(&camera, 0, -768, 0);
-            setVector(&camera.rotation, 0, 0, 0);
+            cam_setTranslation(&camera, 200, -2500, 200);
+            setVector(&camera.rotation, 0, -512, 0);
         }
 
         noise_init();
