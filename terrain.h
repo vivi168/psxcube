@@ -37,8 +37,9 @@ int terrain_flat(int x, int y);
 int terrain_slope(int x, int y);
 int terrain_fbm3(int x, int y);
 
-void chunk_init(Chunk* out, int cx, int cy, int (*f)(int, int));
 int  chunk_getQuadrant(int x, int y, int* cx, int* cy);
+
+// this one also initialize the indices
 void chunk_initTerrain(Terrain* terrain, int cx, int cy, int q,
                        int (*f)(int, int));
 void chunk_updateTerrain(Terrain* terrain, int cx, int cy, int q,
