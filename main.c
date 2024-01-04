@@ -119,8 +119,8 @@ void mainloop()
     // int curr_frame = 0;
     int q, pq;
     int cx, cy;
-    q = chunk_getQuadrant(camera.translate.vx, camera.translate.vz, &cx, &cy);
-    chunk_initTerrain(&terrain, cx, cy, q, terrain_fbm3);
+    q = terrain_chunkQuadrant(camera.translate.vx, camera.translate.vz, &cx, &cy);
+    terrain_init(&terrain, cx, cy, q, terrain_fbm3);
 
     while (1) {
         frame_start = VSync(-1);
@@ -129,12 +129,12 @@ void mainloop()
         pad_pollEvents();
         cam_processInput(&camera);
 
-        q = chunk_getQuadrant(camera.translate.vx,
+        q = terrain_chunkQuadrant(camera.translate.vx,
                               camera.translate.vz,
                               &cx,
                               &cy);
         if (q != pq) {
-            chunk_updateTerrain(&terrain, cx, cy, q, terrain_fbm3);
+            terrain_update(&terrain, cx, cy, q, terrain_fbm3);
         }
 
         // TODO: function to loop through scene linked list and update animated

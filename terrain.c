@@ -33,7 +33,7 @@ int terrain_slope(int x, int y) { return -(y * 200); }
 
 int terrain_fbm3(int x, int y) { return noise_fbm(3, x, y, 0, 4000) >> 1; }
 
-int chunk_getQuadrant(int x, int y, int* cx, int* cy)
+int terrain_chunkQuadrant(int x, int y, int* cx, int* cy)
 {
     // get current chunk
     *cx = x >> WORLD_TO_CHUNK;
@@ -52,8 +52,7 @@ int chunk_getQuadrant(int x, int y, int* cx, int* cy)
 }
 
 // TODO: also need to generate indices.
-void chunk_initTerrain(Terrain* terrain, int cx, int cy, int q,
-                       int (*tf)(int, int))
+void terrain_init(Terrain* terrain, int cx, int cy, int q, int (*tf)(int, int))
 {
     printf("INIT TERRAIN!\n");
 
@@ -65,8 +64,8 @@ void chunk_initTerrain(Terrain* terrain, int cx, int cy, int q,
     }
 }
 
-void chunk_updateTerrain(Terrain* terrain, int cx, int cy, int q,
-                         int (*tf)(int, int))
+void terrain_update(Terrain* terrain, int cx, int cy, int q,
+                    int (*tf)(int, int))
 {
     DVECTOR needed[MAX_CHUNK] = { 0 };
     int     ni = 0;

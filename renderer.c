@@ -204,21 +204,20 @@ void rdr_processScene()
     /* if (tc > 0) fps = fc/tc; */
     /* FntPrint("vsync %d fc %d tc %d fps %d\n", VSync(-1), fc, tc, fps); */
     FntPrint("nt %d ent %d quad %d\n", numTri, effectiveNumTri, numQuad);
-    FntPrint("cam rot x %06d y %06d z %06d\n",
+    FntPrint("cam rot x %06d y %06d z %06d\ncam pos x %06d y %06d z %06d\n",
              scene.camera->rotation.vx,
              scene.camera->rotation.vy,
-             scene.camera->rotation.vz);
-    FntPrint("cam pos x %06d y %06d z %06d\n",
+             scene.camera->rotation.vz,
              scene.camera->translate.vx,
              scene.camera->translate.vy,
              scene.camera->translate.vz);
 
     int cx, cy, q;
-    q = chunk_getQuadrant(scene.camera->translate.vx,
-                          scene.camera->translate.vz,
-                          &cx,
-                          &cy);
-    FntPrint("chunk %03d %03d %03d\n", cx, cy, q);
+    // q = terrain_chunkQuadrant(scene.camera->translate.vx,
+    //                       scene.camera->translate.vz,
+    //                       &cx,
+    //                       &cy);
+    // FntPrint("chunk %d %d q: %d\n", cx, cy, q);
 }
 
 void rdr_prependToScene(Model3D* model)
