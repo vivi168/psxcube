@@ -356,54 +356,23 @@ static void addChunk(Chunk* chunk)
     gte_SetTransMatrix(&mv);
     gte_SetLightMatrix(&lm);
 
-    for (int j = 0; j < CHUNK_SIZE; j++) {
-        for (int i = 0; i < CHUNK_SIZE; i++) {
-            SVECTOR color;
-            int     t;
+    for (int i = 0; i < (CELL_COUNT * 2 * 3); i += 3) {
+        int i1 = chunk->indices[i];
+        int i2 = chunk->indices[i + 1];
+        int i3 = chunk->indices[i + 2];
 
-            if ((i + j) & 1)
-                setVector(&color, 128, 128, 128);
-            else
-                setVector(&color, 255, 255, 255);
-
-            chunk->heightmap[j][i].uv.vx = 0;
-            chunk->heightmap[j][i].uv.vy = 0;
-
-            chunk->heightmap[j + 1][i].uv.vx = 0;
-            chunk->heightmap[j + 1][i].uv.vy = 31;
-
-            chunk->heightmap[j][i + 1].uv.vx = 31;
-            chunk->heightmap[j][i + 1].uv.vy = 0;
-
-            chunk->heightmap[j + 1][i + 1].uv.vx = 31;
-            chunk->heightmap[j + 1][i + 1].uv.vy = 31;
-
-            t = addTriangle(&chunk->heightmap[j][i],
-                            &chunk->heightmap[j + 1][i],
-                            &chunk->heightmap[j][i + 1],
+        int t = addTriangle(&chunk->vertices[i1],
+                            &chunk->vertices[i2],
+                            &chunk->vertices[i3],
                             chunk->texture);
 
 #ifdef DRAW_FACE_NORM
-            if (t) {
-                drawFaceNormal(&chunk->heightmap[j][i],
-                               &chunk->heightmap[j + 1][i],
-                               &chunk->heightmap[j][i + 1]);
-            }
-#endif
-
-            t = addTriangle(&chunk->heightmap[j + 1][i],
-                            &chunk->heightmap[j + 1][i + 1],
-                            &chunk->heightmap[j][i + 1],
-                            chunk->texture);
-
-#ifdef DRAW_FACE_NORM
-            if (t) {
-                drawFaceNormal(&chunk->heightmap[j + 1][i],
-                               &chunk->heightmap[j + 1][i + 1],
-                               &chunk->heightmap[j][i + 1]);
-            }
-#endif
+        if (t) {
+            drawFaceNormal(&chunk->vertices[i1].position,
+                            &chunk->vertices[i2].position,
+                            &chunk->vertices[i3].position);
         }
+#endif
     }
 }
 
@@ -474,7 +443,7 @@ static int addTriangle(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
     gte_avsz3();
     gte_stotz(&otz); // screen_z >>= 2
 
-    if (otz <= 0 || otz >= FAR_PLANE) return 0;
+    if (otz < 0 || otz >= FAR_PLANE) return 0;
 
     poly = (POLY_FT3*)nextpri;
     setPolyFT3(poly);

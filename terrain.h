@@ -2,8 +2,9 @@
 #define TERRAIN_H
 
 #define CHUNK_SIZE        16
-#define QUADRANT_SIZE     8
+#define QUADRANT_SIZE     (CHUNK_SIZE / 2)
 #define CELL_SIZE         1024
+#define CELL_COUNT (CHUNK_SIZE * CHUNK_SIZE)
 #define WORLD_TO_CHUNK    14 // (16 * 1024 = 1 << 14)
 #define CHUNK_TO_QUADRANT 13 // (8 * 1024 = 1 << 13)
 
@@ -15,9 +16,11 @@ typedef struct chunk_t
 {
     DVECTOR pos; // TODO: DVECTOR is short, need 32 bits
     bool    needed;
-    Vertex  heightmap[CHUNK_SIZE + 1][CHUNK_SIZE + 1];
-    // Vertex terrain[1024]
-    // int heightmap[CHUNK_SIZE + 1][CHUNK_SIZE + 1];
+
+    int  heightmap[CHUNK_SIZE + 1][CHUNK_SIZE + 1];
+    Vertex vertices[CELL_COUNT * 4]; // 4 vertices/cell
+    int indices[CELL_COUNT * 2 * 3];  // 2 triangles/cell, 3 vertices/triangle
+
     struct texture_t* texture;
 
     MATRIX matrix;
