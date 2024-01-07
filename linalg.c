@@ -153,9 +153,9 @@ int quad_clip(RECT* clip, DVECTOR* v0, DVECTOR* v1, DVECTOR* v2, DVECTOR* v3)
 
 void crossProduct(SVECTOR* v0, SVECTOR* v1, VECTOR* out)
 {
-    out->vx = ((v0->vy * v1->vz) - (v0->vz * v1->vy)) >> SCALE;
-    out->vy = ((v0->vz * v1->vx) - (v0->vx * v1->vz)) >> SCALE;
-    out->vz = ((v0->vx * v1->vy) - (v0->vy * v1->vx)) >> SCALE;
+    out->vx = (v0->vy * v1->vz - v0->vz * v1->vy) >> SCALE;
+    out->vy = (v0->vz * v1->vx - v0->vx * v1->vz) >> SCALE;
+    out->vz = (v0->vx * v1->vy - v0->vy * v1->vx) >> SCALE;
 }
 
 void surfaceNormal(SVECTOR* v1, SVECTOR* v2, SVECTOR* v3, SVECTOR* out)

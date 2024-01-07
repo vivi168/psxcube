@@ -27,6 +27,7 @@ typedef int quat[4];
 void quat_rotate_point(const quat q, const vec3 in, vec3 out);
 
 // trigonometry
+#define M_PI 2048
 int iSin(int x);
 #define iCos(x) (iSin(x + 1024))
 
@@ -37,6 +38,7 @@ int quad_clip(RECT* clip, DVECTOR* v0, DVECTOR* v1, DVECTOR* v2, DVECTOR* v3);
 
 // normals
 
+void crossProduct(SVECTOR* v0, SVECTOR* v1, VECTOR* out);
 void surfaceNormal(SVECTOR* v1, SVECTOR* v2, SVECTOR* v3, SVECTOR* out);
 void centroid(SVECTOR* v1, SVECTOR* v2, SVECTOR* v3, SVECTOR* out);
 

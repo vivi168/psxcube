@@ -122,12 +122,14 @@ void mainloop()
     q = terrain_chunkQuadrant(camera.translate.vx, camera.translate.vz, &cx, &cy);
     terrain_init(&terrain, cx, cy, q, terrain_fbm3);
 
+    cam_init(&camera);
+
     while (1) {
         frame_start = VSync(-1);
         pq = q;
 
         pad_pollEvents();
-        cam_processInput(&camera);
+        cam_processInput2(&camera);
 
         q = terrain_chunkQuadrant(camera.translate.vx,
                               camera.translate.vz,
