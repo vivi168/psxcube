@@ -129,6 +129,9 @@ void mainloop()
         pq = q;
 
         pad_pollEvents();
+
+        int h = terrain_currentHeight(terrain.current_chunk, camera.translate.vx, camera.translate.vz);
+        camera.translate.vy = h - 1536;
         cam_processInput2(&camera);
 
         q = terrain_chunkQuadrant(camera.translate.vx,

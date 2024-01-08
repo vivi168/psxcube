@@ -54,6 +54,47 @@ int terrain_chunkQuadrant(int x, int y, int* cx, int* cy)
     return q;
 }
 
+int terrain_currentHeight(Chunk* chunk, int x, int y)
+{
+    // first get triangle
+    int x_chunk = x - (chunk->pos.vx * 1 << WORLD_TO_CHUNK);
+    int y_chunk = y - (chunk->pos.vy * 1 << WORLD_TO_CHUNK);
+
+    int tx = x_chunk >> CHUNK_TO_CELL;
+    int ty = y_chunk >> CHUNK_TO_CELL;
+
+    // get position relative to cell
+    int x_cell = x_chunk - (tx * 1 << 10);
+    int y_cell = y_chunk - (ty * 1 << 10);
+
+    // bilinear_interpolation
+    int h = 0;
+    {
+        VECTOR a, b, c, d;
+        setVector(&a, 0, 0, chunk->heightmap[ty][tx]);
+        setVector(&b, 1024, 0, chunk->heightmap[ty][tx+1]);
+        setVector(&c, 1024, 1024, chunk->heightmap[ty+1][tx+1]);
+        setVector(&d, 0, 1024, chunk->heightmap[ty+1][tx]);
+
+        int u = IntToFixed(x_cell - a.vx) / (b.vx - a.vx);
+        int v = IntToFixed(y_cell - a.vx) / (d.vy - a.vy);
+
+        // FntPrint("%d %d\n", u, v);
+
+        // h = (1 - u) * (1 - v) * a.vz + u * (1 - v) * b.vz + u * v * c.vz + (1 - u) * v * d.vz;
+
+        h = FixedMulFixed(FixedMulFixed((ONE - u), (ONE - v)), a.vz) +
+        FixedMulFixed(FixedMulFixed(u, (ONE - v)), b.vz) +
+        FixedMulFixed(FixedMulFixed(u, v), c.vz) +
+        FixedMulFixed(FixedMulFixed((ONE - u), v), d.vz);
+    }
+
+    // FntPrint("tc: %d %d\n", x_chunk, y_chunk);
+    // FntPrint("tt: %d %d - %d\n", x_cell, y_cell, h);
+
+    return h;
+}
+
 void terrain_init(Terrain* terrain, int cx, int cy, int q, int (*tf)(int, int))
 {
     printf("INIT TERRAIN!\n");
@@ -63,6 +104,10 @@ void terrain_init(Terrain* terrain, int cx, int cy, int q, int (*tf)(int, int))
                   cx + neighbors[q][i].vx,
                   cy + neighbors[q][i].vy,
                   tf);
+
+        if (terrain->chunks[i].pos.vx == cx && terrain->chunks[i].pos.vy == cy) {
+            terrain->current_chunk = &terrain->chunks[i];
+        }
     }
 }
 
@@ -77,6 +122,10 @@ void terrain_update(Terrain* terrain, int cx, int cy, int q,
 
     for (int i = 0; i < MAX_CHUNK; i++) {
         terrain->chunks[i].needed = false;
+
+        if (terrain->chunks[i].pos.vx == cx && terrain->chunks[i].pos.vy == cy) {
+            terrain->current_chunk = &terrain->chunks[i];
+        }
     }
 
     // construct needed list

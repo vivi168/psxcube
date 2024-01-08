@@ -7,6 +7,7 @@
 #define CELL_COUNT (CHUNK_SIZE * CHUNK_SIZE)
 #define WORLD_TO_CHUNK    14 // (16 * 1024 = 1 << 14)
 #define CHUNK_TO_QUADRANT 13 // (8 * 1024 = 1 << 13)
+#define CHUNK_TO_CELL 10 // (1024 = 1 << 10)
 
 #define MAX_CHUNK 4
 
@@ -41,6 +42,7 @@ int terrain_slope(int x, int y);
 int terrain_fbm3(int x, int y);
 
 int terrain_chunkQuadrant(int x, int y, int* cx, int* cy);
+int terrain_currentHeight(Chunk* chunk, int x, int y);
 
 // this one also initialize the indices
 void terrain_init(Terrain* terrain, int cx, int cy, int q, int (*f)(int, int));
