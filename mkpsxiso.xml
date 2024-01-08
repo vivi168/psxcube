@@ -69,6 +69,13 @@
 
       <file name="TERRAIN.TIM" type="data" source="assets/TERRAIN.TIM" />
 
+      <file name="TREE1.M3D" type="data" source="assets/TREE1.M3D" />
+      <file name="BRANCH5.TIM" type="data" source="assets/BRANCH5.TIM" />
+      <file name="TRUNK3.TIM" type="data" source="assets/TRUNK3.TIM" />
+      <file name="SWORD1.M3D" type="data" source="assets/SWORD1.M3D" />
+      <file name="SWORD1.TIM" type="data" source="assets/SWORD1.TIM" />
+
+
       <!-- Lastly, some dummy sectors must always be placed at the -->
       <!-- end of the disc image. It must be a pretty large one to -->
       <!-- make sure the console does not go run-away when it -->

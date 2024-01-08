@@ -16,6 +16,7 @@ void rdr_prependToScene(Model3D*);
 void rdr_appendToScene(Model3D*);
 void rdr_setSceneCamera(Camera*);
 void rdr_setSceneTerrain(Terrain*);
+void rdr_setSceneWeapon(Model3D*);
 void rdr_processScene();
 
 #endif

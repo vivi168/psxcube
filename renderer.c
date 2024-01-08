@@ -39,6 +39,8 @@ typedef struct scene_list_t
 
     Camera*  camera;
     Terrain* terrain;
+
+    Model3D* weapon_r; // weapon right hand
 } Scene;
 
 // TODO: all of these static ?
@@ -194,6 +196,21 @@ void rdr_processScene()
 
     for (int i = 0; i < MAX_CHUNK; i++) addChunk(&scene.terrain->chunks[i]);
 
+    // draw weapon, don't use camera
+    {
+
+        MATRIX mv, ll;
+
+        model_mat(scene.weapon_r, &mv);
+        MulMatrix0(&light_matrix, &mv, &ll);
+
+        gte_SetRotMatrix(&mv);
+        gte_SetTransMatrix(&mv);
+        gte_SetLightMatrix(&ll);
+
+        addMesh(scene.weapon_r->mesh);
+    }
+
 #ifdef DRAW_ORIG_AXIS
     addOriginAxis(&scene.camera->matrix);
 #endif
@@ -249,6 +266,8 @@ void rdr_appendToScene(Model3D* model)
 void rdr_setSceneCamera(Camera* camera) { scene.camera = camera; }
 
 void rdr_setSceneTerrain(Terrain* terrain) { scene.terrain = terrain; }
+
+void rdr_setSceneWeapon(Model3D* weap_r) { scene.weapon_r = weap_r; }
 
 // Static
 
@@ -443,7 +462,7 @@ static int addTriangle(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
     gte_avsz3();
     gte_stotz(&otz); // screen_z >>= 2
 
-    if (otz < 0 || otz >= FAR_PLANE) return 0;
+    if (otz <= 0 || otz >= FAR_PLANE) return 0;
 
     poly = (POLY_FT3*)nextpri;
     setPolyFT3(poly);

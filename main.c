@@ -12,10 +12,11 @@ unsigned long long timeCounter;
 Camera camera;
 
 // models/meshes/md5_models
-#define CUBE_MESH    0
+#define TREE_MESH    0
 #define BOB_MESH     1
 #define CUBEGUY_MESH 2
 #define HOUSE_MESH   3
+#define SWORD_MESH   4
 // anims
 #define BOB_ANIM        0
 #define CUBEGUY_RUNNING 1
@@ -30,21 +31,39 @@ Terrain terrain;
 // TODO better way
 void init_assets()
 {
-    // Cube
+    // tree
     {
-        obj_readMesh("\\CUBE.M3D;1", &meshes[CUBE_MESH]);
-        print_mesh3d(&meshes[CUBE_MESH]);
+        obj_readMesh("\\TREE1.M3D;1", &meshes[TREE_MESH]);
+        print_mesh3d(&meshes[TREE_MESH]);
         // TODO: if multiple models share same texture
         // no need to reload texture
-        rdr_initMeshTextures(&meshes[CUBE_MESH]);
+        rdr_initMeshTextures(&meshes[TREE_MESH]);
 
-        model_initStaticModel(&models[CUBE_MESH], &meshes[CUBE_MESH]);
+        model_initStaticModel(&models[TREE_MESH], &meshes[TREE_MESH]);
 
-        model_setScale(&models[CUBE_MESH], ONE);
-        model_setRotation(&models[CUBE_MESH], 0, 0, 0);
-        model_setTranslation(&models[CUBE_MESH], 500, 0, 500);
+        model_setScale(&models[TREE_MESH], ONE);
+        model_setRotation(&models[TREE_MESH], 0, 0, 0);
+        model_setTranslation(&models[TREE_MESH], 500, 0, 500);
 
-        rdr_appendToScene(&models[CUBE_MESH]);
+        rdr_appendToScene(&models[TREE_MESH]);
+    }
+
+    // sword
+    {
+        obj_readMesh("\\SWORD1.M3D;1", &meshes[SWORD_MESH]);
+        print_mesh3d(&meshes[SWORD_MESH]);
+        // TODO: if multiple models share same texture
+        // no need to reload texture
+        rdr_initMeshTextures(&meshes[SWORD_MESH]);
+
+        model_initStaticModel(&models[SWORD_MESH], &meshes[SWORD_MESH]);
+
+        model_setScale(&models[SWORD_MESH], ONE);
+        model_setRotation(&models[SWORD_MESH], -M_PI/6, M_PI/3, -M_PI/2);
+        model_setTranslation(&models[SWORD_MESH], 150, 200, (SCREEN_Z * 3) / 2);
+
+        // rdr_appendToScene(&models[SWORD_MESH]);
+        rdr_setSceneWeapon(&models[SWORD_MESH]);
     }
 
     // House
