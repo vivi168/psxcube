@@ -101,27 +101,30 @@ void cam_processInput2(Camera* cam)
         cam->pitch = -768;
 
     if (pad_isHeld(KEY_TRIANGLE)) {
-        cam->translate.vx += cam->front.vx >> cam->speed;
-        // cam->translate.vy += cam->front.vy >> cam->speed;
-        cam->translate.vz += cam->front.vz >> cam->speed;
+        cam->translate.vx -= cam->forward.vx >> cam->speed;
+        cam->translate.vz -= cam->forward.vz >> cam->speed;
     }
 
     if (pad_isHeld(KEY_CROSS)) {
-        cam->translate.vx -= cam->front.vx >> cam->speed;
-        // cam->translate.vy -= cam->front.vy >> cam->speed;
-        cam->translate.vz -= cam->front.vz >> cam->speed;
+        cam->translate.vx += cam->forward.vx >> cam->speed;
+        cam->translate.vz += cam->forward.vz >> cam->speed;
     }
 
     if (pad_isHeld(KEY_SQUARE)) {
         cam->translate.vx -= cam->right.vx >> cam->speed;
-        // cam->translate.vy -= cam->right.vy >> cam->speed;
         cam->translate.vz -= cam->right.vz >> cam->speed;
     }
 
     if (pad_isHeld(KEY_CIRCLE)) {
         cam->translate.vx += cam->right.vx >> cam->speed;
-        // cam->translate.vy += cam->right.vy >> cam->speed;
         cam->translate.vz += cam->right.vz >> cam->speed;
+    }
+
+    if (pad_isHeld(KEY_R1)) {
+        cam->translate.vy -= ONE >> cam->speed;
+    }
+    if (pad_isHeld(KEY_R2)) {
+        cam->translate.vy += ONE >> cam->speed;
     }
 
     cam_update2(cam);
@@ -161,6 +164,10 @@ static void cam_update2(Camera* cam)
     // right = glm::normalize(glm::cross(front, world_up));
     crossProduct(&cam->front, &cam->world_up, &f);
     VectorNormalS(&f, &cam->right);
+
+    // forward = glm::normalize(glm::cross(right, world_up));
+    crossProduct(&cam->right, &cam->world_up, &f);
+    VectorNormalS(&f, &cam->forward);
 
     // up = glm::normalize(glm::cross(right, front));
     crossProduct(&cam->right, &cam->front, &f);

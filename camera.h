@@ -11,7 +11,7 @@ typedef struct camera_t
     MATRIX  matrix;
 
     int yaw, pitch;
-    SVECTOR front, up, right;
+    SVECTOR front, up, right, forward;
     SVECTOR world_up;
 
     int speed, sensitivity, zoom;
