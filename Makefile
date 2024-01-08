@@ -42,4 +42,7 @@ clean:
 run:
 	cd log && pcsx-redux -bios openbios.bin -fastboot -interpreter -debugger -iso ../$(ISO) -run -logfile development.log
 
-.PHONY: all clean
+install:
+	cp $(ISO) $(INSTALL_PATH)
+
+.PHONY: all clean install
