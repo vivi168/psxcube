@@ -102,25 +102,25 @@ void cam_processInput2(Camera* cam)
 
     if (pad_isHeld(KEY_TRIANGLE)) {
         cam->translate.vx += cam->front.vx >> cam->speed;
-        cam->translate.vy += cam->front.vy >> cam->speed;
+        // cam->translate.vy += cam->front.vy >> cam->speed;
         cam->translate.vz += cam->front.vz >> cam->speed;
     }
 
     if (pad_isHeld(KEY_CROSS)) {
         cam->translate.vx -= cam->front.vx >> cam->speed;
-        cam->translate.vy -= cam->front.vy >> cam->speed;
+        // cam->translate.vy -= cam->front.vy >> cam->speed;
         cam->translate.vz -= cam->front.vz >> cam->speed;
     }
 
     if (pad_isHeld(KEY_SQUARE)) {
         cam->translate.vx -= cam->right.vx >> cam->speed;
-        cam->translate.vy -= cam->right.vy >> cam->speed;
+        // cam->translate.vy -= cam->right.vy >> cam->speed;
         cam->translate.vz -= cam->right.vz >> cam->speed;
     }
 
     if (pad_isHeld(KEY_CIRCLE)) {
         cam->translate.vx += cam->right.vx >> cam->speed;
-        cam->translate.vy += cam->right.vy >> cam->speed;
+        // cam->translate.vy += cam->right.vy >> cam->speed;
         cam->translate.vz += cam->right.vz >> cam->speed;
     }
 
@@ -151,9 +151,9 @@ static void cam_update2(Camera* cam)
 {
     VECTOR f;
 
-    f.vx = iCos(cam->yaw) * iCos(cam->pitch) >> 12;
+    f.vx = FixedMulFixed(iCos(cam->yaw), iCos(cam->pitch));
     f.vy = iSin(cam->pitch);
-    f.vz = iSin(cam->yaw) * iCos(cam->pitch) >> 12;
+    f.vz = FixedMulFixed(iSin(cam->yaw), iCos(cam->pitch));
 
     // front = glm::normalize(f);
     VectorNormalS(&f, &cam->front);
