@@ -2,6 +2,7 @@
 
 #define NEAR_PLANE 16
 #define FAR_PLANE  4096
+#define GTE_DIV_OVERFLOW (1 << 17)
 
 #define setCVector(v, _x, _y, _z) (v)->r = _x, (v)->g = _y, (v)->b = _z
 
@@ -79,8 +80,6 @@ static void addOriginAxis(MATRIX* cam_mat);
 static int  addTriangle(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture);
 static int  addFlatTriangle(Vertex* v1, Vertex* v2, Vertex* v3, SVECTOR* color);
 static void addLine(SVECTOR* org, SVECTOR* dest, CVECTOR* color);
-static void addQuad(Vertex* v1, Vertex* v2, Vertex* v3, Vertex* v4,
-                    SVECTOR* color);
 
 void rdr_init()
 {
@@ -457,8 +456,9 @@ static int addTriangle(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
     // rotation, translation, perspective transformation
     gte_rtpt();
 
+    // near clipping
     gte_stflg(&flg);
-    if (flg & 0x80000000) return 0;
+    if (flg & GTE_DIV_OVERFLOW) return 0;
 
     // normal clip for backface culling
     gte_nclip();
@@ -526,7 +526,7 @@ static int addFlatTriangle(Vertex* v1, Vertex* v2, Vertex* v3, SVECTOR* color)
     gte_rtpt();
 
     gte_stflg(&flg);
-    if (flg & 0x80000000) return 0;
+    if (flg & GTE_DIV_OVERFLOW) return 0;
 
     // normal clip for backface culling
     gte_nclip();
@@ -575,7 +575,7 @@ static void addLine(SVECTOR* org, SVECTOR* dest, CVECTOR* color)
     gte_rtps();
 
     gte_stflg(&p);
-    if (p & 0x80000000) return;
+    if (p & GTE_DIV_OVERFLOW) return;
 
     gte_stsxy(&line->x0);
 
@@ -583,7 +583,7 @@ static void addLine(SVECTOR* org, SVECTOR* dest, CVECTOR* color)
     gte_rtps();
 
     gte_stflg(&p);
-    if (p & 0x80000000) return;
+    if (p & GTE_DIV_OVERFLOW) return;
 
     gte_stsxy(&line->x1);
 
@@ -592,64 +592,4 @@ static void addLine(SVECTOR* org, SVECTOR* dest, CVECTOR* color)
 
     addPrim(&cdb->ot[0], line);
     nextpri += sizeof(LINE_F2);
-}
-
-static void addQuad(Vertex* v1, Vertex* v2, Vertex* v3, Vertex* v4,
-                    SVECTOR* color)
-{
-    int32_t  otz, nclip;
-    POLY_F4* poly;
-
-    // load first three vertices to GTE
-    gte_ldv3(&v1->position, &v2->position, &v3->position);
-
-    // rotation, translation, perspective transformation
-    gte_rtpt();
-    // normal clip for backface culling
-    gte_nclip();
-    gte_stopz(&nclip);
-
-    if (nclip <= 0) return;
-
-    // average Z for depth sorting
-    gte_avsz4();
-    gte_stotz(&otz); // screen_z >>= 2
-
-    if (otz < NEAR_PLANE || otz >= FAR_PLANE) return;
-
-    poly = (POLY_F4*)nextpri;
-    setPolyF4(poly);
-
-    // set projected vertices to the primitive
-    gte_stsxy0(&poly->x0);
-    gte_stsxy1(&poly->x1);
-    gte_stsxy2(&poly->x2);
-
-    // compute last projected vertice
-    gte_ldv0(&v4->position);
-    gte_rtps();
-    gte_stsxy(&poly->x3);
-
-    if (quad_clip(&screenClip,
-                  (DVECTOR*)&poly->x0,
-                  (DVECTOR*)&poly->x1,
-                  (DVECTOR*)&poly->x2,
-                  (DVECTOR*)&poly->x3))
-        return;
-
-    // setUV4(poly, texture->u + v1->uv.vx, texture->v + v1->uv.vy,
-    //              texture->u + v2->uv.vx, texture->v + v2->uv.vy,
-    //              texture->u + v3->uv.vx, texture->v + v3->uv.vy,
-    //              texture->u + v4->uv.vx, texture->v + v4->uv.vy);
-
-    // poly->tpage = texture->tpage;
-    // poly->clut = texture->clut;
-    setRGB0(poly, color->vx, color->vy, color->vz);
-
-    // todo: add terrain to another ot specific for terrain, positionned lower
-    // addPrim(&cdb->ot[FAR_PLANE-1], poly);
-    addPrim(&cdb->ot[otz], poly);
-    nextpri += sizeof(POLY_F4);
-
-    numQuad++;
 }
