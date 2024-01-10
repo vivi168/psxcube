@@ -51,6 +51,7 @@ static DB* cdb; // int instead. make macro to get current cdb ?
                 // swap buffer with cdb ^= 1
 static int8_t* nextpri;
 
+static Hashmap texture_hash;
 static Scene scene;
 static RECT  screenClip;
 
@@ -121,10 +122,13 @@ void rdr_init()
     // ambient color
     gte_SetBackColor(131, 83, 34);
     gte_SetColorMatrix(&color_matrix);
+
+    hash_initHashMap(&texture_hash);
 }
 
 void rdr_initMeshTextures(Mesh3D* mesh)
 {
+    // TODO: don't create same texture twice
     for (int i = 0; i < mesh->header.numSubsets; i++) {
         STRING20 tmp;
         sprintf(tmp, "\\%s.TIM;1", mesh->subsets[i].name);
@@ -144,6 +148,8 @@ void rdr_initTerrainTextures(Terrain* terrain)
     for (int i = 0; i < MAX_CHUNK; i++) {
         terrain->chunks[i].texture = terrain->grassland_tex;
     }
+
+    hash_print(&texture_hash);
 }
 
 void rdr_draw()
@@ -316,6 +322,8 @@ static void createTexture(const char* filename, Texture* texture)
            texture->mode,
            texture->prect.x,
            texture->prect.y);
+
+    hash_insert(&texture_hash, filename, texture);
 
     free3(buff);
 }

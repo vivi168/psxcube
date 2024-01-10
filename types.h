@@ -13,4 +13,6 @@ typedef unsigned long long uint64_t;
 
 typedef enum bool_t { false = 0, true = 1 } bool;
 
+typedef char STRING20[20];
+
 #endif

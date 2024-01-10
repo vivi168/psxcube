@@ -1,8 +1,6 @@
 #ifndef MESH_H
 #define MESH_H
 
-typedef char STRING20[20];
-
 // TODO: anonymous struct for headers?
 typedef struct obj_header_t
 {

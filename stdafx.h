@@ -15,6 +15,7 @@
 #include <libgpu.h>
 
 #include "types.h"
+#include "hashmap.h"
 #include "linalg.h"
 #include "noise.h"
 #include "camera.h"
