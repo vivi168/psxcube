@@ -129,7 +129,7 @@ void rdr_initMeshTextures(Mesh3D* mesh)
 {
     // TODO: don't create same texture twice
     for (int i = 0; i < mesh->header.numSubsets; i++) {
-        STRING20 tmp;
+        STRING20 tmp = { 0 };
         sprintf(tmp, "\\%s.TIM;1", mesh->subsets[i].name);
         printf("Texture[%d]: %s\n", i, tmp);
 
