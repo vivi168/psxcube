@@ -29,7 +29,7 @@ typedef struct hashmap_t
 void hash_initHashMap(Hashmap* hash);
 bool hash_keyExists(Hashmap* hash, STRING20 key);
 void hash_insert(Hashmap* hash, STRING20 key, void* value);
-void hash_fetch(Hashmap* hash, STRING20, void* out);
+void hash_fetch(Hashmap* hash, STRING20, void** out);
 void hash_delete(Hashmap* hash, STRING20);
 void hash_print(Hashmap* hash);
 

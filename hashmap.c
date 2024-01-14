@@ -1,8 +1,17 @@
 #include "stdafx.h"
 
-#define BUCKET_MAX_SIZE 5
+#define DEFAULT_BUCKET_SIZE 11
+#define SEED 1234
+#define KEY_SIZE 20
 
-static const int bucket_sizes[BUCKET_MAX_SIZE] = { 11, 23, 47, 97, 194 };
+static int
+hash_strcmp(const char *s1, const char *s2)
+{
+	while (*s1 == *s2++)
+		if (*s1++ == 0)
+			return (0);
+	return (*(unsigned char *)s1 - *(unsigned char *)--s2);
+}
 
 static void appendToBucket(Bucket* bucket, STRING20 key, void* value);
 
@@ -11,11 +20,10 @@ static uint32_t murmur3_32(const uint8_t* key, size_t len, uint32_t seed);
 
 void hash_initHashMap(Hashmap* hash)
 {
-    hash->bucket_size = 0;
-    unsigned int s = bucket_sizes[hash->bucket_size];
-    hash->buckets = malloc3(sizeof(Bucket) * s);
+    hash->bucket_size = DEFAULT_BUCKET_SIZE;
+    hash->buckets = malloc3(sizeof(Bucket) * hash->bucket_size);
 
-    for (int i = 0; i < s; i++) {
+    for (int i = 0; i < hash->bucket_size; i++) {
         hash->buckets[i].head = NULL;
         hash->buckets[i].tail = NULL;
 
@@ -25,14 +33,13 @@ void hash_initHashMap(Hashmap* hash)
 
 bool hash_keyExists(Hashmap* hash, STRING20 key)
 {
-    int s = bucket_sizes[hash->bucket_size];
-    int h = murmur3_32(key, 20, 1234) % s;
+    int h = murmur3_32(key, KEY_SIZE, SEED) % hash->bucket_size;
 
     BucketNode* curr;
 
     curr = hash->buckets[h].head;
     while (curr != NULL) {
-        if (strcmp(key, curr->pair.key) == 0) return true;
+        if (hash_strcmp(key, curr->pair.key) == 0) return true;
 
         curr = curr->next;
     }
@@ -42,8 +49,7 @@ bool hash_keyExists(Hashmap* hash, STRING20 key)
 
 void hash_insert(Hashmap* hash, STRING20 key, void* value)
 {
-    int s = bucket_sizes[hash->bucket_size];
-    int h = murmur3_32(key, 20, 1234) % s;
+    int h = murmur3_32(key, KEY_SIZE, SEED) % hash->bucket_size;
 
     printf("%s %d\n", key, h);
 
@@ -63,7 +69,7 @@ void hash_insert(Hashmap* hash, STRING20 key, void* value)
 static void appendToBucket(Bucket* bucket, STRING20 key, void* value)
 {
     BucketNode* new_node = malloc3(sizeof(BucketNode));
-    IO_memcpy(new_node->pair.key, key, 20);
+    IO_memcpy(new_node->pair.key, key, KEY_SIZE);
     new_node->pair.value = value;
     new_node->next = NULL;
 
@@ -79,14 +85,55 @@ static void appendToBucket(Bucket* bucket, STRING20 key, void* value)
     bucket->tail = new_node;
 }
 
-void hash_fetch(Hashmap* hash, STRING20, void* out)
+void hash_fetch(Hashmap* hash, STRING20 key, void** out)
 {
-    // TODO
+    int h = murmur3_32(key, KEY_SIZE, SEED) % hash->bucket_size;
+
+    BucketNode* curr;
+    curr = hash->buckets[h].head;
+    while (curr != NULL) {
+        if (hash_strcmp(key, curr->pair.key) == 0) {
+            printf("FOUND! %p \n%s => %s\n", curr->pair.value, key, curr->pair.key);
+            *out = curr->pair.value;
+            return;
+        }
+
+        curr = curr->next;
+    }
+
+    *out = NULL;
 }
 
-void hash_delete(Hashmap* hash, STRING20)
+void hash_delete(Hashmap* hash, STRING20 key)
 {
-    // TODO
+    int h = murmur3_32(key, KEY_SIZE, SEED) % hash->bucket_size;
+
+    BucketNode* curr;
+    BucketNode* prev = NULL;
+    curr = hash->buckets[h].head;
+    printf("DELETE %s AT %d\n", key, h);
+    while (curr != NULL) {
+        printf("LOOKING: %s %s\n", key, curr->pair.key);
+        if (hash_strcmp(key, curr->pair.key) == 0) {
+            break;
+        }
+
+        prev = curr;
+        curr = curr->next;
+    }
+
+    if (curr == NULL) {
+        printf("Node with key [%s] not found\n", key);
+        return;
+    }
+
+    if (prev == NULL) {
+        hash->buckets[h].head = curr->next;
+    } else {
+        prev->next = curr->next;
+    }
+    hash->buckets[h].capacity--;
+    free3(curr);
 }
 
 void hash_print(Hashmap* hash)

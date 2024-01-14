@@ -305,7 +305,6 @@ static void createTexture(const char* filename, Texture* texture)
     }
 
     // copy properties
-    printf("[INFO]: %d %d %d\n", image->mode, image->prect->x, image->prect->y);
     texture->prect = *image->prect;
     texture->crect = *image->crect;
     texture->mode = image->mode;
@@ -317,10 +316,10 @@ static void createTexture(const char* filename, Texture* texture)
         getTPage(texture->mode & 0x3, 0, texture->prect.x, texture->prect.y);
     texture->clut = getClut(texture->crect.x, texture->crect.y);
 
-    printf("[INFO]: %d %d %d\n",
+    printf("[INFO]: TEXTURE %s [%d %d %d] - %p\n", filename,
            texture->mode,
            texture->prect.x,
-           texture->prect.y);
+           texture->prect.y, texture);
 
     hash_insert(&texture_hash, filename, texture);
 
