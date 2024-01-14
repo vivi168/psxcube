@@ -34,7 +34,7 @@ void init_assets()
     // tree
     {
         obj_readMesh("\\TREE1.M3D;1", &meshes[TREE_MESH]);
-        print_mesh3d(&meshes[TREE_MESH]);
+        // print_mesh3d(&meshes[TREE_MESH]);
         // TODO: if multiple models share same texture
         // no need to reload texture
         rdr_initMeshTextures(&meshes[TREE_MESH]);
@@ -51,7 +51,7 @@ void init_assets()
     // sword
     {
         obj_readMesh("\\SWORD1.M3D;1", &meshes[SWORD_MESH]);
-        print_mesh3d(&meshes[SWORD_MESH]);
+        // print_mesh3d(&meshes[SWORD_MESH]);
         // TODO: if multiple models share same texture
         // no need to reload texture
         rdr_initMeshTextures(&meshes[SWORD_MESH]);
@@ -69,7 +69,7 @@ void init_assets()
     // House
     {
         obj_readMesh("\\HOUSE.M3D;1", &meshes[HOUSE_MESH]);
-        print_mesh3d(&meshes[HOUSE_MESH]);
+        // print_mesh3d(&meshes[HOUSE_MESH]);
         // TODO: if multiple models share same texture
         // no need to reload texture
         rdr_initMeshTextures(&meshes[HOUSE_MESH]);
@@ -93,7 +93,7 @@ void init_assets()
                                 &md5_anims[CUBEGUY_RUNNING]);
         // TODO: do not load same texture file twice
         rdr_initMeshTextures(models[CUBEGUY_MESH].mesh);
-        print_mesh3d(models[CUBEGUY_MESH].mesh);
+        // print_mesh3d(models[CUBEGUY_MESH].mesh);
 
         model_setScale(&models[CUBEGUY_MESH], ONE);
         model_setRotation(&models[CUBEGUY_MESH], 0, 0, 0);
