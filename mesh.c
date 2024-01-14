@@ -12,7 +12,7 @@ void obj_readMesh(const char* filename, Mesh3D* mesh)
     assert(buff != NULL);
 
     // header
-    s = sizeof(ObjHeader);
+    s = sizeof(mesh->header);
     IO_memcpy(&mesh->header, buff, s);
     offset += s;
 
@@ -92,7 +92,7 @@ void md5_readModel(const char* filename, MD5Model* model)
     assert(buff != NULL);
 
     // header
-    s = sizeof(MD5ModelHeader);
+    s = sizeof(model->header);
     IO_memcpy(&model->header, buff, s);
     offset += s;
 
@@ -108,7 +108,7 @@ void md5_readModel(const char* filename, MD5Model* model)
     for (int i = 0; i < model->header.numMeshes; i++) {
         MD5Mesh* mesh = &model->meshes[i];
 
-        s = sizeof(MD5MeshHeader);
+        s = sizeof(mesh->header);
         IO_memcpy(&mesh->header, buff + offset, s);
         offset += s;
 
@@ -153,7 +153,7 @@ void md5_readAnim(const char* filename, MD5Anim* anim)
     assert(buff != NULL);
 
     // header
-    s = sizeof(MD5AnimHeader);
+    s = sizeof(anim->header);
     IO_memcpy(&anim->header, buff, s);
     offset += s;
 

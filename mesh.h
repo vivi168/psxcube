@@ -1,14 +1,6 @@
 #ifndef MESH_H
 #define MESH_H
 
-// TODO: anonymous struct for headers?
-typedef struct obj_header_t
-{
-    int numVerts;
-    int numIndices;
-    int numSubsets;
-} ObjHeader;
-
 typedef struct vertex_t
 {
     SVECTOR position;
@@ -28,7 +20,13 @@ typedef struct subset_t
 
 typedef struct obj_mesh_t
 {
-    ObjHeader     header;
+    struct
+    {
+        int numVerts;
+        int numIndices;
+        int numSubsets;
+    } header;
+
     Vertex*       vertices;
     unsigned int* indices;
     Subset*       subsets;
@@ -62,16 +60,14 @@ typedef struct md5_joint_t
     quat orient;
 } MD5Joint;
 
-typedef struct md5_mesh_header_t
-{
-    int numVerts;
-    int numTris;
-    int numWeights;
-} MD5MeshHeader;
-
 typedef struct md5_mesh_t
 {
-    MD5MeshHeader header;
+    struct
+    {
+        int numVerts;
+        int numTris;
+        int numWeights;
+    } header;
 
     MD5Vertex*    vertices;
     unsigned int* indices;
@@ -80,31 +76,28 @@ typedef struct md5_mesh_t
     // TODO: add color
 } MD5Mesh;
 
-typedef struct md5_model_header_t
-{
-    int numJoints;
-    int numMeshes;
-} MD5ModelHeader;
-
 typedef struct md5_model_t
 {
-    MD5ModelHeader header;
+    struct
+    {
+        int numJoints;
+        int numMeshes;
+    } header;
 
     MD5Joint* joints;
     MD5Mesh*  meshes;
 } MD5Model;
 
-typedef struct md5_anim_header_t
-{
-    int numFrames;
-    int numJoints;
-    int frameRate;
-} MD5AnimHeader;
-
 typedef struct md5_anim_t
 {
-    MD5AnimHeader header;
-    MD5Joint**    frameJoints; // frameJoints[numFrames][numJoints]
+    struct
+    {
+        int numFrames;
+        int numJoints;
+        int frameRate;
+    } header;
+
+    MD5Joint** frameJoints; // frameJoints[numFrames][numJoints]
 } MD5Anim;
 
 void md5_readModel(const char* filename, MD5Model* model);
