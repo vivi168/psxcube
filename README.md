@@ -2,24 +2,18 @@
 
 3D test on PSX
 
-## Convert image
+<img width="724" alt="スクリーンショット 2024-03-16 130639" src="https://github.com/vivi168/psxcube/assets/1566422/0ac1aebd-3a69-4932-9e17-6a6eb7925681">
 
-Save as 256 colors BMP
 
-then
+## Assets
 
 ```
-bmp2tim -org 640 0 -plt 0 480 -v CUBE.BMP
+cd assets/Bob && make
+cd assets && make
 ```
 
 ## compile
 
 ```
-psymake
-```
-
-## Make CD
-
-```
-mkpsxiso -y mkpsxiso.xml
+make
 ```
