@@ -9,6 +9,10 @@ unsigned long long vsyncCounter;
 unsigned long long frameCounter;
 unsigned long long timeCounter;
 
+extern int RustAdd(int, int);
+extern unsigned int RustFuz(unsigned int);
+extern long Issoufle(long);
+
 Camera camera;
 
 // models/meshes/md5_models
@@ -216,6 +220,13 @@ int main(void)
     }
 
     printf("[INFO]: init done !\n");
+    printf("[INFO]: testing rust... %d !\n", RustAdd(13, 37) * 2);
+    printf("[INFO]: testing rust 2... %d !\n", Issoufle(1337));
+    printf("[INFO]: testing c... %d !\n", SquareRoot12(1337));
+
+    for (unsigned int i = 0; i < 20; i++) {
+	printf("fizzbuz %d : %d\n", i, RustFuz(i));
+    }
 
     mainloop();
 

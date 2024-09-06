@@ -5,6 +5,7 @@
 *.ELF
 *.EXE
 *.log
+*.rox
 log/*
 !log/.keep
 .DS_Store
