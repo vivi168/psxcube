@@ -78,7 +78,7 @@ static void addMesh(Mesh3D* mesh);
 static void addChunk(Chunk* chunk);
 static void addOriginAxis(MATRIX* cam_mat);
 static int  addTriangle(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture);
-static int  addFlatTriangle(Vertex* v1, Vertex* v2, Vertex* v3, SVECTOR* color);
+static int  addFlatTriangle(Vertex* v1, Vertex* v2, Vertex* v3, CVECTOR* color);
 static void addLine(SVECTOR* org, SVECTOR* dest, CVECTOR* color);
 
 void rdr_init()
@@ -510,7 +510,7 @@ static int addTriangle(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
     return 1;
 }
 
-static int addFlatTriangle(Vertex* v1, Vertex* v2, Vertex* v3, SVECTOR* color)
+static int addFlatTriangle(Vertex* v1, Vertex* v2, Vertex* v3, CVECTOR* color)
 {
     int32_t  otz, nclip, flg;
     POLY_F3* poly;
@@ -553,7 +553,7 @@ static int addFlatTriangle(Vertex* v1, Vertex* v2, Vertex* v3, SVECTOR* color)
                  (DVECTOR*)&poly->x2))
         return 0;
 
-    setRGB0(poly, color->vx, color->vy, color->vz);
+    setRGB0(poly, color->r, color->g, color->b);
 
     addPrim(&cdb->ot[otz], poly);
     nextpri += sizeof(POLY_F3);
