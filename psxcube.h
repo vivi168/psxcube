@@ -5,7 +5,8 @@
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
-#include <ctype.h>
+#include <stdbool.h>
+#include <stdint.h>
 
 #include <inline_c.h>
 #include <libcd.h>
@@ -14,7 +15,8 @@
 #include <libgte.h>
 #include <libgpu.h>
 
-#include "types.h"
+typedef char STRING20[20];
+
 #include "hashmap.h"
 #include "linalg.h"
 #include "noise.h"
