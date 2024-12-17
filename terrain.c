@@ -12,17 +12,17 @@ static const DVECTOR neighbors[MAX_CHUNK][MAX_CHUNK] = {
     {{ .vx = 0, .vy = 0 },
      { .vx = 1, .vy = 0 },
      { .vx = 0, .vy = -1 },
-     { .vx = 1, .vy = -1 }},
+     { .vx = 1, .vy = -1 } },
  // q2
     {{ .vx = 0, .vy = 0 },
      { .vx = -1, .vy = 0 },
      { .vx = 0, .vy = 1 },
-     { .vx = -1, .vy = 1 }},
+     { .vx = -1, .vy = 1 } },
  // q3
     {{ .vx = 0, .vy = 0 },
      { .vx = 1, .vy = 0 },
      { .vx = 0, .vy = 1 },
-     { .vx = 1, .vy = 1 }}
+     { .vx = 1, .vy = 1 }  }
 };
 
 static bool alreadyThere(DVECTOR* v, Terrain* terrain);
@@ -72,21 +72,22 @@ int terrain_currentHeight(Chunk* chunk, int x, int y)
     {
         VECTOR a, b, c, d;
         setVector(&a, 0, 0, chunk->heightmap[ty][tx]);
-        setVector(&b, 1024, 0, chunk->heightmap[ty][tx+1]);
-        setVector(&c, 1024, 1024, chunk->heightmap[ty+1][tx+1]);
-        setVector(&d, 0, 1024, chunk->heightmap[ty+1][tx]);
+        setVector(&b, 1024, 0, chunk->heightmap[ty][tx + 1]);
+        setVector(&c, 1024, 1024, chunk->heightmap[ty + 1][tx + 1]);
+        setVector(&d, 0, 1024, chunk->heightmap[ty + 1][tx]);
 
         int u = IntToFixed(x_cell - a.vx) / (b.vx - a.vx);
         int v = IntToFixed(y_cell - a.vx) / (d.vy - a.vy);
 
         // FntPrint("%d %d\n", u, v);
 
-        // h = (1 - u) * (1 - v) * a.vz + u * (1 - v) * b.vz + u * v * c.vz + (1 - u) * v * d.vz;
+        // h = (1 - u) * (1 - v) * a.vz + u * (1 - v) * b.vz + u * v * c.vz + (1
+        // - u) * v * d.vz;
 
         h = FixedMulFixed(FixedMulFixed((ONE - u), (ONE - v)), a.vz) +
-        FixedMulFixed(FixedMulFixed(u, (ONE - v)), b.vz) +
-        FixedMulFixed(FixedMulFixed(u, v), c.vz) +
-        FixedMulFixed(FixedMulFixed((ONE - u), v), d.vz);
+            FixedMulFixed(FixedMulFixed(u, (ONE - v)), b.vz) +
+            FixedMulFixed(FixedMulFixed(u, v), c.vz) +
+            FixedMulFixed(FixedMulFixed((ONE - u), v), d.vz);
     }
 
     // FntPrint("tc: %d %d\n", x_chunk, y_chunk);
@@ -105,7 +106,8 @@ void terrain_init(Terrain* terrain, int cx, int cy, int q, int (*tf)(int, int))
                   cy + neighbors[q][i].vy,
                   tf);
 
-        if (terrain->chunks[i].pos.vx == cx && terrain->chunks[i].pos.vy == cy) {
+        if (terrain->chunks[i].pos.vx == cx && terrain->chunks[i].pos.vy == cy)
+        {
             terrain->current_chunk = &terrain->chunks[i];
         }
     }
@@ -123,7 +125,8 @@ void terrain_update(Terrain* terrain, int cx, int cy, int q,
     for (int i = 0; i < MAX_CHUNK; i++) {
         terrain->chunks[i].needed = false;
 
-        if (terrain->chunks[i].pos.vx == cx && terrain->chunks[i].pos.vy == cy) {
+        if (terrain->chunks[i].pos.vx == cx && terrain->chunks[i].pos.vy == cy)
+        {
             terrain->current_chunk = &terrain->chunks[i];
         }
     }
@@ -182,44 +185,53 @@ static void initChunk(Chunk* chunk, int cx, int cy, int (*tf)(int, int))
         int tl_z = hy * CELL_SIZE;
 
         int y1 = chunk->heightmap[hy][hx];
-        int y2 = chunk->heightmap[hy][hx+1];
-        int y3 = chunk->heightmap[hy+1][hx];
-        int y4 = chunk->heightmap[hy+1][hx+1];
+        int y2 = chunk->heightmap[hy][hx + 1];
+        int y3 = chunk->heightmap[hy + 1][hx];
+        int y4 = chunk->heightmap[hy + 1][hx + 1];
 
         // top left
         setVector(&chunk->vertices[vi].position, tl_x, y1, tl_z);
         setDVector(&chunk->vertices[vi].uv, 0, 0);
         // top right
-        setVector(&chunk->vertices[vi+1].position, tl_x+CELL_SIZE, y2, tl_z);
-        setDVector(&chunk->vertices[vi+1].uv, 31, 0);
+        setVector(&chunk->vertices[vi + 1].position,
+                  tl_x + CELL_SIZE,
+                  y2,
+                  tl_z);
+        setDVector(&chunk->vertices[vi + 1].uv, 31, 0);
         // bottom left
-        setVector(&chunk->vertices[vi+2].position, tl_x, y3, tl_z+CELL_SIZE);
-        setDVector(&chunk->vertices[vi+2].uv, 0, 31);
+        setVector(&chunk->vertices[vi + 2].position,
+                  tl_x,
+                  y3,
+                  tl_z + CELL_SIZE);
+        setDVector(&chunk->vertices[vi + 2].uv, 0, 31);
         // bottom right
-        setVector(&chunk->vertices[vi+3].position, tl_x+CELL_SIZE, y4, tl_z+CELL_SIZE);
-        setDVector(&chunk->vertices[vi+3].uv, 31, 31);
+        setVector(&chunk->vertices[vi + 3].position,
+                  tl_x + CELL_SIZE,
+                  y4,
+                  tl_z + CELL_SIZE);
+        setDVector(&chunk->vertices[vi + 3].uv, 31, 31);
 
         // normals
         SVECTOR n;
         surfaceNormal(&chunk->vertices[vi].position,
-                      &chunk->vertices[vi+2].position,
-                      &chunk->vertices[vi+1].position,
+                      &chunk->vertices[vi + 2].position,
+                      &chunk->vertices[vi + 1].position,
                       &n);
 
         // TODO: per vertex normal?
         copyVector(&chunk->vertices[vi].normal, &n);
-        copyVector(&chunk->vertices[vi+1].normal, &n);
-        copyVector(&chunk->vertices[vi+2].normal, &n);
-        copyVector(&chunk->vertices[vi+3].normal, &n);
+        copyVector(&chunk->vertices[vi + 1].normal, &n);
+        copyVector(&chunk->vertices[vi + 2].normal, &n);
+        copyVector(&chunk->vertices[vi + 3].normal, &n);
 
         // indices
         chunk->indices[ii] = vi;
-        chunk->indices[ii+1] = vi + 2;
-        chunk->indices[ii+2] = vi + 1;
+        chunk->indices[ii + 1] = vi + 2;
+        chunk->indices[ii + 2] = vi + 1;
 
-        chunk->indices[ii+3] = vi + 2;
-        chunk->indices[ii+4] = vi + 3;
-        chunk->indices[ii+5] = vi + 1;
+        chunk->indices[ii + 3] = vi + 2;
+        chunk->indices[ii + 4] = vi + 3;
+        chunk->indices[ii + 5] = vi + 1;
 
         vi += 4;
         ii += 6;
@@ -252,35 +264,35 @@ static void updateChunk(Chunk* chunk, int cx, int cy, int (*tf)(int, int))
         int hy = i / CHUNK_SIZE;
 
         int y1 = chunk->heightmap[hy][hx];
-        int y2 = chunk->heightmap[hy][hx+1];
-        int y3 = chunk->heightmap[hy+1][hx];
-        int y4 = chunk->heightmap[hy+1][hx+1];
+        int y2 = chunk->heightmap[hy][hx + 1];
+        int y3 = chunk->heightmap[hy + 1][hx];
+        int y4 = chunk->heightmap[hy + 1][hx + 1];
 
         // top left
         chunk->vertices[vi].position.vy = y1;
         // setDVector(&chunk->vertices[vi].uv, 0, 0);
         // top right
-        chunk->vertices[vi+1].position.vy = y2;
+        chunk->vertices[vi + 1].position.vy = y2;
         // setDVector(&chunk->vertices[vi+1].uv, 31, 0);
         // bottom left
-        chunk->vertices[vi+2].position.vy = y3;
+        chunk->vertices[vi + 2].position.vy = y3;
         // setDVector(&chunk->vertices[vi+2].uv, 0, 31);
         // bottom right
-        chunk->vertices[vi+3].position.vy = y4;
+        chunk->vertices[vi + 3].position.vy = y4;
         // setDVector(&chunk->vertices[vi+3].uv, 31, 31);
 
         // normals
         SVECTOR n;
         surfaceNormal(&chunk->vertices[vi].position,
-                      &chunk->vertices[vi+2].position,
-                      &chunk->vertices[vi+1].position,
+                      &chunk->vertices[vi + 2].position,
+                      &chunk->vertices[vi + 1].position,
                       &n);
 
         // TODO: per vertex normal?
         copyVector(&chunk->vertices[vi].normal, &n);
-        copyVector(&chunk->vertices[vi+1].normal, &n);
-        copyVector(&chunk->vertices[vi+2].normal, &n);
-        copyVector(&chunk->vertices[vi+3].normal, &n);
+        copyVector(&chunk->vertices[vi + 1].normal, &n);
+        copyVector(&chunk->vertices[vi + 2].normal, &n);
+        copyVector(&chunk->vertices[vi + 3].normal, &n);
 
         vi += 4;
     }
@@ -289,7 +301,7 @@ static void updateChunk(Chunk* chunk, int cx, int cy, int (*tf)(int, int))
     chunk->pos.vx = cx;
     chunk->pos.vy = cy;
 
-    VECTOR  translate;
+    VECTOR translate;
     setVector(&translate, cx << WORLD_TO_CHUNK, 0, cy << WORLD_TO_CHUNK);
     TransMatrix(&chunk->matrix, &translate);
 }

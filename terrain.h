@@ -4,10 +4,10 @@
 #define CHUNK_SIZE        16
 #define QUADRANT_SIZE     (CHUNK_SIZE / 2)
 #define CELL_SIZE         1024
-#define CELL_COUNT (CHUNK_SIZE * CHUNK_SIZE)
+#define CELL_COUNT        (CHUNK_SIZE * CHUNK_SIZE)
 #define WORLD_TO_CHUNK    14 // (16 * 1024 = 1 << 14)
 #define CHUNK_TO_QUADRANT 13 // (8 * 1024 = 1 << 13)
-#define CHUNK_TO_CELL 10 // (1024 = 1 << 10)
+#define CHUNK_TO_CELL     10 // (1024 = 1 << 10)
 
 #define MAX_CHUNK 4
 
@@ -18,9 +18,9 @@ typedef struct chunk_t
     DVECTOR pos; // TODO: DVECTOR is short, need 32 bits
     bool    needed;
 
-    int  heightmap[CHUNK_SIZE + 1][CHUNK_SIZE + 1];
-    Vertex vertices[CELL_COUNT * 4]; // 4 vertices/cell
-    int indices[CELL_COUNT * 2 * 3];  // 2 triangles/cell, 3 vertices/triangle
+    int    heightmap[CHUNK_SIZE + 1][CHUNK_SIZE + 1];
+    Vertex vertices[CELL_COUNT * 4];    // 4 vertices/cell
+    int    indices[CELL_COUNT * 2 * 3]; // 2 triangles/cell, 3 vertices/triangle
 
     struct texture_t* texture;
 

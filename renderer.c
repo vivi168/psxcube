@@ -1,7 +1,7 @@
 #include "psxcube.h"
 
-#define NEAR_PLANE 16
-#define FAR_PLANE  4096
+#define NEAR_PLANE       16
+#define FAR_PLANE        4096
 #define GTE_DIV_OVERFLOW (1 << 17)
 
 #define setCVector(v, _x, _y, _z) (v)->r = _x, (v)->g = _y, (v)->b = _z
@@ -10,17 +10,17 @@ unsigned int numTri, effectiveNumTri, numQuad;
 
 typedef struct db_t
 {
-    DISPENV  disp;
-    DRAWENV  draw;
-    u_long ot[FAR_PLANE];
-    unsigned char   pribuff[32768];
+    DISPENV       disp;
+    DRAWENV       draw;
+    u_long        ot[FAR_PLANE];
+    unsigned char pribuff[32768];
 } DB;
 
 typedef struct texture_t
 {
-    unsigned int mode;
-    unsigned char  u, v;
-    RECT     prect, crect;
+    unsigned int  mode;
+    unsigned char u, v;
+    RECT          prect, crect;
 
     unsigned short tpage, clut;
 } Texture;
@@ -53,8 +53,8 @@ static DB* cdb; // int instead. make macro to get current cdb ?
 static unsigned char* nextpri;
 
 static Hashmap texture_hash;
-static Scene scene;
-static RECT  screenClip;
+static Scene   scene;
+static RECT    screenClip;
 
 // one column = one light source
 static MATRIX color_matrix = {
@@ -203,7 +203,6 @@ void rdr_processScene()
 
     // draw weapon, don't use camera
     {
-
         MATRIX mv, ll;
 
         model_mat(scene.weapon_r, &mv);
@@ -282,8 +281,8 @@ void rdr_setSceneWeapon(Model3D* weap_r) { scene.weapon_r = weap_r; }
 // used
 static void createTexture(const char* filename, Texture* texture)
 {
-    u_long file_size;
-    unsigned char*  buff;
+    u_long         file_size;
+    unsigned char* buff;
 
     TIM_IMAGE* image;
 
@@ -316,10 +315,12 @@ static void createTexture(const char* filename, Texture* texture)
         getTPage(texture->mode & 0x3, 0, texture->prect.x, texture->prect.y);
     texture->clut = getClut(texture->crect.x, texture->crect.y);
 
-    printf("[INFO]: TEXTURE %s [%d %d %d] - %p\n", filename,
+    printf("[INFO]: TEXTURE %s [%d %d %d] - %p\n",
+           filename,
            texture->mode,
            texture->prect.x,
-           texture->prect.y, texture);
+           texture->prect.y,
+           texture);
 
     hash_insert(&texture_hash, filename, texture);
 
@@ -394,8 +395,8 @@ static void addChunk(Chunk* chunk)
 #ifdef DRAW_FACE_NORM
         if (t) {
             drawFaceNormal(&chunk->vertices[i1].position,
-                            &chunk->vertices[i2].position,
-                            &chunk->vertices[i3].position);
+                           &chunk->vertices[i2].position,
+                           &chunk->vertices[i3].position);
         }
 #endif
     }
@@ -443,7 +444,7 @@ static void addOriginAxis(MATRIX* cam_mat)
 
 static int addTriangle(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
 {
-    int   otz, nclip, flg;
+    int       otz, nclip, flg;
     POLY_FT3* poly;
 
     numTri++;
@@ -512,7 +513,7 @@ static int addTriangle(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
 
 static int addFlatTriangle(Vertex* v1, Vertex* v2, Vertex* v3, CVECTOR* color)
 {
-    int  otz, nclip, flg;
+    int      otz, nclip, flg;
     POLY_F3* poly;
 
     numTri++;

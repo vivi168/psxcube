@@ -2,16 +2,14 @@
 #include <stdint.h>
 
 #define DEFAULT_BUCKET_SIZE 11
-#define SEED 1234
-#define KEY_SIZE 20
+#define SEED                1234
+#define KEY_SIZE            20
 
-static int
-hash_strcmp(const char *s1, const char *s2)
+static int hash_strcmp(const char* s1, const char* s2)
 {
-	while (*s1 == *s2++)
-		if (*s1++ == 0)
-			return (0);
-	return (*(unsigned char *)s1 - *(unsigned char *)--s2);
+    while (*s1 == *s2++)
+        if (*s1++ == 0) return (0);
+    return (*(unsigned char*)s1 - *(unsigned char*)--s2);
 }
 
 static void appendToBucket(Bucket* bucket, const STRING20 key, void* value);
@@ -34,7 +32,7 @@ void hash_initHashMap(Hashmap* hash)
 
 bool hash_keyExists(Hashmap* hash, const STRING20 key)
 {
-    int h = murmur3_32((const uint8_t *)key, KEY_SIZE, SEED) % hash->bucket_size;
+    int h = murmur3_32((const uint8_t*)key, KEY_SIZE, SEED) % hash->bucket_size;
 
     BucketNode* curr;
 
@@ -50,7 +48,7 @@ bool hash_keyExists(Hashmap* hash, const STRING20 key)
 
 void hash_insert(Hashmap* hash, const STRING20 key, void* value)
 {
-    int h = murmur3_32((const uint8_t *)key, KEY_SIZE, SEED) % hash->bucket_size;
+    int h = murmur3_32((const uint8_t*)key, KEY_SIZE, SEED) % hash->bucket_size;
 
     printf("%s %d\n", key, h);
 
@@ -88,13 +86,16 @@ static void appendToBucket(Bucket* bucket, const STRING20 key, void* value)
 
 void hash_fetch(Hashmap* hash, const STRING20 key, void** out)
 {
-    int h = murmur3_32((const uint8_t *)key, KEY_SIZE, SEED) % hash->bucket_size;
+    int h = murmur3_32((const uint8_t*)key, KEY_SIZE, SEED) % hash->bucket_size;
 
     BucketNode* curr;
     curr = hash->buckets[h].head;
     while (curr != NULL) {
         if (hash_strcmp(key, curr->pair.key) == 0) {
-            printf("FOUND! %p \n%s => %s\n", curr->pair.value, key, curr->pair.key);
+            printf("FOUND! %p \n%s => %s\n",
+                   curr->pair.value,
+                   key,
+                   curr->pair.key);
             *out = curr->pair.value;
             return;
         }
@@ -107,7 +108,7 @@ void hash_fetch(Hashmap* hash, const STRING20 key, void** out)
 
 void hash_delete(Hashmap* hash, const STRING20 key)
 {
-    int h = murmur3_32((const uint8_t *)key, KEY_SIZE, SEED) % hash->bucket_size;
+    int h = murmur3_32((const uint8_t*)key, KEY_SIZE, SEED) % hash->bucket_size;
 
     BucketNode* curr;
     BucketNode* prev = NULL;

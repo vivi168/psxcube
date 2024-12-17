@@ -10,7 +10,7 @@ typedef struct camera_t
     SVECTOR rotation;
     MATRIX  matrix;
 
-    int yaw, pitch;
+    int     yaw, pitch;
     SVECTOR front, up, right, forward;
     SVECTOR world_up;
 

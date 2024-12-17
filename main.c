@@ -59,7 +59,7 @@ void init_assets()
         model_initStaticModel(&models[SWORD_MESH], &meshes[SWORD_MESH]);
 
         model_setScale(&models[SWORD_MESH], ONE);
-        model_setRotation(&models[SWORD_MESH], -M_PI/6, M_PI/3, -M_PI/2);
+        model_setRotation(&models[SWORD_MESH], -M_PI / 6, M_PI / 3, -M_PI / 2);
         model_setTranslation(&models[SWORD_MESH], 150, 200, (SCREEN_Z * 3) / 2);
 
         // rdr_appendToScene(&models[SWORD_MESH]);
@@ -138,7 +138,10 @@ void mainloop()
     // int curr_frame = 0;
     int q, pq;
     int cx, cy;
-    q = terrain_chunkQuadrant(camera.translate.vx, camera.translate.vz, &cx, &cy);
+    q = terrain_chunkQuadrant(camera.translate.vx,
+                              camera.translate.vz,
+                              &cx,
+                              &cy);
     terrain_init(&terrain, cx, cy, q, terrain_fbm3);
 
     cam_init(&camera);
@@ -149,14 +152,16 @@ void mainloop()
 
         pad_pollEvents();
 
-        int h = terrain_currentHeight(terrain.current_chunk, camera.translate.vx, camera.translate.vz);
+        int h = terrain_currentHeight(terrain.current_chunk,
+                                      camera.translate.vx,
+                                      camera.translate.vz);
         camera.translate.vy = h - 1536;
         cam_processInput2(&camera);
 
         q = terrain_chunkQuadrant(camera.translate.vx,
-                              camera.translate.vz,
-                              &cx,
-                              &cy);
+                                  camera.translate.vz,
+                                  &cx,
+                                  &cy);
         if (q != pq) {
             terrain_update(&terrain, cx, cy, q, terrain_fbm3);
         }
