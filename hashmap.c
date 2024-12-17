@@ -68,7 +68,7 @@ void hash_insert(Hashmap* hash, const STRING20 key, void* value)
 static void appendToBucket(Bucket* bucket, const STRING20 key, void* value)
 {
     BucketNode* new_node = malloc3(sizeof(BucketNode));
-    IO_memcpy(new_node->pair.key, key, KEY_SIZE);
+    memcpy(new_node->pair.key, key, KEY_SIZE);
     new_node->pair.value = value;
     new_node->next = NULL;
 
@@ -170,7 +170,7 @@ static uint32_t murmur3_32(const uint8_t* key, size_t len, uint32_t seed)
     for (size_t i = len >> 2; i; i--) {
         // Here is a source of differing results across endiannesses.
         // A swap here has no effects on hash properties though.
-        IO_memcpy(&k, key, sizeof(uint32_t));
+        memcpy(&k, key, sizeof(uint32_t));
         key += sizeof(uint32_t);
         h ^= murmur_32_scramble(k);
         h = (h << 13) | (h >> 19);

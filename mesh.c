@@ -13,23 +13,23 @@ void obj_readMesh(const char* filename, Mesh3D* mesh)
 
     // header
     s = sizeof(mesh->header);
-    IO_memcpy(&mesh->header, buff, s);
+    memcpy(&mesh->header, buff, s);
     offset += s;
 
     // vertices
     s = sizeof(Vertex) * mesh->header.numVerts;
     mesh->vertices = malloc3(s);
-    IO_memcpy(mesh->vertices, buff + offset, s);
+    memcpy(mesh->vertices, buff + offset, s);
     offset += s;
 
     s = sizeof(unsigned int) * mesh->header.numIndices;
     mesh->indices = malloc3(s);
-    IO_memcpy(mesh->indices, buff + offset, s);
+    memcpy(mesh->indices, buff + offset, s);
     offset += s;
 
     s = sizeof(Subset) * mesh->header.numSubsets;
     mesh->subsets = malloc3(s);
-    IO_memcpy(mesh->subsets, buff + offset, s);
+    memcpy(mesh->subsets, buff + offset, s);
 
     printf("[INFO]: Done reading mesh\n");
 
@@ -93,13 +93,13 @@ void md5_readModel(const char* filename, MD5Model* model)
 
     // header
     s = sizeof(model->header);
-    IO_memcpy(&model->header, buff, s);
+    memcpy(&model->header, buff, s);
     offset += s;
 
     // joints
     s = sizeof(MD5Joint) * model->header.numJoints;
     model->joints = malloc3(s);
-    IO_memcpy(model->joints, buff + offset, s);
+    memcpy(model->joints, buff + offset, s);
     offset += s;
 
     // meshes
@@ -109,30 +109,30 @@ void md5_readModel(const char* filename, MD5Model* model)
         MD5Mesh* mesh = &model->meshes[i];
 
         s = sizeof(mesh->header);
-        IO_memcpy(&mesh->header, buff + offset, s);
+        memcpy(&mesh->header, buff + offset, s);
         offset += s;
 
         // Verts
         s = sizeof(MD5Vertex) * mesh->header.numVerts;
         mesh->vertices = malloc3(s);
-        IO_memcpy(mesh->vertices, buff + offset, s);
+        memcpy(mesh->vertices, buff + offset, s);
         offset += s;
 
         // Tris
         s = sizeof(int) * mesh->header.numTris * 3;
         mesh->indices = malloc3(s);
-        IO_memcpy(mesh->indices, buff + offset, s);
+        memcpy(mesh->indices, buff + offset, s);
         offset += s;
 
         // Weights
         s = sizeof(MD5Weight) * mesh->header.numWeights;
         mesh->weights = malloc3(s);
-        IO_memcpy(mesh->weights, buff + offset, s);
+        memcpy(mesh->weights, buff + offset, s);
         offset += s;
 
         // Texture name
         s = sizeof(STRING20);
-        IO_memcpy(&mesh->name, buff + offset, s);
+        memcpy(&mesh->name, buff + offset, s);
         offset += s;
     }
 
@@ -154,7 +154,7 @@ void md5_readAnim(const char* filename, MD5Anim* anim)
 
     // header
     s = sizeof(anim->header);
-    IO_memcpy(&anim->header, buff, s);
+    memcpy(&anim->header, buff, s);
     offset += s;
 
     // joints
@@ -163,7 +163,7 @@ void md5_readAnim(const char* filename, MD5Anim* anim)
     for (int i = 0; i < anim->header.numFrames; i++) {
         s = sizeof(MD5Joint) * anim->header.numJoints;
         anim->frameJoints[i] = malloc3(s);
-        IO_memcpy(anim->frameJoints[i], buff + offset, s);
+        memcpy(anim->frameJoints[i], buff + offset, s);
         offset += s;
     }
 
@@ -221,7 +221,7 @@ void md5_initMesh(const MD5Model* model, Mesh3D* mesh)
 
         mesh->subsets[i].start = start;
         mesh->subsets[i].count = model->meshes[i].header.numTris * 3;
-        IO_memcpy(mesh->subsets[i].name,
+        memcpy(mesh->subsets[i].name,
                   model->meshes[i].name,
                   sizeof(STRING20));
         mesh->subsets[i].texture = NULL;
