@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "psxcube.h"
 
 static void cam_update(Camera* cam);
 static void cam_update2(Camera* cam);

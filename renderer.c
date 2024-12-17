@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "psxcube.h"
 
 #define NEAR_PLANE 16
 #define FAR_PLANE  4096

@@ -1,5 +1,5 @@
 #include "header.h"
-#include "stdafx.h"
+#include "psxcube.h"
 
 #define HEAP_SIZE (1024 * 1024)
 static char heap[HEAP_SIZE];

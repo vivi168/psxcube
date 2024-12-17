@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "psxcube.h"
 
 #define SCALE16   16
 #define FBM_SCALE 14

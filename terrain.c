@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "psxcube.h"
 
 #define setDVector(v, _x, _y) (v)->vx = _x, (v)->vy = _y
 

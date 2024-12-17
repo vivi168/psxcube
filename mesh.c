@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "psxcube.h"
 
 void obj_readMesh(const char* filename, Mesh3D* mesh)
 {

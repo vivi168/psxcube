@@ -1,13 +1,13 @@
-#ifndef STDAFX_H
-#define STDAFX_H
+#ifndef PSXCUBE_H
+#define PSXCUBE_H
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
-#include <inline_c.h>
 #include <string.h>
 #include <ctype.h>
 
+#include <inline_c.h>
 #include <libcd.h>
 #include <libapi.h>
 #include <libetc.h>

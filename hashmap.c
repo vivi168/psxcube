@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "psxcube.h"
 
 #define DEFAULT_BUCKET_SIZE 11
 #define SEED 1234

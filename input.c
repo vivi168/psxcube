@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "psxcube.h"
 
 typedef struct input_manager_t
 {

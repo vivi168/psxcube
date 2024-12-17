@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "psxcube.h"
 
 void* IO_memcpy(void* restrict dest, const void* restrict src, int count)
 {

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "psxcube.h"
 
 void print_vec3(vec3 v) { printf("vec3: %d %d %d\n", v[X], v[Y], v[Z]); }
 
