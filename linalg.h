@@ -38,7 +38,7 @@ int quad_clip(RECT* clip, DVECTOR* v0, DVECTOR* v1, DVECTOR* v2, DVECTOR* v3);
 
 // normals
 
-void crossProduct(SVECTOR* v0, SVECTOR* v1, VECTOR* out);
+void crossProduct(const SVECTOR* v0, const SVECTOR* v1, VECTOR* out);
 void surfaceNormal(SVECTOR* v1, SVECTOR* v2, SVECTOR* v3, SVECTOR* out);
 void centroid(SVECTOR* v1, SVECTOR* v2, SVECTOR* v3, SVECTOR* out);
 

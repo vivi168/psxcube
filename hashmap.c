@@ -1,4 +1,5 @@
 #include "psxcube.h"
+#include <stdint.h>
 
 #define DEFAULT_BUCKET_SIZE 11
 #define SEED 1234
@@ -13,7 +14,7 @@ hash_strcmp(const char *s1, const char *s2)
 	return (*(unsigned char *)s1 - *(unsigned char *)--s2);
 }
 
-static void appendToBucket(Bucket* bucket, STRING20 key, void* value);
+static void appendToBucket(Bucket* bucket, const STRING20 key, void* value);
 
 static inline uint32_t murmur_32_scramble(uint32_t k);
 static uint32_t murmur3_32(const uint8_t* key, size_t len, uint32_t seed);
@@ -23,7 +24,7 @@ void hash_initHashMap(Hashmap* hash)
     hash->bucket_size = DEFAULT_BUCKET_SIZE;
     hash->buckets = malloc3(sizeof(Bucket) * hash->bucket_size);
 
-    for (int i = 0; i < hash->bucket_size; i++) {
+    for (size_t i = 0; i < hash->bucket_size; i++) {
         hash->buckets[i].head = NULL;
         hash->buckets[i].tail = NULL;
 
@@ -31,9 +32,9 @@ void hash_initHashMap(Hashmap* hash)
     }
 }
 
-bool hash_keyExists(Hashmap* hash, STRING20 key)
+bool hash_keyExists(Hashmap* hash, const STRING20 key)
 {
-    int h = murmur3_32(key, KEY_SIZE, SEED) % hash->bucket_size;
+    int h = murmur3_32((const uint8_t *)key, KEY_SIZE, SEED) % hash->bucket_size;
 
     BucketNode* curr;
 
@@ -47,9 +48,9 @@ bool hash_keyExists(Hashmap* hash, STRING20 key)
     return false;
 }
 
-void hash_insert(Hashmap* hash, STRING20 key, void* value)
+void hash_insert(Hashmap* hash, const STRING20 key, void* value)
 {
-    int h = murmur3_32(key, KEY_SIZE, SEED) % hash->bucket_size;
+    int h = murmur3_32((const uint8_t *)key, KEY_SIZE, SEED) % hash->bucket_size;
 
     printf("%s %d\n", key, h);
 
@@ -66,7 +67,7 @@ void hash_insert(Hashmap* hash, STRING20 key, void* value)
     // if bucket is too long, increase buckets size and rehash
 }
 
-static void appendToBucket(Bucket* bucket, STRING20 key, void* value)
+static void appendToBucket(Bucket* bucket, const STRING20 key, void* value)
 {
     BucketNode* new_node = malloc3(sizeof(BucketNode));
     IO_memcpy(new_node->pair.key, key, KEY_SIZE);
@@ -85,9 +86,9 @@ static void appendToBucket(Bucket* bucket, STRING20 key, void* value)
     bucket->tail = new_node;
 }
 
-void hash_fetch(Hashmap* hash, STRING20 key, void** out)
+void hash_fetch(Hashmap* hash, const STRING20 key, void** out)
 {
-    int h = murmur3_32(key, KEY_SIZE, SEED) % hash->bucket_size;
+    int h = murmur3_32((const uint8_t *)key, KEY_SIZE, SEED) % hash->bucket_size;
 
     BucketNode* curr;
     curr = hash->buckets[h].head;
@@ -104,9 +105,9 @@ void hash_fetch(Hashmap* hash, STRING20 key, void** out)
     *out = NULL;
 }
 
-void hash_delete(Hashmap* hash, STRING20 key)
+void hash_delete(Hashmap* hash, const STRING20 key)
 {
-    int h = murmur3_32(key, KEY_SIZE, SEED) % hash->bucket_size;
+    int h = murmur3_32((const uint8_t *)key, KEY_SIZE, SEED) % hash->bucket_size;
 
     BucketNode* curr;
     BucketNode* prev = NULL;
@@ -139,7 +140,7 @@ void hash_delete(Hashmap* hash, STRING20 key)
 void hash_print(Hashmap* hash)
 {
     printf("----- PRINT HASH\n");
-    for (int i = 0; i < 11; i++) {
+    for (size_t i = 0; i < 11; i++) {
         BucketNode* curr = hash->buckets[i].head;
 
         printf("\t----- BUCKET %d %d\n", i, hash->buckets[i].capacity);

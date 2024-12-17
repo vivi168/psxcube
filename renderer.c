@@ -12,17 +12,17 @@ typedef struct db_t
 {
     DISPENV  disp;
     DRAWENV  draw;
-    uint32_t ot[FAR_PLANE];
-    int8_t   pribuff[32768];
+    u_long ot[FAR_PLANE];
+    unsigned char   pribuff[32768];
 } DB;
 
 typedef struct texture_t
 {
-    uint32_t mode;
-    uint8_t  u, v;
+    unsigned int mode;
+    unsigned char  u, v;
     RECT     prect, crect;
 
-    uint16_t tpage, clut;
+    unsigned short tpage, clut;
 } Texture;
 
 typedef struct scene_node_t
@@ -50,7 +50,7 @@ static DB  db[2];
 static DB* cdb; // int instead. make macro to get current cdb ?
                 // #define CBD (db[cdb])
                 // swap buffer with cdb ^= 1
-static int8_t* nextpri;
+static unsigned char* nextpri;
 
 static Hashmap texture_hash;
 static Scene scene;
@@ -282,8 +282,8 @@ void rdr_setSceneWeapon(Model3D* weap_r) { scene.weapon_r = weap_r; }
 // used
 static void createTexture(const char* filename, Texture* texture)
 {
-    uint32_t file_size;
-    int8_t*  buff;
+    u_long file_size;
+    unsigned char*  buff;
 
     TIM_IMAGE* image;
 
@@ -291,7 +291,7 @@ static void createTexture(const char* filename, Texture* texture)
     // TODO: if not able to load texture fallback to rendering face color?
     assert(buff != NULL);
 
-    OpenTIM((uint32_t*)buff);
+    OpenTIM((u_long*)buff);
     ReadTIM(image);
 
     // upload pixel data to framebuffer
@@ -349,7 +349,7 @@ static void addMesh(Mesh3D* mesh)
     for (int s = 0; s < mesh->header.numSubsets; s++) {
         unsigned int offset = mesh->subsets[s].start;
 
-        for (int i = 0; i < mesh->subsets[s].count; i += 3) {
+        for (unsigned int i = 0; i < mesh->subsets[s].count; i += 3) {
             int i1 = mesh->indices[i + offset];
             int i2 = mesh->indices[i + 1 + offset];
             int i3 = mesh->indices[i + 2 + offset];
@@ -443,7 +443,7 @@ static void addOriginAxis(MATRIX* cam_mat)
 
 static int addTriangle(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
 {
-    int32_t   otz, nclip, flg;
+    int   otz, nclip, flg;
     POLY_FT3* poly;
 
     numTri++;
@@ -503,7 +503,7 @@ static int addTriangle(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
         gte_strgb(&poly->r0);
     }
 
-    addPrim(&cdb->ot[otz], poly);
+    AddPrim(&cdb->ot[otz], poly);
     nextpri += sizeof(POLY_FT3);
 
     effectiveNumTri++;
@@ -512,7 +512,7 @@ static int addTriangle(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
 
 static int addFlatTriangle(Vertex* v1, Vertex* v2, Vertex* v3, CVECTOR* color)
 {
-    int32_t  otz, nclip, flg;
+    int  otz, nclip, flg;
     POLY_F3* poly;
 
     numTri++;
@@ -555,7 +555,7 @@ static int addFlatTriangle(Vertex* v1, Vertex* v2, Vertex* v3, CVECTOR* color)
 
     setRGB0(poly, color->r, color->g, color->b);
 
-    addPrim(&cdb->ot[otz], poly);
+    AddPrim(&cdb->ot[otz], poly);
     nextpri += sizeof(POLY_F3);
 
     effectiveNumTri++;
@@ -589,6 +589,6 @@ static void addLine(SVECTOR* org, SVECTOR* dest, CVECTOR* color)
     setRGB0(line, color->r, color->g, color->b);
     // setRGB0(line, 255, 0, 255);
 
-    addPrim(&cdb->ot[0], line);
+    AddPrim(&cdb->ot[0], line);
     nextpri += sizeof(LINE_F2);
 }

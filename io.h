@@ -2,6 +2,6 @@
 #define IO_H
 
 void* IO_memcpy(void* restrict dest, const void* restrict src, int count);
-char* load_file(char*, u_long*);
+unsigned char* load_file(const char*, u_long*);
 
 #endif

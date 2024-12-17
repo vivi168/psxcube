@@ -151,7 +151,7 @@ int quad_clip(RECT* clip, DVECTOR* v0, DVECTOR* v1, DVECTOR* v2, DVECTOR* v3)
     return 1;
 }
 
-void crossProduct(SVECTOR* v0, SVECTOR* v1, VECTOR* out)
+void crossProduct(const SVECTOR* v0, const SVECTOR* v1, VECTOR* out)
 {
     out->vx = (v0->vy * v1->vz - v0->vz * v1->vy) >> SCALE;
     out->vy = (v0->vz * v1->vx - v0->vx * v1->vz) >> SCALE;

@@ -6,7 +6,6 @@
 #include <assert.h>
 #include <string.h>
 #include <stdbool.h>
-#include <stdint.h>
 
 #include <inline_c.h>
 #include <libcd.h>
