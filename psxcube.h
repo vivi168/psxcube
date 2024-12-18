@@ -27,4 +27,6 @@ typedef char STRING20[20];
 #include "input.h"
 #include "renderer.h"
 
+#include "game.h"
+
 #endif

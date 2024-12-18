@@ -15,10 +15,10 @@ OBJCOPY := $(TOOLCHAIN)objcopy
 INC := -I$(PSYQ_PATH)/include
 LIB := -L$(PSYQ_PATH)/lib -lgpu -lgte -lcd -letc -lsn -lsnd -lspu -lcard -lpad -lc2 -lapi -lextra
 
-CFLAGS := -g -O2 -G0 -ffreestanding -nostdlib -mno-unaligned-access -Wall -Wextra $(INC)
+CFLAGS := -g -O2 -G0 -ffreestanding -nostdlib -mno-unaligned-access -Wall -Wextra -DPSX_VER $(INC)
 LDFLAGS := -T linker.ld
 
-SRC := camera.c hashmap.c input.c io.c linalg.c main.c mesh.c noise.c renderer.c terrain.c
+SRC := camera.c game.c hashmap.c input.c io.c linalg.c main.c mesh.c noise.c renderer.c terrain.c
 
 OBJ := $(SRC:.c=.o)
 
