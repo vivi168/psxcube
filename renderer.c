@@ -133,7 +133,7 @@ void rdr_initMeshTextures(Mesh3D* mesh)
         sprintf(tmp, "\\%s.TIM;1", mesh->subsets[i].name);
         printf("Texture[%d]: %s\n", i, tmp);
 
-        mesh->subsets[i].texture = malloc3(sizeof(Texture));
+        mesh->subsets[i].texture = malloc(sizeof(Texture));
         // TODO: when loading/unloading mesh, don't forget to free everything
         createTexture(tmp, mesh->subsets[i].texture);
     }
@@ -141,7 +141,7 @@ void rdr_initMeshTextures(Mesh3D* mesh)
 
 void rdr_initTerrainTextures(Terrain* terrain)
 {
-    terrain->grassland_tex = malloc3(sizeof(Texture));
+    terrain->grassland_tex = malloc(sizeof(Texture));
     createTexture("\\TERRAIN.TIM;1", terrain->grassland_tex);
 
     for (int i = 0; i < MAX_CHUNK; i++) {
@@ -243,7 +243,7 @@ void rdr_processScene()
 
 void rdr_prependToScene(Model3D* model)
 {
-    SceneNode* new_node = malloc3(sizeof(SceneNode));
+    SceneNode* new_node = malloc(sizeof(SceneNode));
     new_node->model = model;
 
     new_node->next = scene.head;
@@ -253,7 +253,7 @@ void rdr_prependToScene(Model3D* model)
 
 void rdr_appendToScene(Model3D* model)
 {
-    SceneNode* new_node = malloc3(sizeof(SceneNode));
+    SceneNode* new_node = malloc(sizeof(SceneNode));
     new_node->model = model;
     new_node->next = NULL;
 
@@ -324,7 +324,7 @@ static void createTexture(const char* filename, Texture* texture)
 
     hash_insert(&texture_hash, filename, texture);
 
-    free3(buff);
+    free(buff);
 }
 
 // TODO: don't compute normal here, precompute somehwere else.
