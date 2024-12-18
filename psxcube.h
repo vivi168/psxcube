@@ -1,5 +1,4 @@
-#ifndef PSXCUBE_H
-#define PSXCUBE_H
+#pragma once
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -28,5 +27,3 @@ typedef char STRING20[20];
 #include "renderer.h"
 
 #include "game.h"
-
-#endif

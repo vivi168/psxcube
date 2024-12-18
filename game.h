@@ -1,5 +1,4 @@
-#ifndef GAME_H
-#define GAME_H
+#pragma once
 
 typedef struct game_ctx_t {
     Camera camera;
@@ -19,5 +18,3 @@ typedef struct game_ctx_t {
 
 void OnInit(GameContext*);
 void OnUpdate(GameContext*);
-
-#endif

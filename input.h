@@ -1,5 +1,4 @@
-#ifndef INPUT_H
-#define INPUT_H
+#pragma once
 
 #define KEY_UP       4
 #define KEY_RIGHT    5
@@ -19,5 +18,3 @@ void pad_pollEvents();
 int  pad_isHeld(int);
 int  pad_isPressed(int);
 int  pad_isReleased(int); // TODO bug
-
-#endif

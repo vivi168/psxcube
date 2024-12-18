@@ -1,5 +1,4 @@
-#ifndef CAMERA_H
-#define CAMERA_H
+#pragma once
 
 #define CAM_ROT_SPEED 24
 #define CAM_MOV_SCALE 6
@@ -22,5 +21,3 @@ void cam_setTranslation(Camera* cam, int, int, int);
 
 void cam_init(Camera* cam);
 void cam_processInput2(Camera* cam);
-
-#endif

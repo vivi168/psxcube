@@ -1,5 +1,4 @@
-#ifndef HASHMAP_C
-#define HASHMAP_C
+#pragma once
 
 typedef struct bucket_node_t
 {
@@ -36,5 +35,3 @@ void hash_print(Hashmap* hash);
 // TODO: add type conversion to STRING20
 // eg: SVECTOR to STRING20, etc
 // in order to use something else as a key
-
-#endif

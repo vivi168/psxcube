@@ -1,5 +1,4 @@
-#ifndef LINALG_H
-#define LINALG_H
+#pragma once
 
 #define SCALE 12
 #ifndef ONE
@@ -41,5 +40,3 @@ int quad_clip(RECT* clip, DVECTOR* v0, DVECTOR* v1, DVECTOR* v2, DVECTOR* v3);
 void crossProduct(const SVECTOR* v0, const SVECTOR* v1, VECTOR* out);
 void surfaceNormal(SVECTOR* v1, SVECTOR* v2, SVECTOR* v3, SVECTOR* out);
 void centroid(SVECTOR* v1, SVECTOR* v2, SVECTOR* v3, SVECTOR* out);
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef TERRAIN_H
-#define TERRAIN_H
+#pragma once
 
 #define CHUNK_SIZE        16
 #define QUADRANT_SIZE     (CHUNK_SIZE / 2)
@@ -46,6 +45,4 @@ int terrain_currentHeight(Chunk* chunk, int x, int y);
 
 // this one also initialize the indices
 void terrain_init(Terrain* terrain, int cx, int cy, int q, int (*f)(int, int));
-void terrain_update(Terrain* terrain, int cx, int cy, int q,
-                    int (*f)(int, int));
-#endif
+void terrain_update(Terrain* terrain, int cx, int cy, int q, int (*f)(int, int));

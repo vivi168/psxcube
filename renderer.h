@@ -1,5 +1,4 @@
-#ifndef RENDERER_H
-#define RENDERER_H
+#pragma once
 
 #define SCREEN_W 320
 #define SCREEN_H 240
@@ -18,5 +17,3 @@ void rdr_setSceneCamera(Camera*);
 void rdr_setSceneTerrain(Terrain*);
 void rdr_setSceneWeapon(Model3D*);
 void rdr_processScene();
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef MESH_H
-#define MESH_H
+#pragma once
 
 typedef struct vertex_t
 {
@@ -141,5 +140,3 @@ void model_setScale(Model3D*, int);
 void model_setRotation(Model3D*, int, int, int);
 void model_setTranslation(Model3D*, int, int, int);
 void model_mat(const Model3D* model, MATRIX* mat);
-
-#endif
