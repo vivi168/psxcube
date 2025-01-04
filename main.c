@@ -10,8 +10,7 @@ unsigned long long timeCounter;
 
 static GameContext ctx;
 
-void vsync_callback()
-{
+void vsync_callback() {
     // VSync(-1);
     vsyncCounter++;
 
@@ -33,8 +32,7 @@ void run() {
     }
 }
 
-int main(void)
-{
+int main(void) {
 #ifdef PSX_VER
     InitHeap3((void*)&heap, HEAP_SIZE);
     CdInit();

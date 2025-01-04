@@ -1,17 +1,16 @@
 #include "psxcube.h"
 
 // models/meshes/md5_models
-#define TREE_MESH    0
-#define BOB_MESH     1
+#define TREE_MESH 0
+#define BOB_MESH 1
 #define CUBEGUY_MESH 2
-#define HOUSE_MESH   3
-#define SWORD_MESH   4
+#define HOUSE_MESH 3
+#define SWORD_MESH 4
 // anims
-#define BOB_ANIM        0
+#define BOB_ANIM 0
 #define CUBEGUY_RUNNING 1
 
-static void init_assets(GameContext* ctx)
-{
+static void init_assets(GameContext* ctx) {
     // tree
     {
         obj_readMesh("\\TREE1.M3D;1", &ctx->meshes[TREE_MESH]);
@@ -69,8 +68,7 @@ static void init_assets(GameContext* ctx)
         md5_readModel("\\CUBEGUY.MD5M;1", &ctx->md5_models[CUBEGUY_MESH]);
         md5_readAnim("\\RUNNING.MD5A;1", &ctx->md5_anims[CUBEGUY_RUNNING]);
 
-        model_initAnimatedModel(&ctx->models[CUBEGUY_MESH],
-                                &ctx->md5_models[CUBEGUY_MESH],
+        model_initAnimatedModel(&ctx->models[CUBEGUY_MESH], &ctx->md5_models[CUBEGUY_MESH],
                                 &ctx->md5_anims[CUBEGUY_RUNNING]);
         // TODO: do not load same texture file twice
         rdr_initMeshTextures(ctx->models[CUBEGUY_MESH].mesh);
@@ -92,12 +90,9 @@ static void init_assets(GameContext* ctx)
         // TODO: what if multiple animations
         // animated model has mesh on heap ? can't share mesh because it's
         // animated and thus modified.
-        model_initAnimatedModel(&ctx->models[BOB_MESH],
-                                &ctx->md5_models[BOB_MESH],
-                                &ctx->md5_anims[BOB_ANIM]);
-        rdr_initMeshTextures(
-            ctx->models[BOB_MESH].mesh); // TODO: be careful of doing this after
-                                    // initing the mesh.
+        model_initAnimatedModel(&ctx->models[BOB_MESH], &ctx->md5_models[BOB_MESH], &ctx->md5_anims[BOB_ANIM]);
+        rdr_initMeshTextures(ctx->models[BOB_MESH].mesh);  // TODO: be careful of doing this after
+                                                           // initing the mesh.
         // print_mesh3d(ctx->models[BOB_MESH].mesh);
 
         model_setScale(&ctx->models[BOB_MESH], ONE);
@@ -113,8 +108,7 @@ static void init_assets(GameContext* ctx)
     printf("[INFO]: assets init done !\n");
 }
 
-void OnInit(GameContext* ctx)
-{
+void OnInit(GameContext* ctx) {
     rdr_init();
 
     init_assets(ctx);
@@ -131,32 +125,23 @@ void OnInit(GameContext* ctx)
     rdr_setSceneTerrain(&ctx->terrain);
 
     ctx->frameCounter = 0;
-    ctx->q = terrain_chunkQuadrant(ctx->camera.translate.vx,
-                                   ctx->camera.translate.vz,
-                                   &ctx->cx,
-                                   &ctx->cy);
+    ctx->q = terrain_chunkQuadrant(ctx->camera.translate.vx, ctx->camera.translate.vz, &ctx->cx, &ctx->cy);
     terrain_init(&ctx->terrain, ctx->cx, ctx->cy, ctx->q, terrain_fbm3);
 
     printf("[INFO]: OnInit done !\n");
 }
 
-void OnUpdate(GameContext* ctx)
-{
+void OnUpdate(GameContext* ctx) {
     ctx->frame_start = VSync(-1);
     ctx->pq = ctx->q;
 
     pad_pollEvents();
 
-    int h = terrain_currentHeight(ctx->terrain.current_chunk,
-                                  ctx->camera.translate.vx,
-                                  ctx->camera.translate.vz);
+    int h = terrain_currentHeight(ctx->terrain.current_chunk, ctx->camera.translate.vx, ctx->camera.translate.vz);
     ctx->camera.translate.vy = h - 1536;
     cam_processInput2(&ctx->camera);
 
-    ctx->q = terrain_chunkQuadrant(ctx->camera.translate.vx,
-                                   ctx->camera.translate.vz,
-                                   &ctx->cx,
-                                   &ctx->cy);
+    ctx->q = terrain_chunkQuadrant(ctx->camera.translate.vx, ctx->camera.translate.vz, &ctx->cx, &ctx->cy);
     if (ctx->q != ctx->pq) {
         terrain_update(&ctx->terrain, ctx->cx, ctx->cy, ctx->q, terrain_fbm3);
     }
