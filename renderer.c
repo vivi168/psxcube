@@ -281,7 +281,7 @@ void rdr_setSceneWeapon(Model3D* weap_r) { scene.weapon_r = weap_r; }
 // used
 static void createTexture(const char* filename, Texture* texture)
 {
-    u_long         file_size;
+    unsigned long file_size;
     unsigned char* buff;
 
     TIM_IMAGE* image;
@@ -290,7 +290,7 @@ static void createTexture(const char* filename, Texture* texture)
     // TODO: if not able to load texture fallback to rendering face color?
     assert(buff != NULL);
 
-    OpenTIM((u_long*)buff);
+    OpenTIM((unsigned long*)buff);
     ReadTIM(image);
 
     // upload pixel data to framebuffer

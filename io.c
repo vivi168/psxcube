@@ -10,7 +10,7 @@ void* IO_memcpy(void* restrict dest, const void* restrict src, int count)
     return dest;
 }
 
-unsigned char* load_file(const char* filename, u_long* size)
+unsigned char* load_file(const char* filename, unsigned long* size)
 {
     CdlFILE        file;
     int            sectors;
@@ -29,7 +29,7 @@ unsigned char* load_file(const char* filename, u_long* size)
     sectors = (file.size + 2047) / 2048;
     buff = (unsigned char*)malloc(2048 * sectors);
     CdControl(CdlSetloc, (unsigned char*)&file.pos, 0);
-    CdRead(sectors, (u_long*)buff, CdlModeSpeed);
+    CdRead(sectors, (unsigned long*)buff, CdlModeSpeed);
     printf("[INFO]: sectors: %d, file size: %d\n", sectors, file.size);
     CdReadSync(0, 0);
 
