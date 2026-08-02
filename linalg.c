@@ -14,12 +14,11 @@ void quat_normalize(quat q)
     int mag = SquareRoot12(x);
 
     if (mag > 0) {
-        int one_over_mag = ONE / mag;
-
-        q[X] *= one_over_mag;
-        q[Y] *= one_over_mag;
-        q[Z] *= one_over_mag;
-        q[W] *= one_over_mag;
+        int reciprocal = (ONE * ONE) / mag;
+        q[X] = FixedMulFixed(q[X], reciprocal);
+        q[Y] = FixedMulFixed(q[Y], reciprocal);
+        q[Z] = FixedMulFixed(q[Z], reciprocal);
+        q[W] = FixedMulFixed(q[W], reciprocal);
     }
 }
 
@@ -56,8 +55,6 @@ void quat_rotate_point(const quat q, const vec3 in, vec3 out)
     inv[Z] = -q[Z];
     inv[W] = q[W];
 
-    quat_normalize(inv);
-
     quat_mulvec(q, in, tmp);
     quat_mulquat(tmp, inv, qout);
     // print_quat(qout);
@@ -76,7 +73,7 @@ void quat_rotate_point(const quat q, const vec3 in, vec3 out)
 
 int iSin(int x)
 {
-    int c, x2, y;
+    int c, y;
 
     c = x << (30 - qN); // Semi-circle info into carry.
     x -= 1 << qN;       // sine -> cosine calc

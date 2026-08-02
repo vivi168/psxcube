@@ -4,15 +4,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
-#include <inline_c.h>
 #include <string.h>
 #include <ctype.h>
 
-#include <libcd.h>
-#include <libapi.h>
-#include <libetc.h>
-#include <libgte.h>
-#include <libgpu.h>
+#include "system.h"
 
 #include "types.h"
 #include "hashmap.h"

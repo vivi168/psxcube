@@ -15,5 +15,6 @@ cd assets && make
 ## compile
 
 ```
-make
+cmake -B build
+cmake --build build
 ```

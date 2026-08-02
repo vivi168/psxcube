@@ -1,0 +1,3 @@
+[submodule "third_party/ps1-bare-metal"]
+	path = third_party/ps1-bare-metal
+	url = https://github.com/spicyjpeg/ps1-bare-metal

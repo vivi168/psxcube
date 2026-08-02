@@ -21,7 +21,7 @@ static uint32_t murmur3_32(const uint8_t* key, size_t len, uint32_t seed);
 void hash_initHashMap(Hashmap* hash)
 {
     hash->bucket_size = DEFAULT_BUCKET_SIZE;
-    hash->buckets = malloc3(sizeof(Bucket) * hash->bucket_size);
+    hash->buckets = malloc(sizeof(Bucket) * hash->bucket_size);
 
     for (int i = 0; i < hash->bucket_size; i++) {
         hash->buckets[i].head = NULL;
@@ -68,7 +68,7 @@ void hash_insert(Hashmap* hash, STRING20 key, void* value)
 
 static void appendToBucket(Bucket* bucket, STRING20 key, void* value)
 {
-    BucketNode* new_node = malloc3(sizeof(BucketNode));
+    BucketNode* new_node = malloc(sizeof(BucketNode));
     IO_memcpy(new_node->pair.key, key, KEY_SIZE);
     new_node->pair.value = value;
     new_node->next = NULL;
@@ -133,7 +133,7 @@ void hash_delete(Hashmap* hash, STRING20 key)
         prev->next = curr->next;
     }
     hash->buckets[h].capacity--;
-    free3(curr);
+    free(curr);
 }
 
 void hash_print(Hashmap* hash)

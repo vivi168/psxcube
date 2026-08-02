@@ -1,8 +1,4 @@
-#include "header.h"
 #include "stdafx.h"
-
-#define HEAP_SIZE (1024 * 1024)
-static char heap[HEAP_SIZE];
 
 // TODO: struct to hold this ?
 unsigned long long vsyncCounter;
@@ -134,7 +130,6 @@ void init_assets()
 
 void mainloop()
 {
-    unsigned int frame_start;
     // int curr_frame = 0;
     int q, pq;
     int cx, cy;
@@ -144,7 +139,6 @@ void mainloop()
     cam_init(&camera);
 
     while (1) {
-        frame_start = VSync(-1);
         pq = q;
 
         pad_pollEvents();
@@ -176,28 +170,14 @@ void mainloop()
     }
 }
 
-void vsync_callback()
-{
-    // VSync(-1);
-    vsyncCounter++;
-
-    if (vsyncCounter % 60 == 59) {
-        timeCounter++;
-        // printf("Time: %d\n" , timeCounter);
-    }
-}
-
 int main(void)
 {
-    InitHeap3((void*)&heap, HEAP_SIZE);
-    CdInit();
+    InitHeap();
     pad_init();
 
     vsyncCounter = 0;
     frameCounter = 0;
     timeCounter = 0;
-
-    VSyncCallback(vsync_callback);
 
     rdr_init();
 

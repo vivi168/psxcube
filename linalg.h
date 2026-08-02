@@ -24,6 +24,7 @@ typedef int vec2[2];
 typedef int vec3[3];
 typedef int quat[4];
 
+void quat_normalize(quat q);
 void quat_rotate_point(const quat q, const vec3 in, vec3 out);
 
 // trigonometry

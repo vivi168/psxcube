@@ -1,8 +1,9 @@
 #include "stdafx.h"
 
 #define NEAR_PLANE 16
-#define FAR_PLANE  4096
+#define FAR_PLANE  PLATFORM_ORDERING_TABLE_SIZE
 #define GTE_DIV_OVERFLOW (1 << 17)
+#define PRIMITIVE_BUFFER_SIZE (128 * 1024)
 
 #define setCVector(v, _x, _y, _z) (v)->r = _x, (v)->g = _y, (v)->b = _z
 
@@ -13,7 +14,7 @@ typedef struct db_t
     DISPENV  disp;
     DRAWENV  draw;
     uint32_t ot[FAR_PLANE];
-    int8_t   pribuff[32768];
+    _Alignas(4) uint8_t pribuff[PRIMITIVE_BUFFER_SIZE];
 } DB;
 
 typedef struct texture_t
@@ -50,26 +51,29 @@ static DB  db[2];
 static DB* cdb; // int instead. make macro to get current cdb ?
                 // #define CBD (db[cdb])
                 // swap buffer with cdb ^= 1
-static int8_t* nextpri;
+static uint8_t* nextpri;
 
 static Hashmap texture_hash;
 static Scene scene;
 static RECT  screenClip;
+static uint16_t last_frame_hblank;
 
 // one column = one light source
 static MATRIX color_matrix = {
-    // 1 2 3
-    3072, 0, 0, // Red
-    3072, 0, 0, // Green
-    3072, 0, 0  // Blue
+    .m = {
+        { 3072, 0, 0 }, // Red
+        { 3072, 0, 0 }, // Green
+        { 3072, 0, 0 }  // Blue
+    }
 };
 // one row = one light source
 // represents direction and intensity
 static MATRIX light_matrix = {
-    // x y z
-    -2048, -2048, -2048, // 1
-    0,     0,     0,     // 2
-    0,     0,     0      // 3
+    .m = {
+        { -2048, -2048, -2048 }, // Light 1
+        {     0,     0,     0 }, // Light 2
+        {     0,     0,     0 }  // Light 3
+    }
 };
 
 static void createTexture(const char* filename, Texture* texture);
@@ -81,6 +85,16 @@ static int  addTriangle(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture);
 static int  addFlatTriangle(Vertex* v1, Vertex* v2, Vertex* v3, SVECTOR* color);
 static void addLine(SVECTOR* org, SVECTOR* dest, CVECTOR* color);
 
+static void* allocPrimitive(size_t size)
+{
+    uint8_t* end = cdb->pribuff + sizeof(cdb->pribuff);
+    if (size > (size_t)(end - nextpri)) return NULL;
+
+    void* primitive = nextpri;
+    nextpri += size;
+    return primitive;
+}
+
 void rdr_init()
 {
     printf("[INFO]: init\n");
@@ -88,8 +102,9 @@ void rdr_init()
     scene.head = NULL;
     scene.tail = NULL;
 
-    ResetGraph(0);
+    ResetGraph();
     InitGeom();
+    last_frame_hblank = platform_hblank_counter();
 
     gte_SetGeomOffset(SCREEN_W / 2, SCREEN_H / 2);
     gte_SetGeomScreen(SCREEN_Z);
@@ -114,6 +129,10 @@ void rdr_init()
     FntLoad(960, 0);
     FntOpen(0, 8, 320, 224, 0, 100);
 
+    /* Clear both framebuffers before unblanking the display. */
+    PutDrawEnv(&db[0].draw);
+    PutDrawEnv(&db[1].draw);
+    PutDispEnv(&db[0].disp);
     SetDispMask(1);
 
     setRECT(&screenClip, 0, 0, SCREEN_W, SCREEN_H);
@@ -133,7 +152,7 @@ void rdr_initMeshTextures(Mesh3D* mesh)
         sprintf(tmp, "\\%s.TIM;1", mesh->subsets[i].name);
         printf("Texture[%d]: %s\n", i, tmp);
 
-        mesh->subsets[i].texture = malloc3(sizeof(Texture));
+        mesh->subsets[i].texture = malloc(sizeof(Texture));
         // TODO: when loading/unloading mesh, don't forget to free everything
         createTexture(tmp, mesh->subsets[i].texture);
     }
@@ -141,7 +160,7 @@ void rdr_initMeshTextures(Mesh3D* mesh)
 
 void rdr_initTerrainTextures(Terrain* terrain)
 {
-    terrain->grassland_tex = malloc3(sizeof(Texture));
+    terrain->grassland_tex = malloc(sizeof(Texture));
     createTexture("\\TERRAIN.TIM;1", terrain->grassland_tex);
 
     for (int i = 0; i < MAX_CHUNK; i++) {
@@ -153,14 +172,14 @@ void rdr_initTerrainTextures(Terrain* terrain)
 
 void rdr_draw()
 {
-    DrawSync(0);
+    DrawSync();
     VSync(0);
 
     PutDrawEnv(&cdb->draw);
     PutDispEnv(&cdb->disp);
 
+    FntFlushToOT(&cdb->ot[0], &nextpri, cdb->pribuff + sizeof(cdb->pribuff));
     DrawOTag(&cdb->ot[FAR_PLANE - 1]);
-    FntFlush(-1);
 
     // TODO: extract to function swap_buffer ?
     cdb = (cdb == &db[0]) ? &db[1] : &db[0];
@@ -221,7 +240,12 @@ void rdr_processScene()
 #endif
 
     /* FntPrint("MODEL LOADER\n"); */
-    FntPrint("vsync %d\n", VSync(-1));
+    uint16_t hblank_now = platform_hblank_counter();
+    uint16_t frame_hblanks = hblank_now - last_frame_hblank;
+    uint16_t refresh_hblanks = platform_hblanks_per_vsync();
+    unsigned int refreshes = (frame_hblanks + refresh_hblanks - 1) / refresh_hblanks;
+    last_frame_hblank = hblank_now;
+    FntPrint("frame hb %u vb %u\n", frame_hblanks, refreshes);
     /* int fps = 0; */
     /* if (tc > 0) fps = fc/tc; */
     /* FntPrint("vsync %d fc %d tc %d fps %d\n", VSync(-1), fc, tc, fps); */
@@ -234,7 +258,6 @@ void rdr_processScene()
              scene.camera->translate.vy,
              scene.camera->translate.vz);
 
-    int cx, cy, q;
     // q = terrain_chunkQuadrant(scene.camera->translate.vx,
     //                       scene.camera->translate.vz,
     //                       &cx,
@@ -244,7 +267,7 @@ void rdr_processScene()
 
 void rdr_prependToScene(Model3D* model)
 {
-    SceneNode* new_node = malloc3(sizeof(SceneNode));
+    SceneNode* new_node = malloc(sizeof(SceneNode));
     new_node->model = model;
 
     new_node->next = scene.head;
@@ -254,7 +277,7 @@ void rdr_prependToScene(Model3D* model)
 
 void rdr_appendToScene(Model3D* model)
 {
-    SceneNode* new_node = malloc3(sizeof(SceneNode));
+    SceneNode* new_node = malloc(sizeof(SceneNode));
     new_node->model = model;
     new_node->next = NULL;
 
@@ -282,39 +305,43 @@ void rdr_setSceneWeapon(Model3D* weap_r) { scene.weapon_r = weap_r; }
 // used
 static void createTexture(const char* filename, Texture* texture)
 {
-    uint32_t file_size;
-    int8_t*  buff;
+    unsigned long file_size;
+    char* buff;
 
-    TIM_IMAGE* image;
+    TIM_IMAGE image;
 
     buff = load_file(filename, &file_size);
     // TODO: if not able to load texture fallback to rendering face color?
     assert(buff != NULL);
 
-    OpenTIM((uint32_t*)buff);
-    ReadTIM(image);
+    OpenTIM(buff, file_size);
+    assert(ReadTIM(&image));
+    assert((image.mode & 0x7) <= 2);
 
     // upload pixel data to framebuffer
-    LoadImage(image->prect, image->paddr);
-    DrawSync(0);
+    LoadImage(image.prect, image.paddr);
+    DrawSync();
 
     // upload CLUT to framebuffer if any
-    if (image->mode & 0x8) {
-        LoadImage(image->crect, image->caddr);
-        DrawSync(0);
+    if (image.mode & 0x8) {
+        LoadImage(image.crect, image.caddr);
+        DrawSync();
     }
 
     // copy properties
-    texture->prect = *image->prect;
-    texture->crect = *image->crect;
-    texture->mode = image->mode;
+    texture->prect = *image.prect;
+    if (image.crect != NULL)
+        texture->crect = *image.crect;
+    else
+        memset(&texture->crect, 0, sizeof(texture->crect));
+    texture->mode = image.mode;
 
     texture->u = (texture->prect.x % 0x40) << (2 - (texture->mode & 0x3));
     texture->v = (texture->prect.y & 0xff);
 
     texture->tpage =
         getTPage(texture->mode & 0x3, 0, texture->prect.x, texture->prect.y);
-    texture->clut = getClut(texture->crect.x, texture->crect.y);
+    texture->clut = image.crect != NULL ? getClut(texture->crect.x, texture->crect.y) : 0;
 
     printf("[INFO]: TEXTURE %s [%d %d %d] - %p\n", filename,
            texture->mode,
@@ -323,7 +350,7 @@ static void createTexture(const char* filename, Texture* texture)
 
     hash_insert(&texture_hash, filename, texture);
 
-    free3(buff);
+    free(buff);
 }
 
 // TODO: don't compute normal here, precompute somehwere else.
@@ -445,6 +472,7 @@ static int addTriangle(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
 {
     int32_t   otz, nclip, flg;
     POLY_FT3* poly;
+    uint8_t*  primitive_start;
 
     numTri++;
     // if (effectiveNumTri > 1600) return 0;
@@ -471,7 +499,9 @@ static int addTriangle(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
 
     if (otz <= 0 || otz >= FAR_PLANE) return 0;
 
-    poly = (POLY_FT3*)nextpri;
+    primitive_start = nextpri;
+    poly = allocPrimitive(sizeof(*poly));
+    if (poly == NULL) return 0;
     setPolyFT3(poly);
 
     // set projected vertices to the primitive
@@ -483,7 +513,10 @@ static int addTriangle(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
                  (DVECTOR*)&poly->x0,
                  (DVECTOR*)&poly->x1,
                  (DVECTOR*)&poly->x2))
+    {
+        nextpri = primitive_start;
         return 0;
+    }
 
     setUV3(poly,
            texture->u + v1->uv.vx,
@@ -497,6 +530,7 @@ static int addTriangle(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
     poly->clut = texture->clut;
 
     {
+        setRGB0(poly, 128, 128, 128);
         gte_ldrgb(&poly->r0);
         gte_ldv3(&v1->normal, &v2->normal, &v3->normal);
         gte_nct();
@@ -504,7 +538,6 @@ static int addTriangle(Vertex* v1, Vertex* v2, Vertex* v3, Texture* texture)
     }
 
     addPrim(&cdb->ot[otz], poly);
-    nextpri += sizeof(POLY_FT3);
 
     effectiveNumTri++;
     return 1;
@@ -514,6 +547,7 @@ static int addFlatTriangle(Vertex* v1, Vertex* v2, Vertex* v3, SVECTOR* color)
 {
     int32_t  otz, nclip, flg;
     POLY_F3* poly;
+    uint8_t* primitive_start;
 
     numTri++;
     // if (effectiveNumTri > 1600) return 0;
@@ -539,7 +573,9 @@ static int addFlatTriangle(Vertex* v1, Vertex* v2, Vertex* v3, SVECTOR* color)
 
     if (otz <= 0 || otz >= FAR_PLANE) return 0;
 
-    poly = (POLY_F3*)nextpri;
+    primitive_start = nextpri;
+    poly = allocPrimitive(sizeof(*poly));
+    if (poly == NULL) return 0;
     setPolyF3(poly);
 
     // set projected vertices to the primitive
@@ -551,12 +587,14 @@ static int addFlatTriangle(Vertex* v1, Vertex* v2, Vertex* v3, SVECTOR* color)
                  (DVECTOR*)&poly->x0,
                  (DVECTOR*)&poly->x1,
                  (DVECTOR*)&poly->x2))
+    {
+        nextpri = primitive_start;
         return 0;
+    }
 
     setRGB0(poly, color->vx, color->vy, color->vz);
 
     addPrim(&cdb->ot[otz], poly);
-    nextpri += sizeof(POLY_F3);
 
     effectiveNumTri++;
     return 1;
@@ -564,11 +602,10 @@ static int addFlatTriangle(Vertex* v1, Vertex* v2, Vertex* v3, SVECTOR* color)
 
 static void addLine(SVECTOR* org, SVECTOR* dest, CVECTOR* color)
 {
-    int      p;
+    int32_t  p;
+    DVECTOR  screen_org;
+    DVECTOR  screen_dest;
     LINE_F2* line;
-
-    line = (LINE_F2*)nextpri;
-    setLineF2(line);
 
     gte_ldv0(org);
     gte_rtps();
@@ -576,7 +613,7 @@ static void addLine(SVECTOR* org, SVECTOR* dest, CVECTOR* color)
     gte_stflg(&p);
     if (p & GTE_DIV_OVERFLOW) return;
 
-    gte_stsxy(&line->x0);
+    gte_stsxy(&screen_org.vx);
 
     gte_ldv0(dest);
     gte_rtps();
@@ -584,11 +621,18 @@ static void addLine(SVECTOR* org, SVECTOR* dest, CVECTOR* color)
     gte_stflg(&p);
     if (p & GTE_DIV_OVERFLOW) return;
 
-    gte_stsxy(&line->x1);
+    gte_stsxy(&screen_dest.vx);
+
+    line = allocPrimitive(sizeof(*line));
+    if (line == NULL) return;
+    setLineF2(line);
+    line->x0 = screen_org.vx;
+    line->y0 = screen_org.vy;
+    line->x1 = screen_dest.vx;
+    line->y1 = screen_dest.vy;
 
     setRGB0(line, color->r, color->g, color->b);
     // setRGB0(line, 255, 0, 255);
 
     addPrim(&cdb->ot[0], line);
-    nextpri += sizeof(LINE_F2);
 }
